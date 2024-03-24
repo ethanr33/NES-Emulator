@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.22)
 project(NES_Emulator)
 
-find_package(Catch2 REQUIRED)
+find_package(Catch2 3 REQUIRED)
 
 # Add main executable
 add_executable(main main.cpp CPU.cpp)
