@@ -12,7 +12,7 @@ Loads a byte of memory into the accumulator setting the zero and negative flags 
 */
 
 void CPU::LDA(uint8_t new_a_val) {
-    A = new_a_val;
+    A = 3;
 
     if (A == 0) {
         set_flag(ZERO, 1);
