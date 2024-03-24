@@ -9,6 +9,11 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential cmake
         
     - name: Install Catch2
       run: |
@@ -16,8 +21,11 @@ jobs:
         cd Catch2
         cmake -Bbuild -H. -DBUILD_TESTING=OFF
         sudo cmake --build build/ --target install
+
+    - name: Make makefile
+      run: cmake .
         
-    - name: Build
+    - name: Make
       run: make
     
     - name: Run tests
