@@ -18,7 +18,7 @@ jobs:
         sudo cmake --build build/ --target install
         
     - name: Build
-      run: cmake --build . --config Release
+      run: make
     
     - name: Run tests
       run: ./cputest
