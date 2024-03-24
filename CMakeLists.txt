@@ -4,7 +4,7 @@ project(NES_Emulator)
 find_package(Catch2 REQUIRED)
 
 # Add main executable
-add_executable(main main.cpp NES.cpp CPU.cpp)
+add_executable(main main.cpp CPU.cpp)
 
 # Add test executable
 add_executable(cputest tests/cputest.cpp CPU.cpp)
