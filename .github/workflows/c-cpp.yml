@@ -1,0 +1,24 @@
+name: C++ CI with Catch2
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+        
+    - name: Install Catch2
+      run: |
+        git clone https://github.com/catchorg/Catch2.git
+        cd Catch2
+        cmake -Bbuild -H. -DBUILD_TESTING=OFF
+        sudo cmake --build build/ --target install
+        
+    - name: Build
+      run: make
+    
+    - name: Run tests
+      run: ./cputest
