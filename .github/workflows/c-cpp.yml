@@ -21,8 +21,11 @@ jobs:
         cd Catch2
         cmake -Bbuild -H. -DBUILD_TESTING=OFF
         sudo cmake --build build/ --target install
+
+    - name: Make makefile
+      run: cmake .
         
-    - name: Build
+    - name: Make
       run: make
     
     - name: Run tests
