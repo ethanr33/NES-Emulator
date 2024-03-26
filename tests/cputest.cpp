@@ -2,6 +2,64 @@
 #include <catch2/catch_test_macros.hpp>
 #include "../CPU.h"
 
+TEST_CASE("LDX works properly", "[cpu]") {
+    CPU cpu;
+
+    SECTION("LDX stores proper value into accumulator") {
+        cpu.LDX(0x00);
+        REQUIRE(cpu.get_x() == 0);
+
+        cpu.LDX(0x03);
+        REQUIRE(cpu.get_x() == 0x03);
+
+        cpu.LDX(0xFC);
+        REQUIRE(cpu.get_x() == 0xFC);
+
+        cpu.LDX(0x7F);
+        REQUIRE(cpu.get_x() == 0x7F);
+
+        cpu.LDX(0x80);
+        REQUIRE(cpu.get_x() == 0x80);
+    }
+
+    SECTION("LDX properly updates zero flag") {
+        cpu.LDX(0x64);
+        REQUIRE(cpu.get_flag(ZERO) == 0);
+
+        cpu.LDX(0x9C);
+        REQUIRE(cpu.get_flag(ZERO) == 0);
+
+        cpu.LDX(0);
+        REQUIRE(cpu.get_flag(ZERO) == 1);
+
+        cpu.LDX(0x9C);
+        REQUIRE(cpu.get_flag(ZERO) == 1);
+
+        cpu.LDX(0x64);
+        REQUIRE(cpu.get_flag(ZERO) == 1);
+    }
+
+    SECTION("LDX properly updates negative flag") {
+        cpu.LDX(0x7F);
+        REQUIRE(cpu.get_flag(NEGATIVE) == 0);
+
+        cpu.LDX(0x14);
+        REQUIRE(cpu.get_flag(NEGATIVE) == 0);
+
+        cpu.LDX(0);
+        REQUIRE(cpu.get_flag(NEGATIVE) == 0);
+
+        cpu.LDX(0xFF);
+        REQUIRE(cpu.get_flag(NEGATIVE) == 1);
+
+        cpu.LDX(0x14);
+        REQUIRE(cpu.get_flag(NEGATIVE) == 1);
+
+        cpu.LDX(0);
+        REQUIRE(cpu.get_flag(NEGATIVE) == 1);
+    }
+}
+
 TEST_CASE("LDA works properly", "[cpu]") {
     CPU cpu;
 
@@ -59,6 +117,7 @@ TEST_CASE("LDA works properly", "[cpu]") {
         REQUIRE(cpu.get_flag(NEGATIVE) == 1);
     }
 }
+
 
 TEST_CASE("TAX works properly", "[cpu]") {
     CPU cpu;
