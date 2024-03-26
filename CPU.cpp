@@ -24,6 +24,23 @@ void CPU::LDA(uint8_t new_a_val) {
 }
 
 /*
+LDX - Load Accumulator
+Loads a byte of memory into the accumulator setting the zero and negative flags as appropriate.
+*/
+
+void CPU::LDX(uint8_t new_x_val) {
+    X = new_x_val;
+
+    if (X == 0) {
+        set_flag(ZERO, 1);
+    }
+
+    if (is_bit_set(7, X)) {
+        set_flag(NEGATIVE, 1);
+    }
+}
+
+/*
 TAX - Transfer Accumulator to X
 Copies the current contents of the accumulator into the X register and sets the zero and negative flags as appropriate.
 */
