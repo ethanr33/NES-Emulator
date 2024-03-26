@@ -2,7 +2,7 @@
 # How to run program:
 
 ```
-./make
+./main
 ```
 
 # How to run the test suites:
