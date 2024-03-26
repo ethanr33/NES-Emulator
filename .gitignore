@@ -12,3 +12,4 @@ main
 cputest
 *.cmake
 Makefile
+/.vscode
