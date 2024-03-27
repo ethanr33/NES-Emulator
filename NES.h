@@ -1,5 +1,9 @@
 #pragma once
+
+#include <string>
 #include "CPU.h"
+
+using std::string;
 
 class NES {
     
@@ -9,5 +13,5 @@ class NES {
 
         CPU get_cpu() const;
         void initialize();
-        void load_program();
+        bool load_program(const string&);
 };
