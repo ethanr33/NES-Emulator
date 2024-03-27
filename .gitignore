@@ -10,6 +10,7 @@ CTestTestfile.cmake
 _deps
 main
 cputest
+debug
 *.cmake
 Makefile
 /.vscode

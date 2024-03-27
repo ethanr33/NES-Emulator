@@ -6,6 +6,9 @@ find_package(Catch2 3 REQUIRED)
 # Add main executable
 add_executable(main main.cpp CPU.cpp)
 
+# Add debug executable
+add_executable(debug debug.cpp CPU.cpp)
+
 # Add test executable
 add_executable(cputest tests/cputest.cpp CPU.cpp)
 
