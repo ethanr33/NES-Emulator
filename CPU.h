@@ -1,6 +1,7 @@
 
 #pragma once
 #include <cstdint>
+#include <vector>
 
 /*
     See:
@@ -14,6 +15,8 @@ enum addressing_mode {IMPLICIT, ACCUMULATOR, IMMEDIATE, ZERO_PAGE, ZERO_PAGE_X, 
 class CPU {
 
     private:
+
+    const int PROGRAM_MEMORY_START = 0x600;
 
     int stack_pointer = 0;
     int program_counter = 0;
@@ -30,7 +33,10 @@ class CPU {
     // Index 5: Overflow flag
     // Index 6: Negative flag
     bool flags[7] = {0, 0, 0, 0, 0, 0, 0};
-    bool RAM[0x10000]; // Fixed size memory based on NES architecture specs
+
+    // Fixed size memory based on NES architecture specs
+    // Store in units of kilobytes
+    uint8_t RAM[0xFFFF];
 
     void increment_program_counter();
 
@@ -48,6 +54,9 @@ class CPU {
 
     // Given an address, execute the opcode at that address
     void execute_opcode(uint16_t);
+
+    // Given an array, copy array into memory
+    void load_rom_into_memory(const std::vector<uint8_t>&);
 
     // Opcode implementations
     void ADC(uint8_t);

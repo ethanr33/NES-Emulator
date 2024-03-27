@@ -180,3 +180,9 @@ void CPU::execute_opcode(uint16_t opcode_address) {
             break;
     };
 }
+
+void CPU::load_rom_into_memory(const std::vector<uint8_t>& rom_data) {
+    for (int i = 0; i < rom_data.size(); i++) {
+        RAM[PROGRAM_MEMORY_START + i] = rom_data.at(i);
+    }
+} 
