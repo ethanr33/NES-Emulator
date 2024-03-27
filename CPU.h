@@ -41,10 +41,13 @@ class CPU {
     public:
 
     // Given an addressing mode and parameters, return the value stored in memory
+    // Some addressing modes only require one parameter, so there are 2 versions of the method:
+    // one with one parameter and one with two
     uint8_t get_memory(addressing_mode, uint8_t) const;
     uint8_t get_memory(addressing_mode, uint8_t, uint8_t) const;
 
-    void execute_opcode(uint8_t opcode);
+    // Given an address, execute the opcode at that address
+    void execute_opcode(uint16_t);
 
     // Opcode implementations
     void ADC(uint8_t);

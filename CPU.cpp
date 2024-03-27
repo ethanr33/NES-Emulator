@@ -5,7 +5,6 @@
 #include "Helpers.cpp"
 
 
-
 /*
 LDA - Load Accumulator
 Loads a byte of memory into the accumulator setting the zero and negative flags as appropriate.
@@ -97,8 +96,18 @@ bool CPU::get_flag(flag_type flag_to_get) {
     return flags[flag_to_get];
 }
 
+/*
+
+addressing_mode mode: The way we want to address memory
+uint8_t parameter_val: The address of the parameter
+
+return value: The content in memory we want to use
+
+*/
 uint8_t CPU::get_memory(addressing_mode mode, uint8_t parameter_val) const {
-    if (mode == ZERO_PAGE) {
+    if (mode == IMMEDIATE) {
+        return parameter_val;
+    } else if (mode == ZERO_PAGE) {
         return RAM[parameter_val];
     } else if (mode == ZERO_PAGE_X) {
         return RAM[parameter_val + X];
@@ -129,6 +138,45 @@ uint8_t CPU::get_memory(addressing_mode mode, uint8_t parameter_lsb, uint8_t par
     } else if (mode == ABSOLUTE_Y) {
         return RAM[full_address + Y];
     } else {
-        throw std::runtime_error("Memory addressing mode not implemented: " + mode);
+        throw std::runtime_error("Memory addressing mode not implemented: " + std::to_string(mode));
     }
+}
+
+void CPU::execute_opcode(uint16_t opcode_address) {
+    uint8_t opcode = RAM[opcode_address];
+    uint8_t lsb = RAM[opcode_address + 1];
+    uint8_t msb = RAM[opcode_address + 2];
+
+    // Figure out what command the opcode corresponds to
+    // Get the values (possibly in memory) required to execure it
+    // Then execute the command
+    switch (opcode) {
+        case 0xA1:
+            // LDA, indirect x
+            LDA(get_memory(INDEXED_INDIRECT, lsb));
+        case 0xA5:
+            // LDA, zero page
+            LDA(get_memory(ZERO_PAGE, lsb));
+        case 0xA9:
+            // LDA, immediate
+            LDA(get_memory(IMMEDIATE, lsb));
+        case 0xAD:
+            // LDA, absolute
+            LDA(get_memory(ABSOLUTE, lsb, msb));
+        case 0xB1:
+            // LDA, indirect y
+            LDA(get_memory(INDIRECT_INDEXED, lsb));
+        case 0xB5:
+            // LDA, zero page x
+            LDA(get_memory(ZERO_PAGE_X, lsb));
+        case 0xBD:
+            // LDA, absolute x
+            LDA(get_memory(ABSOLUTE_X, lsb, msb));
+        case 0xB9:
+            // LDA, absolute y
+            LDA(get_memory(ABSOLUTE_Y, lsb, msb));
+        default:
+            throw std::runtime_error("Unknown opcode " + std::to_string(opcode));
+            break;
+    };
 }
