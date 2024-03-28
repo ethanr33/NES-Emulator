@@ -130,6 +130,19 @@ main/fast:
 .PHONY : main/fast
 
 #=============================================================================
+# Target rules for targets named debug
+
+# Build rule for target.
+debug: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 debug
+.PHONY : debug
+
+# fast build rule for target.
+debug/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/debug.dir/build.make CMakeFiles/debug.dir/build
+.PHONY : debug/fast
+
+#=============================================================================
 # Target rules for targets named cputest
 
 # Build rule for target.
@@ -148,6 +161,7 @@ CPU.o: CPU.cpp.o
 # target to build an object file
 CPU.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/CPU.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/debug.dir/build.make CMakeFiles/debug.dir/CPU.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/cputest.dir/build.make CMakeFiles/cputest.dir/CPU.cpp.o
 .PHONY : CPU.cpp.o
 
@@ -157,6 +171,7 @@ CPU.i: CPU.cpp.i
 # target to preprocess a source file
 CPU.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/CPU.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/debug.dir/build.make CMakeFiles/debug.dir/CPU.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/cputest.dir/build.make CMakeFiles/cputest.dir/CPU.cpp.i
 .PHONY : CPU.cpp.i
 
@@ -166,8 +181,57 @@ CPU.s: CPU.cpp.s
 # target to generate assembly for a file
 CPU.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/CPU.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/debug.dir/build.make CMakeFiles/debug.dir/CPU.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/cputest.dir/build.make CMakeFiles/cputest.dir/CPU.cpp.s
 .PHONY : CPU.cpp.s
+
+NES.o: NES.cpp.o
+.PHONY : NES.o
+
+# target to build an object file
+NES.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/debug.dir/build.make CMakeFiles/debug.dir/NES.cpp.o
+.PHONY : NES.cpp.o
+
+NES.i: NES.cpp.i
+.PHONY : NES.i
+
+# target to preprocess a source file
+NES.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/debug.dir/build.make CMakeFiles/debug.dir/NES.cpp.i
+.PHONY : NES.cpp.i
+
+NES.s: NES.cpp.s
+.PHONY : NES.s
+
+# target to generate assembly for a file
+NES.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/debug.dir/build.make CMakeFiles/debug.dir/NES.cpp.s
+.PHONY : NES.cpp.s
+
+debug.o: debug.cpp.o
+.PHONY : debug.o
+
+# target to build an object file
+debug.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/debug.dir/build.make CMakeFiles/debug.dir/debug.cpp.o
+.PHONY : debug.cpp.o
+
+debug.i: debug.cpp.i
+.PHONY : debug.i
+
+# target to preprocess a source file
+debug.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/debug.dir/build.make CMakeFiles/debug.dir/debug.cpp.i
+.PHONY : debug.cpp.i
+
+debug.s: debug.cpp.s
+.PHONY : debug.s
+
+# target to generate assembly for a file
+debug.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/debug.dir/build.make CMakeFiles/debug.dir/debug.cpp.s
+.PHONY : debug.cpp.s
 
 main.o: main.cpp.o
 .PHONY : main.o
@@ -226,10 +290,17 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... cputest"
+	@echo "... debug"
 	@echo "... main"
 	@echo "... CPU.o"
 	@echo "... CPU.i"
 	@echo "... CPU.s"
+	@echo "... NES.o"
+	@echo "... NES.i"
+	@echo "... NES.s"
+	@echo "... debug.o"
+	@echo "... debug.i"
+	@echo "... debug.s"
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"

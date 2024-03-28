@@ -1,4 +1,4 @@
-
+#include <string>
 #include <stdexcept>
 
 #include "CPU.h"
@@ -157,7 +157,7 @@ uint8_t CPU::get_memory(addressing_mode mode, uint8_t parameter_val) {
 
         return RAM[form_address(least_significant_byte, most_significant_byte) + Y];
     } else {
-        throw std::runtime_error("Memory addressing mode not implemented: " + mode);
+        throw std::runtime_error("Memory addressing mode not implemented: " + std::to_string(mode));
     }
 }
 
