@@ -7,7 +7,7 @@ find_package(Catch2 3 REQUIRED)
 add_executable(main main.cpp CPU.cpp)
 
 # Add debug executable
-add_executable(debug debug.cpp CPU.cpp)
+add_executable(debug debug.cpp NES.cpp CPU.cpp)
 
 # Add test executable
 add_executable(cputest tests/cputest.cpp CPU.cpp)

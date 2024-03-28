@@ -58,6 +58,9 @@ class CPU {
     // Given an array, copy array into memory
     void load_rom_into_memory(const std::vector<uint8_t>&);
 
+    // Execute one opcode
+    void tick();
+
     // Opcode implementations
     void ADC(uint8_t);
     void AND(uint8_t);
@@ -122,6 +125,8 @@ class CPU {
     // Getters
     uint8_t get_a() const;
     uint8_t get_x() const;
+    uint8_t get_y() const;
+    int get_program_counter() const;
     bool get_flag(flag_type);
 
     // Setters

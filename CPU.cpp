@@ -92,8 +92,16 @@ uint8_t CPU::get_x() const {
     return X;
 }
 
+uint8_t CPU::get_y() const {
+    return Y;
+}
+
 bool CPU::get_flag(flag_type flag_to_get) {
     return flags[flag_to_get];
+}
+
+int CPU::get_program_counter() const {
+    return program_counter;
 }
 
 /*
@@ -186,3 +194,9 @@ void CPU::load_rom_into_memory(const std::vector<uint8_t>& rom_data) {
         RAM[PROGRAM_MEMORY_START + i] = rom_data.at(i);
     }
 } 
+
+// Execute one cycle of CPU.
+// This will typically run one opcode
+void CPU::tick() {
+    
+}

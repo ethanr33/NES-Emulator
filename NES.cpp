@@ -4,11 +4,15 @@
 #include <vector>
 #include "NES.h"
 
+CPU NES::get_cpu() const {
+    return cpu;
+}
+
 bool NES::load_program(const string& rom_file_name) {
     std::ifstream rom_file("roms/" + rom_file_name, std::ios::binary);
 
     if (!rom_file.is_open()) {
-        std::cerr << "Failed to open file";
+        std::cerr << "Failed to open file" << std::endl;
         return false;
     }
 
@@ -30,5 +34,5 @@ bool NES::load_program(const string& rom_file_name) {
     // Once we read all of the data from the rom, we can store it in memory
     cpu.load_rom_into_memory(rom_data);
 
-
+    return true;
 }
