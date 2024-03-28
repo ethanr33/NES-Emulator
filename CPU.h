@@ -19,7 +19,7 @@ class CPU {
     const int PROGRAM_MEMORY_START = 0x600;
 
     int stack_pointer = 0;
-    uint16_t program_counter = 0;
+    uint16_t program_counter = PROGRAM_MEMORY_START;
     uint8_t A = 0; // Accumulator register A
     uint8_t X = 0; // Index register X
     uint8_t Y = 0; // Index register Y

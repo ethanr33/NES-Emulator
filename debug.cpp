@@ -50,19 +50,19 @@ int main() {
         } else if (command == 'p') {
             cout << "CPU State:" << endl;
             cout << "-------------------------------------------------" << endl;
-            cout << "A: " << std::hex << static_cast<unsigned>(nes.get_cpu().get_a());
-            cout << " X: " << static_cast<unsigned>(nes.get_cpu().get_x());
-            cout << " Y: " << static_cast<unsigned>(nes.get_cpu().get_y());
-            cout << " PC: " << nes.get_cpu().get_program_counter();
+            cout << "A: " << std::hex << static_cast<unsigned>(nes.get_cpu()->get_a());
+            cout << " X: " << static_cast<unsigned>(nes.get_cpu()->get_x());
+            cout << " Y: " << static_cast<unsigned>(nes.get_cpu()->get_y());
+            cout << " PC: " << nes.get_cpu()->get_program_counter();
             cout << " Flags: ";
 
             for (int i = 0; i < 8; i++) {
-                cout << nes.get_cpu().get_flag(static_cast<flag_type>(i));
+                cout << nes.get_cpu()->get_flag(static_cast<flag_type>(i));
             }
 
             cout << endl;
         } else if (command == 's') {
-            nes.get_cpu().tick();
+            nes.get_cpu()->tick();
         } else if (command == 'q') {
             return 0;
         } else {

@@ -7,11 +7,11 @@ using std::string;
 
 class NES {
     
-    CPU cpu;
+    CPU* cpu;
 
     public:
-
-        CPU get_cpu() const;
+        NES();
+        CPU* get_cpu() const;
         void initialize();
         bool load_program(const string&);
 };

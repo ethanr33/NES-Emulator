@@ -4,7 +4,11 @@
 #include <vector>
 #include "NES.h"
 
-CPU NES::get_cpu() const {
+NES::NES() {
+    cpu = new CPU();
+}
+
+CPU* NES::get_cpu() const {
     return cpu;
 }
 
@@ -28,11 +32,11 @@ bool NES::load_program(const string& rom_file_name) {
     // Read input from file one byte at a time, since that is the size of a opcode
     while (rom_file.get(cur_byte)) {
         // Conversion of char to uint8_t because that's the type of value we need to store in memory
-        rom_data.push_back((uint8_t) cur_byte);
+        rom_data.push_back(static_cast<uint8_t>(cur_byte));
     }
 
     // Once we read all of the data from the rom, we can store it in memory
-    cpu.load_rom_into_memory(rom_data);
+    cpu->load_rom_into_memory(rom_data);
 
     return true;
 }
