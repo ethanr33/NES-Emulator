@@ -56,6 +56,18 @@ void CPU::LDX(uint8_t new_x_val) {
 }
 
 /*
+Transfer X to Stack Pointer
+Copies the current contents of the X register into the stack register.
+*/
+void CPU::TXS() {
+
+stack_pointer = X;
+//No flags are affected.
+
+}
+
+
+/*
 TAX - Transfer Accumulator to X
 Copies the current contents of the accumulator into the X register and sets the zero and negative flags as appropriate.
 */
