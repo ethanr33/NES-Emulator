@@ -72,6 +72,23 @@ void CPU::TAX() {
 }
 
 /*
+TXA Transfer X contents to Accumulator
+Copies the current contents of the X register into the accumulator and sets the zero and negative flags as appropriate.
+*/
+
+void CPU::TXA() {
+    A = X;
+
+    if (A == 0) {
+        set_flag(ZERO, 1);
+    }
+
+    if (is_bit_set(7, A)) {
+        set_flag(NEGATIVE, 1);
+    }
+}
+
+/*
 TAY - Transfer Accumulator to Y
 Copies the current contents of the accumulator into the Y register and sets the zero and negative flags as appropriate.
 */
