@@ -19,8 +19,7 @@ class CPU {
     const int PROGRAM_MEMORY_START = 0x600;
 
     int stack_pointer = 0;
-    int program_counter = 0;
-    int accumulator = 0;
+    uint16_t program_counter = 0;
     uint8_t A = 0; // Accumulator register A
     uint8_t X = 0; // Index register X
     uint8_t Y = 0; // Index register Y
@@ -38,7 +37,7 @@ class CPU {
     // Store in units of kilobytes
     uint8_t RAM[0xFFFF];
 
-    void increment_program_counter();
+    void increment_program_counter(int);
 
     // Methods to control flags
     void set_flag(flag_type, bool);
@@ -49,8 +48,8 @@ class CPU {
     // Given an addressing mode and parameters, return the value stored in memory
     // Some addressing modes only require one parameter, so there are 2 versions of the method:
     // one with one parameter and one with two
-    uint8_t get_memory(addressing_mode, uint8_t) const;
-    uint8_t get_memory(addressing_mode, uint8_t, uint8_t) const;
+    uint8_t get_memory(addressing_mode, uint8_t);
+    uint8_t get_memory(addressing_mode, uint8_t, uint8_t);
 
     // Given an address, execute the opcode at that address
     void execute_opcode(uint16_t);
@@ -126,7 +125,7 @@ class CPU {
     uint8_t get_a() const;
     uint8_t get_x() const;
     uint8_t get_y() const;
-    int get_program_counter() const;
+    uint16_t get_program_counter() const;
     bool get_flag(flag_type);
 
     // Setters

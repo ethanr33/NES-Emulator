@@ -4,7 +4,6 @@
 #include "CPU.h"
 #include "Helpers.cpp"
 
-
 /*
 LDA - Load Accumulator
 Loads a byte of memory into the accumulator setting the zero and negative flags as appropriate.
@@ -23,8 +22,8 @@ void CPU::LDA(uint8_t new_a_val) {
 }
 
 /*
-LDX - Load Accumulator
-Loads a byte of memory into the accumulator setting the zero and negative flags as appropriate.
+LDX - Load X
+Loads a byte of memory into the X register setting the zero and negative flags as appropriate.
 */
 
 void CPU::LDX(uint8_t new_x_val) {
@@ -100,8 +99,12 @@ bool CPU::get_flag(flag_type flag_to_get) {
     return flags[flag_to_get];
 }
 
-int CPU::get_program_counter() const {
+uint16_t CPU::get_program_counter() const {
     return program_counter;
+}
+
+void CPU::increment_program_counter(int increment_amount) {
+    program_counter += increment_amount;
 }
 
 /*
@@ -112,7 +115,12 @@ uint8_t parameter_val: The address of the parameter
 return value: The content in memory we want to use
 
 */
-uint8_t CPU::get_memory(addressing_mode mode, uint8_t parameter_val) const {
+uint8_t CPU::get_memory(addressing_mode mode, uint8_t parameter_val) {
+    // The opcode will be 2 bytes long if we get here, so we should increment the program counter by 2
+    // to reflect this
+
+    increment_program_counter(2);
+
     if (mode == IMMEDIATE) {
         return parameter_val;
     } else if (mode == ZERO_PAGE) {
@@ -136,8 +144,10 @@ uint8_t CPU::get_memory(addressing_mode mode, uint8_t parameter_val) const {
     }
 }
 
-uint8_t CPU::get_memory(addressing_mode mode, uint8_t parameter_lsb, uint8_t parameter_msb) const {
+uint8_t CPU::get_memory(addressing_mode mode, uint8_t parameter_lsb, uint8_t parameter_msb) {
     uint16_t full_address = form_address(parameter_lsb, parameter_msb);
+
+    increment_program_counter(3);
 
     if (mode == ABSOLUTE) {
         return RAM[full_address];
@@ -154,6 +164,7 @@ void CPU::execute_opcode(uint16_t opcode_address) {
     uint8_t opcode = RAM[opcode_address];
     uint8_t lsb = RAM[opcode_address + 1];
     uint8_t msb = RAM[opcode_address + 2];
+
 
     // Figure out what command the opcode corresponds to
     // Get the values (possibly in memory) required to execure it
@@ -198,5 +209,6 @@ void CPU::load_rom_into_memory(const std::vector<uint8_t>& rom_data) {
 // Execute one cycle of CPU.
 // This will typically run one opcode
 void CPU::tick() {
-    
+    // TODO: check for special end condition
+    execute_opcode(program_counter);
 }

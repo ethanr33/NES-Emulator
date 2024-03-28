@@ -44,6 +44,7 @@ int main() {
         if (command == 'h') {
             cout << "h - Print help menu" << endl;
             cout << "p - Print CPU status" << endl;
+            cout << "s - Step" << endl;
             cout << "q - Quit debugger" << endl;
             cout << endl;
         } else if (command == 'p') {
@@ -60,6 +61,8 @@ int main() {
             }
 
             cout << endl;
+        } else if (command == 's') {
+            nes.get_cpu().tick();
         } else if (command == 'q') {
             return 0;
         } else {
