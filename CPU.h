@@ -42,6 +42,7 @@ class CPU {
     // Methods to control flags
     void set_flag(flag_type, bool);
     void toggle_flag(flag_type);
+    uint8_t get_byte_from_flags() const;
 
     public:
 
