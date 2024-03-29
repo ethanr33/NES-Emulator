@@ -64,7 +64,7 @@ class CPU {
     void ADC(uint8_t);
     void AND(uint8_t);
     void ASL(uint8_t);
-    void BCC();
+    void BCC(uint8_t);
     void BCS();
     void BEQ();
     void BIT(uint8_t);
