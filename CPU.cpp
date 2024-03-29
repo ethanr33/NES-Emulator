@@ -4,6 +4,16 @@
 #include "CPU.h"
 #include "Helpers.cpp"
 
+/*
+BCC - Branch if Carry Clear
+If the carry flag is clear then add the relative displacement to the program counter to cause a branch to a new location.
+*/
+void CPU::BCC(uint8_t displacement) {
+    if (!get_flag(CARRY)) {
+        program_counter += displacement;
+    }
+}
+
 
 void CPU::ORA(uint8_t memory_val) {
     A = A | memory_val;
