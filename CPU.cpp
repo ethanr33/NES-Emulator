@@ -4,7 +4,41 @@
 #include "CPU.h"
 #include "Helpers.cpp"
 
+/*
+ADC - Add with Carry
+This instruction adds the contents of a memory location to the accumulator together with the carry bit.
+If overflow occurs the carry bit is set, this enables multiple byte addition to be performed.
+*/
+void CPU::ADC(uint8_t memory_val) {
+    uint8_t sum = A + memory_val + static_cast<uint8_t>(get_flag(CARRY));
 
+    // Check if overflow from bit 7
+    if (sum > 0xFF) {
+        set_flag(CARRY, 1);
+    }
+
+    if (sum == 0) {
+        set_flag(ZERO, 1);
+    }
+
+    if (is_positive(A) && is_positive(memory_val) && sum < 0) {
+        // Check if we add 2 positives and get a negative
+        set_flag(OVER_FLOW, 1);
+    } else if (!is_positive(A) && !is_positive(memory_val) && sum > 0) {
+        // Check if we add 2 negatives and get a positive (or 0)
+        set_flag(OVER_FLOW, 1);
+    }
+
+    if (is_bit_set(7, sum)) {
+        set_flag(NEGATIVE, 1);
+    }
+
+}
+
+/*
+ORA - Logical Inclusive OR
+An inclusive OR is performed, bit by bit, on the accumulator contents using the contents of a byte of memory.
+*/
 void CPU::ORA(uint8_t memory_val) {
     A = A | memory_val;
 
