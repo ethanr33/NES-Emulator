@@ -4,6 +4,20 @@
 #include "CPU.h"
 #include "Helpers.cpp"
 
+
+void CPU::ORA(uint8_t memory_val) {
+    A = A | memory_val;
+
+    if (A == 0) {
+        set_flag(ZERO, 1);
+    }
+
+    if (is_bit_set(7, A)) {
+        set_flag(NEGATIVE, 1);
+    }
+}
+
+
 /*
 AND - Logical AND
 A logical AND is performed, bit by bit, on the accumulator contents using the contents of a byte of memory.
