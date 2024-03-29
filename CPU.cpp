@@ -4,6 +4,20 @@
 #include "CPU.h"
 #include "Helpers.cpp"
 
+
+void CPU::ORA(uint8_t memory_val) {
+    A = A | memory_val;
+
+    if (A == 0) {
+        set_flag(ZERO, 1);
+    }
+
+    if (is_bit_set(7, A)) {
+        set_flag(NEGATIVE, 1);
+    }
+}
+
+
 /*
 AND - Logical AND
 A logical AND is performed, bit by bit, on the accumulator contents using the contents of a byte of memory.
@@ -233,27 +247,35 @@ void CPU::execute_opcode(uint16_t opcode_address) {
         case 0xA1:
             // LDA, indirect x
             LDA(get_memory(INDEXED_INDIRECT, lsb));
+            break;
         case 0xA5:
             // LDA, zero page
             LDA(get_memory(ZERO_PAGE, lsb));
+            break;
         case 0xA9:
             // LDA, immediate
             LDA(get_memory(IMMEDIATE, lsb));
+            break;
         case 0xAD:
             // LDA, absolute
             LDA(get_memory(ABSOLUTE, lsb, msb));
+            break;
         case 0xB1:
             // LDA, indirect y
             LDA(get_memory(INDIRECT_INDEXED, lsb));
+            break;
         case 0xB5:
             // LDA, zero page x
             LDA(get_memory(ZERO_PAGE_X, lsb));
+            break;
         case 0xBD:
             // LDA, absolute x
             LDA(get_memory(ABSOLUTE_X, lsb, msb));
+            break;
         case 0xB9:
             // LDA, absolute y
             LDA(get_memory(ABSOLUTE_Y, lsb, msb));
+            break;
         default:
             throw std::runtime_error("Unknown opcode " + std::to_string(opcode));
             break;
