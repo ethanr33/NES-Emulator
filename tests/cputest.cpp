@@ -183,3 +183,21 @@ TEST_CASE("TAX works properly", "[cpu]") {
         REQUIRE(cpu.get_flag(NEGATIVE) == 1);
     }
 }
+
+TEST_CASE("ASL works properly", "[cpu]") {
+    CPU cpu;
+
+    SECTION("ASL shifts right by one (accumulator)") {
+        cpu.set_a(2);
+        cpu.ASL();
+
+        REQUIRE(cpu.get_a() == 4);
+
+        // test overflow
+
+        cpu.set_a(0xF2);
+        cpu.ASL();
+
+        REQUIRE(cpu.get_a() == 0xE4);
+    }
+}
