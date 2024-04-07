@@ -330,6 +330,16 @@ void CPU::BNE(uint8_t displacement) {
     }
 }
 
+/*
+    BPL - Branch if Positive
+    If the negative flag is clear then add the relative displacement to the program counter to cause a branch to a new location.
+*/
+void CPU::BPL(uint8_t displacement) {
+    if (get_flag(NEGATIVE) == 0) {
+        program_counter += displacement;
+    }
+}
+
 
 
 void CPU::set_flag(flag_type flag_to_set, bool new_flag_val) {
