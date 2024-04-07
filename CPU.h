@@ -16,9 +16,11 @@ class CPU {
 
     private:
 
-    const int PROGRAM_MEMORY_START = 0x600;
-
-    int stack_pointer = 0;
+    const uint16_t PROGRAM_MEMORY_START = 0x600;
+    const uint16_t STACK_LOCATION = 0x1FF;
+    
+    // The stack pointer stores the low 8 bytes of the next memory location available on the stack
+    uint8_t stack_pointer = STACK_LOCATION & 0xFF;
     uint16_t program_counter = PROGRAM_MEMORY_START;
     uint8_t A = 0; // Accumulator register A
     uint8_t X = 0; // Index register X
@@ -65,7 +67,7 @@ class CPU {
     void ADC(uint8_t);
     void AND(uint8_t);
     void ASL(uint8_t);
-    void BCC();
+    void BCC(uint8_t);
     void BCS();
     void BEQ();
     void BIT(uint8_t);
