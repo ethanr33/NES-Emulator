@@ -74,7 +74,7 @@ class CPU {
     void BEQ(uint8_t);
     void BIT(uint8_t);
     void BMI(uint8_t);
-    void BNE();
+    void BNE(uint8_t);
     void BPL();
     void BRK();
     void BVC();
