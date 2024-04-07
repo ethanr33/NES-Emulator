@@ -436,6 +436,15 @@ void CPU::STX(uint16_t location) {
     RAM[location] = X;
 }
 
+/*
+    STY - Store Y Register
+    Stores the contents of the Y register into memory.
+*/
+void CPU::STY(uint16_t location) {
+    RAM[location] = Y;
+}
+
+
 
 void CPU::set_flag(flag_type flag_to_set, bool new_flag_val) {
     flags[flag_to_set] = new_flag_val;

@@ -118,7 +118,7 @@ class CPU {
     void SEI();
     void STA(uint16_t);
     void STX(uint16_t);
-    void STY(uint8_t);
+    void STY(uint16_t);
     void TAX();
     void TAY();
     void TSX();
