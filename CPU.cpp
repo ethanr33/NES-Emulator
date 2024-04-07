@@ -380,6 +380,26 @@ void CPU::CMP(uint8_t memory_val) {
     }
 }
 
+/*
+    CPX - Compare X Register
+    This instruction compares the contents of the X register with another memory held value and sets the zero and carry flags as appropriate.
+*/
+void CPU::CPX(uint8_t memory_val) {
+    uint8_t compare = X - memory_val;
+
+    if (memory_val == X) {
+        set_flag(ZERO, 1);
+    }
+
+    if (X >= memory_val) {
+        set_flag(CARRY, 1);
+    }
+
+    if (is_bit_set(7, compare) == 1) {
+        set_flag(NEGATIVE, 1);
+    }
+}
+
 
 void CPU::set_flag(flag_type flag_to_set, bool new_flag_val) {
     flags[flag_to_set] = new_flag_val;
