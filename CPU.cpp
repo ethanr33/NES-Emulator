@@ -310,6 +310,16 @@ void CPU::BIT(uint8_t memory_val) {
     set_flag(NEGATIVE, is_bit_set(7, result));
 }
 
+/*
+    BMI - Branch if Minus
+    If the negative flag is set then add the relative displacement to the program counter to cause a branch to a new location.
+*/
+void CPU::BMI(uint8_t displacement) {
+    if (get_flag(NEGATIVE) == 1) {
+        program_counter += displacement;
+    }
+}
+
 
 void CPU::set_flag(flag_type flag_to_set, bool new_flag_val) {
     flags[flag_to_set] = new_flag_val;
