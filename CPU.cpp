@@ -340,6 +340,17 @@ void CPU::BPL(uint8_t displacement) {
     }
 }
 
+/*
+    BVC - Branch if Overflow Clear
+    If the overflow flag is clear then add the relative displacement to the program counter to cause a branch to a new location.
+*/
+void CPU::BVC(uint8_t displacement) {
+    if (get_flag(OVER_FLOW) == 0) {
+        program_counter += displacement;
+    }
+}
+
+
 
 
 void CPU::set_flag(flag_type flag_to_set, bool new_flag_val) {

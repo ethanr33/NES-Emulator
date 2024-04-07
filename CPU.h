@@ -77,7 +77,7 @@ class CPU {
     void BNE(uint8_t);
     void BPL(uint8_t);
     void BRK();
-    void BVC();
+    void BVC(uint8_t);
     void BVS();
     void CLC();
     void CLD();
