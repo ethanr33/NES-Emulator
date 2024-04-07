@@ -428,6 +428,14 @@ void CPU::STA(uint16_t location) {
     RAM[location] = A;
 }
 
+/*
+    STX - Store X Register
+    Stores the contents of the X register into memory.
+*/
+void CPU::STX(uint16_t location) {
+    RAM[location] = X;
+}
+
 
 void CPU::set_flag(flag_type flag_to_set, bool new_flag_val) {
     flags[flag_to_set] = new_flag_val;
