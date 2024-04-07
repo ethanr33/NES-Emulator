@@ -5,6 +5,17 @@
 #include "Helpers.cpp"
 
 /*
+BCC - Branch if Carry Clear
+If the carry flag is clear then add the relative displacement to the program counter to cause a branch to a new location.
+*/
+void CPU::BCC(uint8_t displacement) {
+    if (!get_flag(CARRY)) {
+        program_counter += displacement;
+    }
+}
+
+
+/*
 ADC - Add with Carry
 This instruction adds the contents of a memory location to the accumulator together with the carry bit.
 If overflow occurs the carry bit is set, this enables multiple byte addition to be performed.
