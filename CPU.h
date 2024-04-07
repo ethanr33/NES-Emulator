@@ -70,7 +70,7 @@ class CPU {
     void ASL(); 
     void ASL(uint16_t);
     void BCC(uint8_t);
-    void BCS();
+    void BCS(uint8_t);
     void BEQ();
     void BIT(uint8_t);
     void BMI();

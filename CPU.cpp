@@ -276,6 +276,17 @@ void CPU::ASL(uint16_t memory_address) {
     }
 }
 
+/*
+    BCS - Branch if Carry Set
+    If the carry flag is set then add the relative displacement to the program counter to cause a branch to a new location.
+*/
+void CPU::BCS(uint8_t displacement) {
+    if (get_flag(CARRY) == 1) {
+        program_counter += displacement;
+    }
+}
+
+
 void CPU::set_flag(flag_type flag_to_set, bool new_flag_val) {
     flags[flag_to_set] = new_flag_val;
 }
