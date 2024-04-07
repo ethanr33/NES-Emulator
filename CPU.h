@@ -69,7 +69,7 @@ class CPU {
     // ASL can operate on the accumulator or a value in memory, there are different versions for each use case
     void ASL(); 
     void ASL(uint16_t);
-    void BCC();
+    void BCC(uint8_t);
     void BCS();
     void BEQ();
     void BIT(uint8_t);
