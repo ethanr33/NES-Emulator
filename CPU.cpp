@@ -296,6 +296,9 @@ void CPU::BEQ(uint8_t displacement) {
     }
 }
 
+/*
+    BIT - Bit Test
+*/
 void CPU::BIT(uint8_t memory_val) {
     uint8_t result = A & memory_val;
 
