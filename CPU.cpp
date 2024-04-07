@@ -420,6 +420,14 @@ void CPU::CPY(uint8_t memory_val) {
     }
 }
 
+/*
+    STA - Store Accumulator
+    Stores the contents of the accumulator into memory.
+*/
+void CPU::STA(uint16_t location) {
+    RAM[location] = A;
+}
+
 
 void CPU::set_flag(flag_type flag_to_set, bool new_flag_val) {
     flags[flag_to_set] = new_flag_val;
