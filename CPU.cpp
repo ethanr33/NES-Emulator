@@ -436,6 +436,14 @@ void CPU::STX(uint16_t location) {
     RAM[location] = X;
 }
 
+void CPU::JMP(uint16_t target) {
+    /*
+        TODO: In the original 6502 processor JMP does not properly fetch the target address if the indirect vector falls on a page boundary
+              We need to account for this in the future
+    */
+    program_counter = target;
+}
+
 /*
     STY - Store Y Register
     Stores the contents of the Y register into memory.
