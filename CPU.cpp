@@ -296,6 +296,17 @@ void CPU::BEQ(uint8_t displacement) {
     }
 }
 
+void CPU::BIT(uint8_t memory_val) {
+    uint8_t result = A & memory_val;
+
+    if (result == 0) {
+        set_flag(ZERO, 1);
+    }
+
+    set_flag(OVER_FLOW, is_bit_set(6, result));
+    set_flag(NEGATIVE, is_bit_set(7, result));
+}
+
 
 void CPU::set_flag(flag_type flag_to_set, bool new_flag_val) {
     flags[flag_to_set] = new_flag_val;
