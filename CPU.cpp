@@ -238,6 +238,43 @@ void CPU::TYA() {
 
 }
 
+/*
+    ASL - Arithmetic Shift Left (Accumulator version)
+    This operation shifts all the bits of the accumulator one bit left. 
+*/
+void CPU::ASL() {
+    
+    set_flag(CARRY, is_bit_set(7, A));
+
+    A = A << 1;
+
+    if (A == 0) {
+        set_flag(ZERO, 1);
+    }
+
+    if (is_bit_set(A, 7) == 1) {
+        set_flag(NEGATIVE, 1);
+    }
+}
+
+/*
+    ASL - Arithmetic Shift Left (Memory version)
+    This operation shifts all the bits of the memory contents one bit left. 
+*/
+void CPU::ASL(uint16_t memory_address) {
+    
+    set_flag(CARRY, is_bit_set(7, RAM[memory_address]));
+
+    RAM[memory_address] = RAM[memory_address] << 1;
+
+    if (RAM[memory_address] == 0) {
+        set_flag(ZERO, 1);
+    }
+
+    if (is_bit_set(RAM[memory_address], 7) == 1) {
+        set_flag(NEGATIVE, 1);
+    }
+}
 
 void CPU::set_flag(flag_type flag_to_set, bool new_flag_val) {
     flags[flag_to_set] = new_flag_val;
