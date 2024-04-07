@@ -32,6 +32,7 @@ void CPU::ADC(uint8_t memory_val) {
     if (is_bit_set(7, sum)) {
         set_flag(NEGATIVE, 1);
     }
+}
 
 /*
 PHA - Push Accumulator
