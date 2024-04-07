@@ -16,8 +16,8 @@ class CPU {
 
     private:
 
-    const int PROGRAM_MEMORY_START = 0x600;
-    const uint8_t STACK_LOCATION = 0x1FF;
+    const uint16_t PROGRAM_MEMORY_START = 0x600;
+    const uint16_t STACK_LOCATION = 0x1FF;
     
     // The stack pointer stores the low 8 bytes of the next memory location available on the stack
     uint8_t stack_pointer = STACK_LOCATION & 0xFF;
@@ -44,6 +44,7 @@ class CPU {
     // Methods to control flags
     void set_flag(flag_type, bool);
     void toggle_flag(flag_type);
+    uint8_t get_byte_from_flags() const;
 
     public:
 
