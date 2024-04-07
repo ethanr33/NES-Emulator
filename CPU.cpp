@@ -83,7 +83,6 @@ void CPU::PLP() {
     }
 }
 
-}
 
 /*
 ORA - Logical Inclusive OR
