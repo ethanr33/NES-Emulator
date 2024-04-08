@@ -505,6 +505,60 @@ void CPU::ROL(uint16_t address) {
 }
 
 
+/*
+    ROR - Rotate Right (Accumulator)
+    Move each of the bits in either A or M one place to the right.
+*/
+void CPU::ROR() {
+
+    bool old_carry = get_flag(CARRY);
+
+    set_flag(CARRY, is_bit_set(0, A));
+
+    A = A >> 1;
+
+    if (old_carry) {
+        A = A | 0x80;
+    }
+
+    if (A == 0) {
+        set_flag(ZERO, 1);
+    }
+
+    if (is_bit_set(7, A)) {
+        set_flag(NEGATIVE, 1);
+    }
+
+}
+
+/*
+    ROR - Rotate Right (Memory)
+    Move each of the bits in either A or M one place to the right.
+*/
+void CPU::ROR(uint16_t address) {
+
+    bool old_carry = get_flag(CARRY);
+
+    set_flag(CARRY, is_bit_set(0, RAM[address]));
+
+    RAM[address] = RAM[address] >> 1;
+
+    if (old_carry) {
+        RAM[address] = RAM[address] | 0x80;
+    }
+
+    if (RAM[address] == 0) {
+        set_flag(ZERO, 1);
+    }
+
+    if (is_bit_set(7, RAM[address])) {
+        set_flag(NEGATIVE, 1);
+    }
+
+}
+
+
+
 void CPU::set_flag(flag_type flag_to_set, bool new_flag_val) {
     flags[flag_to_set] = new_flag_val;
 }

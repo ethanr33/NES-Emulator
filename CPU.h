@@ -109,7 +109,7 @@ class CPU {
     void ROL();
     void ROL(uint16_t);
     void ROR();
-    void ROR(uint8_t);
+    void ROR(uint16_t);
     void RTI();
     void RTS();
     void SBC(uint8_t);
