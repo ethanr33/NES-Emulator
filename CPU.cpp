@@ -452,6 +452,57 @@ void CPU::STY(uint16_t location) {
     RAM[location] = Y;
 }
 
+/*
+    ROL - Rotate Left (Accumulator)
+    Move each of the bits in either A or M one place to the left.
+*/
+void CPU::ROL() {
+
+    bool old_carry = get_flag(CARRY);
+
+    set_flag(CARRY, is_bit_set(7, A));
+
+    A = A << 1;
+
+    if (old_carry) {
+        A = A | 1;
+    }
+
+    if (A == 0) {
+        set_flag(ZERO, 1);
+    }
+
+    if (is_bit_set(7, A)) {
+        set_flag(NEGATIVE, 1);
+    }
+
+}
+
+/*
+    ROL - Rotate Left (Memory)
+    Move each of the bits in either A or M one place to the left.
+*/
+void CPU::ROL(uint16_t address) {
+
+    bool old_carry = get_flag(CARRY);
+
+    set_flag(CARRY, is_bit_set(7, RAM[address]));
+
+    RAM[address] = RAM[address] << 1;
+
+    if (old_carry) {
+        RAM[address] = RAM[address] | 1;
+    }
+
+    if (RAM[address] == 0) {
+        set_flag(ZERO, 1);
+    }
+
+    if (is_bit_set(7, RAM[address])) {
+        set_flag(NEGATIVE, 1);
+    }
+
+}
 
 
 void CPU::set_flag(flag_type flag_to_set, bool new_flag_val) {

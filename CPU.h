@@ -107,7 +107,7 @@ class CPU {
     void PLA();
     void PLP();
     void ROL();
-    void ROL(uint8_t);
+    void ROL(uint16_t);
     void ROR();
     void ROR(uint8_t);
     void RTI();
