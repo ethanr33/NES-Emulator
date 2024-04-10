@@ -14,6 +14,69 @@ void CPU::BCC(uint8_t displacement) {
     }
 }
 
+void CPU::INY()
+{
+    Y = Y+1;
+
+    if( Y==0 )
+    {
+        set_flag(ZERO,1);
+    }
+
+    if(is_bit_set(7,Y))
+    {
+        set_flag(NEGATIVE, 1);
+    }
+
+}
+
+void CPU::INX()
+{
+    X = X+1;
+
+    if( X==0 )
+    {
+        set_flag(ZERO,1);
+    }
+
+    if(is_bit_set(7,X))
+    {
+        set_flag(NEGATIVE, 1);
+    }
+
+}
+
+void CPU::EOR(uint8_t memory_val)
+{
+    A = A^memory_val;
+
+    if( A==0 )
+    {
+        set_flag(ZERO,1);
+    }
+
+    if(is_bit_set(7,A))
+    {
+        set_flag(NEGATIVE, 1);
+    }
+    
+}
+
+void CPU::CLI()
+{
+    set_flag(INT_DISABLE,0);
+}
+
+void CPU::CLD()
+{
+    set_flag(DECIMAL,0);
+}
+
+void CPU::CLC()
+{
+    set_flag(CARRY,0);
+}
+
 
 /*
 ADC - Add with Carry
