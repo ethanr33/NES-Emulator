@@ -557,6 +557,19 @@ void CPU::ROR(uint16_t address) {
 
 }
 
+void CPU::TSX() {
+    X = stack_pointer;
+
+    if (X == 0) {
+        set_flag(ZERO, 1);
+    }
+
+    if (is_bit_set(7, X)) {
+        set_flag(NEGATIVE, 1);
+    }
+}
+
+
 
 
 void CPU::set_flag(flag_type flag_to_set, bool new_flag_val) {
