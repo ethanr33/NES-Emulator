@@ -636,6 +636,10 @@ void CPU::LSR(uint16_t address) {
 }
 
 
+void CPU::NOP() {
+    // no operation, do nothing
+}
+
 void CPU::set_flag(flag_type flag_to_set, bool new_flag_val) {
     flags[flag_to_set] = new_flag_val;
 }
