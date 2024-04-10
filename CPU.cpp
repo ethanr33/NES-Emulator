@@ -142,8 +142,7 @@ PHA - Push Accumulator
 Pushes a copy of the accumulator on to the stack.
 */
 void CPU::PHA() {
-    RAM[stack_pointer] = A;
-    stack_pointer--;
+    stack_push(A);
 }
 
 /*
@@ -151,8 +150,7 @@ PHP - Push Processor Status
 Pushes a copy of the status flags on to the stack.
 */
 void CPU::PHP() {
-    RAM[stack_pointer] = get_byte_from_flags();
-    stack_pointer--;
+    stack_push(get_byte_from_flags());
 }
 
 /*
@@ -160,8 +158,7 @@ PLA - Pull Accumulator
 Pulls an 8 bit value from the stack and into the accumulator. The zero and negative flags are set as appropriate.
 */
 void CPU::PLA() {
-    stack_pointer++;
-    A = RAM[stack_pointer];
+    A = stack_pop();
 
     if (A == 0) {
         set_flag(ZERO, 1);
@@ -177,8 +174,7 @@ PLP - Pull Processor Status
 Pulls an 8 bit value from the stack and into the processor flags. The flags will take on new states as determined by the value pulled.
 */
 void CPU::PLP() {
-    stack_pointer++;
-    uint8_t flag_byte = RAM[stack_pointer];
+    uint8_t flag_byte = stack_pop();
 
     for (int i = 7; i >= 0; i--) {
         set_flag(static_cast<flag_type>(i), flag_byte & 1);
