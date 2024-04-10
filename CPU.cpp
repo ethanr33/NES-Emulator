@@ -732,6 +732,18 @@ void CPU::NOP() {
     // no operation, do nothing
 }
 
+void CPU::INC(uint16_t address) {
+    RAM[address]++;
+
+    if (RAM[address] == 0) {
+        set_flag(ZERO, 1);
+    }
+
+    if (is_bit_set(7, RAM[address])) {
+        set_flag(CARRY, 1);
+    }
+}
+
 void CPU::set_flag(flag_type flag_to_set, bool new_flag_val) {
     flags[flag_to_set] = new_flag_val;
 }

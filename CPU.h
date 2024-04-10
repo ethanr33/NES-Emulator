@@ -90,7 +90,7 @@ class CPU {
     void DEX();
     void DEY();
     void EOR(uint8_t);
-    void INC(uint8_t);
+    void INC(uint16_t);
     void INX();
     void INY();
     void JMP(uint16_t);
