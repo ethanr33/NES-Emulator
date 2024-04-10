@@ -605,6 +605,36 @@ void CPU::DEY() {
     }
 }
 
+void CPU::LSR() {
+    set_flag(CARRY, A & 0x1);
+
+    A = A >> 1;
+
+    if (A == 0) {
+        set_flag(ZERO, 1);
+    }
+
+    // don't know why this is necessary
+    if (is_bit_set(7, A)) {
+        set_flag(CARRY, 1);
+    }
+}
+
+void CPU::LSR(uint16_t address) {
+    set_flag(CARRY, RAM[address] & 0x1);
+
+    RAM[address] = RAM[address] >> 1;
+
+    if (RAM[address] == 0) {
+        set_flag(ZERO, 1);
+    }
+
+    // don't know why this is necessary
+    if (is_bit_set(7, RAM[address])) {
+        set_flag(CARRY, 1);
+    }
+}
+
 
 void CPU::set_flag(flag_type flag_to_set, bool new_flag_val) {
     flags[flag_to_set] = new_flag_val;
