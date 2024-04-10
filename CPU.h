@@ -16,9 +16,11 @@ class CPU {
 
     private:
 
-    const int PROGRAM_MEMORY_START = 0x600;
-
-    int stack_pointer = 0;
+    const uint16_t PROGRAM_MEMORY_START = 0x600;
+    const uint16_t STACK_LOCATION = 0x1FF;
+    
+    // The stack pointer stores the low 8 bytes of the next memory location available on the stack
+    uint8_t stack_pointer = STACK_LOCATION & 0xFF;
     uint16_t program_counter = PROGRAM_MEMORY_START;
     uint8_t A = 0; // Accumulator register A
     uint8_t X = 0; // Index register X
@@ -42,6 +44,7 @@ class CPU {
     // Methods to control flags
     void set_flag(flag_type, bool);
     void toggle_flag(flag_type);
+    uint8_t get_byte_from_flags() const;
 
     public:
 
@@ -63,17 +66,19 @@ class CPU {
     // Opcode implementations
     void ADC(uint8_t);
     void AND(uint8_t);
-    void ASL(uint8_t);
-    void BCC();
-    void BCS();
-    void BEQ();
+    // ASL can operate on the accumulator or a value in memory, there are different versions for each use case
+    void ASL(); 
+    void ASL(uint16_t);
+    void BCC(uint8_t);
+    void BCS(uint8_t);
+    void BEQ(uint8_t);
     void BIT(uint8_t);
-    void BMI();
-    void BNE();
-    void BPL();
+    void BMI(uint8_t);
+    void BNE(uint8_t);
+    void BPL(uint8_t);
     void BRK();
-    void BVC();
-    void BVS();
+    void BVC(uint8_t);
+    void BVS(uint8_t);
     void CLC();
     void CLD();
     void CLI();
@@ -102,18 +107,18 @@ class CPU {
     void PLA();
     void PLP();
     void ROL();
-    void ROL(uint8_t);
+    void ROL(uint16_t);
     void ROR();
-    void ROR(uint8_t);
+    void ROR(uint16_t);
     void RTI();
     void RTS();
     void SBC(uint8_t);
     void SEC();
     void SED();
     void SEI();
-    void STA(uint8_t);
-    void STX(uint8_t);
-    void STY(uint8_t);
+    void STA(uint16_t);
+    void STX(uint16_t);
+    void STY(uint16_t);
     void TAX();
     void TAY();
     void TSX();

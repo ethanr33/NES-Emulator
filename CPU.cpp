@@ -4,7 +4,101 @@
 #include "CPU.h"
 #include "Helpers.cpp"
 
+/*
+BCC - Branch if Carry Clear
+If the carry flag is clear then add the relative displacement to the program counter to cause a branch to a new location.
+*/
+void CPU::BCC(uint8_t displacement) {
+    if (!get_flag(CARRY)) {
+        program_counter += displacement;
+    }
+}
 
+
+/*
+ADC - Add with Carry
+This instruction adds the contents of a memory location to the accumulator together with the carry bit.
+If overflow occurs the carry bit is set, this enables multiple byte addition to be performed.
+*/
+void CPU::ADC(uint8_t memory_val) {
+    uint8_t sum = A + memory_val + static_cast<uint8_t>(get_flag(CARRY));
+
+    // Check if overflow from bit 7
+    if (sum > 0xFF) {
+        set_flag(CARRY, 1);
+    }
+
+    if (sum == 0) {
+        set_flag(ZERO, 1);
+    }
+
+    if (is_positive(A) && is_positive(memory_val) && sum < 0) {
+        // Check if we add 2 positives and get a negative
+        set_flag(OVER_FLOW, 1);
+    } else if (!is_positive(A) && !is_positive(memory_val) && sum > 0) {
+        // Check if we add 2 negatives and get a positive (or 0)
+        set_flag(OVER_FLOW, 1);
+    }
+
+    if (is_bit_set(7, sum)) {
+        set_flag(NEGATIVE, 1);
+    }
+}
+
+/*
+PHA - Push Accumulator
+Pushes a copy of the accumulator on to the stack.
+*/
+void CPU::PHA() {
+    RAM[stack_pointer] = A;
+    stack_pointer--;
+}
+
+/*
+PHP - Push Processor Status
+Pushes a copy of the status flags on to the stack.
+*/
+void CPU::PHP() {
+    RAM[stack_pointer] = get_byte_from_flags();
+    stack_pointer--;
+}
+
+/*
+PLA - Pull Accumulator
+Pulls an 8 bit value from the stack and into the accumulator. The zero and negative flags are set as appropriate.
+*/
+void CPU::PLA() {
+    stack_pointer++;
+    A = RAM[stack_pointer];
+
+    if (A == 0) {
+        set_flag(ZERO, 1);
+    }
+
+    if (is_bit_set(7, A)) {
+        set_flag(NEGATIVE, 1);
+    }
+}
+
+/*
+PLP - Pull Processor Status
+Pulls an 8 bit value from the stack and into the processor flags. The flags will take on new states as determined by the value pulled.
+*/
+void CPU::PLP() {
+    stack_pointer++;
+    uint8_t flag_byte = RAM[stack_pointer];
+
+    for (int i = 7; i >= 0; i--) {
+        set_flag(static_cast<flag_type>(i), flag_byte & 1);
+        flag_byte = flag_byte >> 1;
+    }
+}
+
+
+/*
+ORA - Logical Inclusive OR
+An inclusive OR is performed, bit by bit, on the accumulator contents using the contents of a byte of memory.
+*/
 void CPU::ORA(uint8_t memory_val) {
     A = A | memory_val;
 
@@ -70,6 +164,18 @@ void CPU::LDX(uint8_t new_x_val) {
 }
 
 /*
+Transfer X to Stack Pointer
+Copies the current contents of the X register into the stack register.
+*/
+void CPU::TXS() {
+
+stack_pointer = X;
+//No flags are affected.
+
+}
+
+
+/*
 TAX - Transfer Accumulator to X
 Copies the current contents of the accumulator into the X register and sets the zero and negative flags as appropriate.
 */
@@ -81,6 +187,23 @@ void CPU::TAX() {
     }
 
     if (is_bit_set(7, X)) {
+        set_flag(NEGATIVE, 1);
+    }
+}
+
+/*
+TXA Transfer X contents to Accumulator
+Copies the current contents of the X register into the accumulator and sets the zero and negative flags as appropriate.
+*/
+
+void CPU::TXA() {
+    A = X;
+
+    if (A == 0) {
+        set_flag(ZERO, 1);
+    }
+
+    if (is_bit_set(7, A)) {
         set_flag(NEGATIVE, 1);
     }
 }
@@ -100,6 +223,340 @@ void CPU::TAY() {
         set_flag(NEGATIVE, 1);
     }
 }
+
+void CPU::TYA() {
+
+    A=Y;
+
+    if (A == 0) {
+        set_flag(ZERO, 1);
+    }
+
+    if (is_bit_set(7, A)) {
+        set_flag(NEGATIVE, 1);
+    }
+
+}
+
+/*
+    ASL - Arithmetic Shift Left (Accumulator version)
+    This operation shifts all the bits of the accumulator one bit left. 
+*/
+void CPU::ASL() {
+    
+    set_flag(CARRY, is_bit_set(7, A));
+
+    A = A << 1;
+
+    if (A == 0) {
+        set_flag(ZERO, 1);
+    }
+
+    if (is_bit_set(A, 7) == 1) {
+        set_flag(NEGATIVE, 1);
+    }
+}
+
+/*
+    ASL - Arithmetic Shift Left (Memory version)
+    This operation shifts all the bits of the memory contents one bit left. 
+*/
+void CPU::ASL(uint16_t memory_address) {
+    
+    set_flag(CARRY, is_bit_set(7, RAM[memory_address]));
+
+    RAM[memory_address] = RAM[memory_address] << 1;
+
+    if (RAM[memory_address] == 0) {
+        set_flag(ZERO, 1);
+    }
+
+    if (is_bit_set(RAM[memory_address], 7) == 1) {
+        set_flag(NEGATIVE, 1);
+    }
+}
+
+/*
+    BCS - Branch if Carry Set
+    If the carry flag is set then add the relative displacement to the program counter to cause a branch to a new location.
+*/
+void CPU::BCS(uint8_t displacement) {
+    if (get_flag(CARRY) == 1) {
+        program_counter += displacement;
+    }
+}
+
+/*
+    BEQ - Branch if Equal
+    If the zero flag is set then add the relative displacement to the program counter to cause a branch to a new location.
+*/
+void CPU::BEQ(uint8_t displacement) {
+    if (get_flag(ZERO) == 1) {
+        program_counter += displacement;
+    }
+}
+
+/*
+    BIT - Bit Test
+*/
+void CPU::BIT(uint8_t memory_val) {
+    uint8_t result = A & memory_val;
+
+    if (result == 0) {
+        set_flag(ZERO, 1);
+    }
+
+    set_flag(OVER_FLOW, is_bit_set(6, result));
+    set_flag(NEGATIVE, is_bit_set(7, result));
+}
+
+/*
+    BMI - Branch if Minus
+    If the negative flag is set then add the relative displacement to the program counter to cause a branch to a new location.
+*/
+void CPU::BMI(uint8_t displacement) {
+    if (get_flag(NEGATIVE) == 1) {
+        program_counter += displacement;
+    }
+}
+
+/*
+    BNE - Branch if Not Equal
+    If the zero flag is clear then add the relative displacement to the program counter to cause a branch to a new location.
+*/
+void CPU::BNE(uint8_t displacement) {
+    if (get_flag(ZERO) == 0) {
+        program_counter += displacement;
+    }
+}
+
+/*
+    BPL - Branch if Positive
+    If the negative flag is clear then add the relative displacement to the program counter to cause a branch to a new location.
+*/
+void CPU::BPL(uint8_t displacement) {
+    if (get_flag(NEGATIVE) == 0) {
+        program_counter += displacement;
+    }
+}
+
+/*
+    BVC - Branch if Overflow Clear
+    If the overflow flag is clear then add the relative displacement to the program counter to cause a branch to a new location.
+*/
+void CPU::BVC(uint8_t displacement) {
+    if (get_flag(OVER_FLOW) == 0) {
+        program_counter += displacement;
+    }
+}
+
+/*
+    BVS - Branch if Overflow Set
+    If the overflow flag is set then add the relative displacement to the program counter to cause a branch to a new location.
+*/
+void CPU::BVS(uint8_t displacement) {
+    if (get_flag(OVER_FLOW) == 1) {
+        program_counter += displacement;
+    }
+}
+
+/*
+    CMP - Compare
+    This instruction compares the contents of the accumulator with another memory held value and sets the zero and carry flags as appropriate.
+*/
+void CPU::CMP(uint8_t memory_val) {
+    uint8_t compare = A - memory_val;
+
+    if (memory_val == A) {
+        set_flag(ZERO, 1);
+    }
+
+    if (A >= memory_val) {
+        set_flag(CARRY, 1);
+    }
+
+    if (is_bit_set(7, compare) == 1) {
+        set_flag(NEGATIVE, 1);
+    }
+}
+
+/*
+    CPX - Compare X Register
+    This instruction compares the contents of the X register with another memory held value and sets the zero and carry flags as appropriate.
+*/
+void CPU::CPX(uint8_t memory_val) {
+    uint8_t compare = X - memory_val;
+
+    if (memory_val == X) {
+        set_flag(ZERO, 1);
+    }
+
+    if (X >= memory_val) {
+        set_flag(CARRY, 1);
+    }
+
+    if (is_bit_set(7, compare) == 1) {
+        set_flag(NEGATIVE, 1);
+    }
+}
+
+/*
+    CPY - Compare Y Register
+    This instruction compares the contents of the Y register with another memory held value and sets the zero and carry flags as appropriate.
+*/
+void CPU::CPY(uint8_t memory_val) {
+    uint8_t compare = Y - memory_val;
+
+    if (memory_val == Y) {
+        set_flag(ZERO, 1);
+    }
+
+    if (Y >= memory_val) {
+        set_flag(CARRY, 1);
+    }
+
+    if (is_bit_set(7, compare) == 1) {
+        set_flag(NEGATIVE, 1);
+    }
+}
+
+/*
+    STA - Store Accumulator
+    Stores the contents of the accumulator into memory.
+*/
+void CPU::STA(uint16_t location) {
+    RAM[location] = A;
+}
+
+/*
+    STX - Store X Register
+    Stores the contents of the X register into memory.
+*/
+void CPU::STX(uint16_t location) {
+    RAM[location] = X;
+}
+
+void CPU::JMP(uint16_t target) {
+    /*
+        TODO: In the original 6502 processor JMP does not properly fetch the target address if the indirect vector falls on a page boundary
+              We need to account for this in the future
+    */
+    program_counter = target;
+}
+
+/*
+    STY - Store Y Register
+    Stores the contents of the Y register into memory.
+*/
+void CPU::STY(uint16_t location) {
+    RAM[location] = Y;
+}
+
+/*
+    ROL - Rotate Left (Accumulator)
+    Move each of the bits in either A or M one place to the left.
+*/
+void CPU::ROL() {
+
+    bool old_carry = get_flag(CARRY);
+
+    set_flag(CARRY, is_bit_set(7, A));
+
+    A = A << 1;
+
+    if (old_carry) {
+        A = A | 1;
+    }
+
+    if (A == 0) {
+        set_flag(ZERO, 1);
+    }
+
+    if (is_bit_set(7, A)) {
+        set_flag(NEGATIVE, 1);
+    }
+
+}
+
+/*
+    ROL - Rotate Left (Memory)
+    Move each of the bits in either A or M one place to the left.
+*/
+void CPU::ROL(uint16_t address) {
+
+    bool old_carry = get_flag(CARRY);
+
+    set_flag(CARRY, is_bit_set(7, RAM[address]));
+
+    RAM[address] = RAM[address] << 1;
+
+    if (old_carry) {
+        RAM[address] = RAM[address] | 1;
+    }
+
+    if (RAM[address] == 0) {
+        set_flag(ZERO, 1);
+    }
+
+    if (is_bit_set(7, RAM[address])) {
+        set_flag(NEGATIVE, 1);
+    }
+
+}
+
+
+/*
+    ROR - Rotate Right (Accumulator)
+    Move each of the bits in either A or M one place to the right.
+*/
+void CPU::ROR() {
+
+    bool old_carry = get_flag(CARRY);
+
+    set_flag(CARRY, is_bit_set(0, A));
+
+    A = A >> 1;
+
+    if (old_carry) {
+        A = A | 0x80;
+    }
+
+    if (A == 0) {
+        set_flag(ZERO, 1);
+    }
+
+    if (is_bit_set(7, A)) {
+        set_flag(NEGATIVE, 1);
+    }
+
+}
+
+/*
+    ROR - Rotate Right (Memory)
+    Move each of the bits in either A or M one place to the right.
+*/
+void CPU::ROR(uint16_t address) {
+
+    bool old_carry = get_flag(CARRY);
+
+    set_flag(CARRY, is_bit_set(0, RAM[address]));
+
+    RAM[address] = RAM[address] >> 1;
+
+    if (old_carry) {
+        RAM[address] = RAM[address] | 0x80;
+    }
+
+    if (RAM[address] == 0) {
+        set_flag(ZERO, 1);
+    }
+
+    if (is_bit_set(7, RAM[address])) {
+        set_flag(NEGATIVE, 1);
+    }
+
+}
+
 
 
 void CPU::set_flag(flag_type flag_to_set, bool new_flag_val) {
@@ -128,6 +585,21 @@ uint8_t CPU::get_y() const {
 
 bool CPU::get_flag(flag_type flag_to_get) {
     return flags[flag_to_get];
+}
+
+// Turns the flag array into a byte
+// If the i-th flag is set in the flag array, the i-th bit will be 1 in the returned byte
+// If the i-th flag is not set in the flag array, the i-th bit will be 0.
+// The MSB of the returned byte will be position 0 in the flag array
+uint8_t CPU::get_byte_from_flags() const {
+    uint8_t flag_byte = 0;
+
+    for (int i = 0; i < 8; i++) {
+        flag_byte = flag_byte + static_cast<uint8_t>(flags[i]);
+        flag_byte = flag_byte << 1;
+    }
+
+    return flag_byte;
 }
 
 uint16_t CPU::get_program_counter() const {
