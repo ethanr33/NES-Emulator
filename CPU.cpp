@@ -78,6 +78,35 @@ void CPU::CLC()
 }
 
 
+void CPU::SEI()
+{
+    set_flag(INT_DISABLE, 1);
+}
+
+void CPU::SED()
+{
+    set_flag(DECIMAL, 1);
+}
+
+void CPU::SEC()
+{
+    set_flag(CARRY, 1);
+}
+
+void CPU::LDY(uint8_t memory_val)
+{
+    if(Y==0)
+    {
+        set_flag(ZERO, 1);
+    }
+
+    if(is_bit_set(7,Y));
+}
+
+void CPU::CLV()
+{
+    set_flag(OVER_FLOW, 0);
+}
 /*
 ADC - Add with Carry
 This instruction adds the contents of a memory location to the accumulator together with the carry bit.
