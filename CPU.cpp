@@ -593,6 +593,18 @@ void CPU::DEX() {
     }
 }
 
+void CPU::DEY() {
+    Y--;
+
+    if (Y == 0) {
+        set_flag(ZERO, 1);
+    }
+
+    if (is_bit_set(7, Y)) {
+        set_flag(NEGATIVE, 1);
+    }
+}
+
 
 void CPU::set_flag(flag_type flag_to_set, bool new_flag_val) {
     flags[flag_to_set] = new_flag_val;
