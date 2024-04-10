@@ -86,7 +86,7 @@ class CPU {
     void CMP(uint8_t);
     void CPX(uint8_t);
     void CPY(uint8_t);
-    void DEC(uint8_t);
+    void DEC(uint16_t);
     void DEX();
     void DEY();
     void EOR(uint8_t);

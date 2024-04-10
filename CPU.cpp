@@ -569,6 +569,18 @@ void CPU::TSX() {
     }
 }
 
+void CPU::DEC(uint16_t memory_address) {
+    RAM[memory_address]--;
+
+    if (RAM[memory_address] == 0) {
+        set_flag(ZERO, 1);
+    }
+
+    if (is_bit_set(7, RAM[memory_address])) {
+        set_flag(NEGATIVE, 1);
+    }
+}
+
 
 
 
