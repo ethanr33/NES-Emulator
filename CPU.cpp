@@ -908,3 +908,14 @@ void CPU::tick() {
     // TODO: check for special end condition
     execute_opcode(program_counter);
 }
+
+void CPU::stack_push(uint8_t new_val) {
+    RAM[0x100 + stack_pointer] = new_val;
+    stack_pointer--;
+}
+
+uint8_t CPU::stack_pop() {
+    uint16_t temp = RAM[0x100 + stack_pointer + 1];
+    stack_pointer++;
+    return temp;
+}

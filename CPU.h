@@ -60,6 +60,10 @@ class CPU {
     // Given an array, copy array into memory
     void load_rom_into_memory(const std::vector<uint8_t>&);
 
+    // Push and pop from stack
+    void stack_push(uint8_t);
+    uint8_t stack_pop();
+
     // Execute one opcode
     void tick();
 
