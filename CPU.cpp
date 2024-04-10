@@ -30,6 +30,16 @@ void CPU::INY()
 
 }
 
+void CPU::RTS()
+{
+    uint8_t lowbyte = stack_pop();
+    uint8_t highbyte = stack_pop();
+    uint16_t stackaddress;
+    stackaddress = form_address(lowbyte,highbyte);
+    program_counter = stackaddress+1;
+
+}
+
 void CPU::INX()
 {
     X = X+1;
