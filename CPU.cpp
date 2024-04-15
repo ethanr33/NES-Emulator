@@ -908,6 +908,11 @@ void CPU::execute_opcode(uint16_t opcode_address) {
             //NOP
             NOP();
             break;
+        case 0x48:
+            //PHA
+            PHA();
+            break;
+        
         
 
         default:
