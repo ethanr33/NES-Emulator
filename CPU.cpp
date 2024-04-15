@@ -896,6 +896,11 @@ void CPU::execute_opcode(uint16_t opcode_address) {
             // LDA, absolute y
             LDA(get_memory(ABSOLUTE_Y, lsb, msb));
             break;
+        case 0xC8:
+            //INY
+            INY();
+            break;
+            
         default:
             throw std::runtime_error("Unknown opcode " + std::to_string(opcode));
             break;
