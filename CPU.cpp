@@ -904,6 +904,11 @@ void CPU::execute_opcode(uint16_t opcode_address) {
             //INX
             INX();
             break;
+        case 0xEA:
+            //NOP
+            NOP();
+            break;
+        
 
         default:
             throw std::runtime_error("Unknown opcode " + std::to_string(opcode));
