@@ -912,6 +912,36 @@ void CPU::execute_opcode(uint16_t opcode_address) {
             //PHA
             PHA();
             break;
+        case 0x08:
+            //PHP
+            PHP();
+            break;
+        case 0x68:
+            //PLA
+            PLA();
+            break;
+        case 0x28:
+            //PLP
+            PLP();
+            break;
+        case 0xA2:
+            LDX(get_memory(IMMEDIATE, lsb));
+            break;
+        case 0xAE:
+            LDX(get_memory(ABSOLUTE, lsb, msb));
+            break;
+        case 0xA6:
+            LDX(get_memory(ZERO_PAGE, lsb));
+            break;
+        case 0xB6:
+            LDX(get_memory(ZERO_PAGE_Y,lsb));
+            break;
+        case 0xBE:
+            LDX(get_memory(ABSOLUTE_Y, lsb, msb));
+            break;
+        
+
+
         
         
 
