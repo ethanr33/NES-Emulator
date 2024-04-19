@@ -763,6 +763,18 @@ void CPU::BRK() {
     set_flag(BREAK, 1);
 }
 
+void CPU::RTI() {
+    uint8_t new_flags = stack_pop();
+    uint8_t pc_lsb = stack_pop();
+    uint8_t pc_msb = stack_pop();
+
+    program_counter = form_address(pc_lsb, pc_msb);
+
+    for (int i = 0; i < 8; i++) {
+        flags[i] = is_bit_set(i, new_flags);
+    }
+}
+
 void CPU::set_flag(flag_type flag_to_set, bool new_flag_val) {
     flags[flag_to_set] = new_flag_val;
 }
