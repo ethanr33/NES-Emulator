@@ -750,6 +750,11 @@ void CPU::INC(uint16_t address) {
     }
 }
 
+void CPU::JSR(uint16_t address) {
+    stack_push(program_counter);
+    program_counter = address;
+}
+
 void CPU::set_flag(flag_type flag_to_set, bool new_flag_val) {
     flags[flag_to_set] = new_flag_val;
 }
