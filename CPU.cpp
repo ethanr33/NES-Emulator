@@ -755,6 +755,14 @@ void CPU::JSR(uint16_t address) {
     program_counter = address;
 }
 
+void CPU::BRK() {
+    // for this we push in the order of program_counter (little endian) then processor status (flags)
+    stack_push(program_counter);
+    stack_push(get_byte_from_flags());
+    program_counter = form_address(RAM[0xFFFE], RAM[0xFFFF]);
+    set_flag(BREAK, 1);
+}
+
 void CPU::set_flag(flag_type flag_to_set, bool new_flag_val) {
     flags[flag_to_set] = new_flag_val;
 }
@@ -973,6 +981,14 @@ void CPU::stack_push(uint8_t new_val) {
     RAM[0x100 + stack_pointer] = new_val;
     stack_pointer--;
 }
+
+void CPU::stack_push(uint16_t new_val) {
+    uint8_t lsb = new_val & 0xFF;
+    uint8_t msb = new_val >> 8;
+
+    stack_push(msb);
+    stack_push(lsb);
+} 
 
 uint8_t CPU::stack_pop() {
     uint16_t temp = RAM[0x100 + stack_pointer + 1];

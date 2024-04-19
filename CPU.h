@@ -20,6 +20,7 @@ class CPU {
     const uint16_t STACK_LOCATION = 0x1FF;
     
     // The stack pointer stores the low 8 bytes of the next memory location available on the stack
+    // 
     uint8_t stack_pointer = STACK_LOCATION & 0xFF;
     uint16_t program_counter = PROGRAM_MEMORY_START;
     uint8_t A = 0; // Accumulator register A
@@ -62,6 +63,7 @@ class CPU {
 
     // Push and pop from stack
     void stack_push(uint8_t);
+    void stack_push(uint16_t);
     uint8_t stack_pop();
 
     // Execute one opcode
