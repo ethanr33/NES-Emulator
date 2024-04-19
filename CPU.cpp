@@ -944,6 +944,35 @@ void CPU::execute_opcode(uint16_t opcode_address) {
         case 0xBE:
             LDX(get_memory(ABSOLUTE_Y, lsb, msb));
             break;
+        case 0xC9:
+            CMP(get_memory(IMMEDIATE, lsb));
+            break;
+        case 0xC5:
+            CMP(get_memory(ZERO_PAGE,lsb));
+            break;
+        case 0xD5:
+            CMP(get_memory(ZERO_PAGE_X,lsb));
+            break;
+        case 0xCD:
+            CMP(get_memory(ABSOLUTE, lsb));
+        case 0xDD:
+            CMP(get_memory(ABSOLUTE_X, lsb, msb));
+            break;
+        case 0xD9:
+            CMP(get_memory(ABSOLUTE_Y, lsb));
+            break;
+        case 0xC1:
+            CMP(get_memory(INDIRECT_INDEXED, lsb));
+            break;
+        case 0xD1:
+            CMP(get_memory(INDEXED_INDIRECT, lsb));
+            break;
+
+        
+        
+
+
+
         
 
 
