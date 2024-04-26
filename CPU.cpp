@@ -1141,6 +1141,15 @@ void CPU::execute_opcode(uint16_t opcode_address) {
         case 0x8E:
             STX(make_address(ABSOLUTE, lsb, msb));
             break;
+        case 0x84:
+            STY(make_address(ZERO_PAGE, lsb));
+            break;
+        case 0x94:
+            STY(make_address(ZERO_PAGE_X, lsb));
+            break;
+        case 0x8C:
+            STY(make_address(ABSOLUTE, lsb, msb));
+            break;
 
         
         
