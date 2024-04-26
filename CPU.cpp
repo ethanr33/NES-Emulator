@@ -988,6 +988,103 @@ void CPU::execute_opcode(uint16_t opcode_address) {
         case 0xBE:
             LDX(get_memory(ABSOLUTE_Y, lsb, msb));
             break;
+        case 0xC9:
+            CMP(get_memory(IMMEDIATE, lsb));
+            break;
+        case 0xC5:
+            CMP(get_memory(ZERO_PAGE,lsb));
+            break;
+        case 0xD5:
+            CMP(get_memory(ZERO_PAGE_X,lsb));
+            break;
+        case 0xCD:
+            CMP(get_memory(ABSOLUTE, lsb));
+        case 0xDD:
+            CMP(get_memory(ABSOLUTE_X, lsb, msb));
+            break;
+        case 0xD9:
+            CMP(get_memory(ABSOLUTE_Y, lsb));
+            break;
+        case 0xC1:
+            CMP(get_memory(INDIRECT_INDEXED, lsb));
+            break;
+        case 0xD1:
+            CMP(get_memory(INDEXED_INDIRECT, lsb));
+            break;
+        case 0x49:
+            CMP(get_memory(IMMEDIATE, lsb));
+            break;
+        case 0x45:
+            CMP(get_memory(ZERO_PAGE, lsb));
+            break;
+        case 0x55:
+            CMP(get_memory(ZERO_PAGE_X, lsb));
+            break;
+        case 0x4D:
+            CMP(get_memory(ABSOLUTE, lsb));
+            break;
+        case 0x5D:
+            CMP(get_memory(ABSOLUTE_X, lsb));
+            break;
+        case 0x59:
+            CMP(get_memory(ABSOLUTE_Y, msb));
+            break;
+        case 0x41:
+            CMP(get_memory(INDEXED_INDIRECT, lsb));
+            break;
+        case 0x51:
+            CMP(get_memory(INDIRECT_INDEXED, lsb));
+            break;
+        case 0x29:
+            AND(get_memory(IMMEDIATE, lsb));
+            break;
+        case 0x25:
+            AND(get_memory(ZERO_PAGE, lsb));
+            break;
+        case 0x35:
+            AND(get_memory(ZERO_PAGE_X, lsb));
+            break;
+        case 0x2D:
+            AND(get_memory(ABSOLUTE, lsb, msb));
+            break;
+        case 0x3D:
+            AND(get_memory(ABSOLUTE_X, lsb, msb));
+            break;
+        case 0x39:
+            AND(get_memory(ABSOLUTE_Y, lsb, msb));
+            break;
+        case 0x21:
+            AND(get_memory(INDEXED_INDIRECT, lsb));
+            break;
+        case 0x31:
+            AND(get_memory(INDIRECT_INDEXED, lsb));
+            break;
+        case 0xA0:
+            LDY(get_memory(IMMEDIATE, lsb));
+            break;
+        case 0xA4:
+            LDY(get_memory(ZERO_PAGE, lsb));
+            break;
+        case 0xB4:
+            LDY(get_memory(ZERO_PAGE_X, lsb));
+            break;
+        case 0xAC:
+            LDY(get_memory(ABSOLUTE, lsb, msb));
+            break;
+        case 0xBC:
+            LDY(get_memory(ABSOLUTE_X, lsb, msb));
+            break;
+
+        
+        
+
+        
+
+        
+        
+
+
+
         
 
 
