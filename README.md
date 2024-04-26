@@ -33,3 +33,4 @@ DEX
 DEY
 DEC
 EOR
+ORA

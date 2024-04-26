@@ -1214,6 +1214,30 @@ void CPU::execute_opcode(uint16_t opcode_address) {
         case 0x51:
             EOR(get_memory(INDIRECT_INDEXED, lsb));
             break;
+        case 0x09:
+            ORA(get_memory(IMMEDIATE, lsb));
+            break;
+        case 0x05:
+            ORA(get_memory(ZERO_PAGE, lsb));
+            break;
+        case 0x15:
+            ORA(get_memory(ZERO_PAGE_X, lsb));
+            break;
+        case 0x0D:
+            ORA(get_memory(ABSOLUTE, lsb, msb));
+            break;
+        case 0x1D:
+            ORA(get_memory(ABSOLUTE_X, lsb, msb));
+            break;
+        case 0x19:
+            ORA(get_memory(ABSOLUTE_Y, lsb, msb));
+            break;
+        case 0x01:
+            ORA(get_memory(INDEXED_INDIRECT, lsb));
+            break;
+        case 0x11:
+            ORA(get_memory(INDIRECT_INDEXED, lsb));
+            break;
         
 
         
