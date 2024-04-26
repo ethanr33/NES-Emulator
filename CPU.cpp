@@ -920,6 +920,8 @@ uint8_t CPU::make_address(addressing_mode mode, uint8_t parameter_lsb) {
         return form_address(least_significant_byte, most_significant_byte);
     } else if (mode == INDIRECT_INDEXED) {
         return form_address(RAM[parameter_lsb], RAM[parameter_lsb + 1]) + Y;
+    } else {
+        throw std::runtime_error("Memory addressing mode not implemented: " + std::to_string(mode));
     }
 
 }
@@ -933,6 +935,8 @@ uint16_t CPU::make_address(addressing_mode mode, uint8_t parameter_lsb, uint8_t 
         return form_address(parameter_lsb, parameter_msb) + X;
     } else if (mode == ABSOLUTE_Y) {
         return form_address(parameter_lsb, parameter_msb) + Y;
+    } else {
+        throw std::runtime_error("Memory addressing mode not implemented: " + std::to_string(mode));
     }
 }
 
@@ -1127,6 +1131,15 @@ void CPU::execute_opcode(uint16_t opcode_address) {
             break;
         case 0x91:
             STA(make_address(INDIRECT_INDEXED, lsb));
+            break;
+        case 0x86:
+            STX(make_address(ZERO_PAGE, lsb));
+            break;
+        case 0x96:
+            STX(make_address(ZERO_PAGE_Y, lsb));
+            break;
+        case 0x8E:
+            STX(make_address(ABSOLUTE, lsb, msb));
             break;
 
         
