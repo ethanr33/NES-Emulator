@@ -1150,6 +1150,24 @@ void CPU::execute_opcode(uint16_t opcode_address) {
         case 0x8C:
             STY(make_address(ABSOLUTE, lsb, msb));
             break;
+        case 0xAA:
+            TAX();
+            break;
+        case 0xA8:
+            TAY();
+            break;
+        case 0xBA:
+            TSX();
+            break;
+        case 0x8A:
+            TXA();
+            break;
+        case 0x9A:
+            TXS();
+            break;
+        case 0x98:
+            TYA();
+            break;
 
         
         
