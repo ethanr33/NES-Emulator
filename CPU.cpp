@@ -1195,6 +1195,24 @@ void CPU::execute_opcode(uint16_t opcode_address) {
         case 0x60:
             RTS();
             break;
+        case 0xCA:
+            DEX();
+            break;
+        case 0x88:
+            DEY();
+            break;
+        case 0xC6:
+            DEC(make_address(ZERO_PAGE, lsb));
+            break;
+        case 0xD6:
+            DEC(make_address(ZERO_PAGE_X, lsb));
+            break;
+        case 0xCE:
+            DEC(make_address(ABSOLUTE, lsb, msb));
+            break;
+        case 0xDE:
+            DEC(make_address(ABSOLUTE_X, lsb, msb));
+            break;
         
 
         
