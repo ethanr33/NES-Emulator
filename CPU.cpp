@@ -1168,6 +1168,16 @@ void CPU::execute_opcode(uint16_t opcode_address) {
         case 0x98:
             TYA();
             break;
+        case 0xD8:
+            CLD();
+            break;
+        case 0x58:
+            CLI();
+            break;
+        case 0xB8:
+            CLV();
+            break;
+        
 
         
         
