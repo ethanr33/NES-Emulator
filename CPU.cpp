@@ -775,6 +775,30 @@ void CPU::RTI() {
     }
 }
 
+void CPU::SBC(uint8_t mem_val) {
+    int result = A - mem_val - (1 - static_cast<int>(get_flag(CARRY)));
+
+    if (result == 0) {
+        set_flag(ZERO, 1);
+    }
+
+    if (result < 0) {
+        set_flag(NEGATIVE, 1);
+    }
+
+    if (result > 127 || result < -128) {
+        set_flag(OVER_FLOW, 1);
+    }
+
+    if (is_bit_set(7, A) == 0 && is_bit_set(7, result) == 1) {
+        set_flag(CARRY, 0);
+    }
+
+    A = result;
+
+
+}
+
 void CPU::set_flag(flag_type flag_to_set, bool new_flag_val) {
     flags[flag_to_set] = new_flag_val;
 }
