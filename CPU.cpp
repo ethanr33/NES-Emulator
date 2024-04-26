@@ -1238,11 +1238,78 @@ void CPU::execute_opcode(uint16_t opcode_address) {
         case 0x11:
             ORA(get_memory(INDIRECT_INDEXED, lsb));
             break;
-        
-
-        
-        
-
+        case 0x24:
+            BIT(get_memory(ZERO_PAGE, lsb));
+            break;
+        case 0x2C:
+            BIT(get_memory(ABSOLUTE, lsb, msb));
+            break;
+        case 0x69:
+            ADC(get_memory(IMMEDIATE, lsb));
+            break;
+        case 0x65:
+            ADC(get_memory(ZERO_PAGE, lsb));
+            break;
+        case 0x75:
+            ADC(get_memory(ZERO_PAGE_X, lsb));
+            break;
+        case 0x6D:
+            ADC(get_memory(ABSOLUTE, lsb, msb));
+            break;
+        case 0x7D:
+            ADC(get_memory(ABSOLUTE_X, lsb, msb));
+            break;
+        case 0x79:
+            ADC(get_memory(ABSOLUTE_Y, lsb, msb));
+            break;
+        case 0x61:
+            ADC(get_memory(INDEXED_INDIRECT, lsb));
+            break;
+        case 0x71:
+            ADC(get_memory(INDIRECT_INDEXED, lsb));
+            break;
+        case 0xE9:
+            SBC(get_memory(IMMEDIATE, lsb));
+            break;
+        case 0xE5:
+            SBC(get_memory(ZERO_PAGE, lsb));
+            break;
+        case 0xF5:
+            SBC(get_memory(ZERO_PAGE_X, lsb));
+            break;
+        case 0xED:
+            SBC(get_memory(ABSOLUTE, lsb, msb));
+            break;
+        case 0xFD:
+            SBC(get_memory(ABSOLUTE_X, lsb, msb));
+            break;
+        case 0xF9:
+            SBC(get_memory(ABSOLUTE_Y, lsb, msb));
+            break;
+        case 0xE1:
+            SBC(get_memory(INDEXED_INDIRECT, lsb));
+            break;
+        case 0xF1:
+            SBC(get_memory(INDIRECT_INDEXED, lsb));
+            break;
+        case 0xE0:
+            CPX(get_memory(IMMEDIATE, lsb));
+            break;
+        case 0xE4:
+            CPX(get_memory(ZERO_PAGE, lsb));
+            break;
+        case 0xEC:
+            CPX(get_memory(ABSOLUTE, lsb));
+            break;
+        case 0xC0:
+            CPY(get_memory(IMMEDIATE, lsb));
+            break;
+        case 0xC4:
+            CPY(get_memory(ZERO_PAGE, lsb));
+            break;
+        case 0xCC:
+            CPY(get_memory(ABSOLUTE, lsb));
+            break;
         
 
         
