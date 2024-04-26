@@ -1186,6 +1186,15 @@ void CPU::execute_opcode(uint16_t opcode_address) {
         case 0x78:
             SEI();
             break;
+        case 0x00:
+            BRK();
+            break;
+        case 0x40:
+            RTI();
+            break;
+        case 0x60:
+            RTS();
+            break;
         
 
         
