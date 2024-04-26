@@ -903,6 +903,39 @@ uint8_t CPU::get_memory(addressing_mode mode, uint8_t parameter_lsb, uint8_t par
     }
 }
 
+uint8_t CPU::make_address(addressing_mode mode, uint8_t parameter_lsb) {
+
+    increment_program_counter(2);
+
+    if (mode == ZERO_PAGE) {
+        return parameter_lsb;
+    } else if (mode == ZERO_PAGE_X) {
+        return parameter_lsb + X;
+    } else if (mode == ZERO_PAGE_Y) {
+        return parameter_lsb + Y;
+    } else if (mode == INDEXED_INDIRECT) {
+        uint8_t least_significant_byte = RAM[parameter_lsb + X];
+        uint8_t most_significant_byte = RAM[parameter_lsb + X + 1];
+
+        return form_address(least_significant_byte, most_significant_byte);
+    } else if (mode == INDIRECT_INDEXED) {
+        return form_address(RAM[parameter_lsb], RAM[parameter_lsb + 1]) + Y;
+    }
+
+}
+
+uint16_t CPU::make_address(addressing_mode mode, uint8_t parameter_lsb, uint8_t parameter_msb) {
+    increment_program_counter(3);
+
+    if (mode == ABSOLUTE) {
+        return form_address(parameter_lsb, parameter_msb);
+    } else if (mode == ABSOLUTE_X) {
+        return form_address(parameter_lsb, parameter_msb) + X;
+    } else if (mode == ABSOLUTE_Y) {
+        return form_address(parameter_lsb, parameter_msb) + Y;
+    }
+}
+
 void CPU::execute_opcode(uint16_t opcode_address) {
     uint8_t opcode = RAM[opcode_address];
     uint8_t lsb = RAM[opcode_address + 1];
@@ -1073,6 +1106,27 @@ void CPU::execute_opcode(uint16_t opcode_address) {
             break;
         case 0xBC:
             LDY(get_memory(ABSOLUTE_X, lsb, msb));
+            break;
+        case 0x85:
+            STA(make_address(ZERO_PAGE, lsb));
+            break;
+        case 0x95:
+            STA(make_address(ZERO_PAGE_X, lsb));
+            break;
+        case 0x8D:
+            STA(make_address(ABSOLUTE, lsb, msb));
+            break;
+        case 0x9D:
+            STA(make_address(ABSOLUTE_X, lsb, msb));
+            break;
+        case 0x99:
+            STA(make_address(ABSOLUTE_Y, lsb, msb));
+            break;
+        case 0x81:
+            STA(make_address(INDEXED_INDIRECT, lsb));
+            break;
+        case 0x91:
+            STA(make_address(INDIRECT_INDEXED, lsb));
             break;
 
         

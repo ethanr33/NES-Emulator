@@ -55,6 +55,9 @@ class CPU {
     uint8_t get_memory(addressing_mode, uint8_t);
     uint8_t get_memory(addressing_mode, uint8_t, uint8_t);
 
+    uint8_t make_address(addressing_mode, uint8_t);
+    uint16_t make_address(addressing_mode, uint8_t, uint8_t);
+
     // Given an address, execute the opcode at that address
     void execute_opcode(uint16_t);
 

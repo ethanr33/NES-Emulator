@@ -1,12 +1,12 @@
 
-# How to run program:
+Fully implemented opcodes:
 
-```
-./main
-```
-
-# How to run the test suites:
-
-```
-./cputest // for CPU
-```
+LDY
+AND
+CMP
+LDX
+PHA
+NOP
+INX
+INY
+LDA
