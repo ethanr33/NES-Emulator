@@ -1370,6 +1370,15 @@ void CPU::execute_opcode(uint16_t opcode_address) {
         case 0x7E:
             ROR(make_address(ABSOLUTE_X, lsb, msb));
             break;
+        case 0x4C:
+            JMP(make_address(ABSOLUTE, lsb, msb));
+            break;
+        case 0x6C:
+            JMP(make_address(INDIRECT, lsb, msb));
+            break;
+        case 0x20:
+            JSR(make_address(ABSOLUTE, lsb, msb));
+            break;
 
         
         
