@@ -32,3 +32,4 @@ RTS
 DEX
 DEY
 DEC
+EOR

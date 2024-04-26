@@ -1036,40 +1036,17 @@ void CPU::execute_opcode(uint16_t opcode_address) {
             break;
         case 0xCD:
             CMP(get_memory(ABSOLUTE, lsb));
+            break;
         case 0xDD:
             CMP(get_memory(ABSOLUTE_X, lsb, msb));
             break;
         case 0xD9:
-            CMP(get_memory(ABSOLUTE_Y, lsb));
+            CMP(get_memory(ABSOLUTE_Y, lsb, msb));
             break;
         case 0xC1:
-            CMP(get_memory(INDIRECT_INDEXED, lsb));
+            CMP(get_memory(INDEXED_INDIRECT, lsb));
             break;
         case 0xD1:
-            CMP(get_memory(INDEXED_INDIRECT, lsb));
-            break;
-        case 0x49:
-            CMP(get_memory(IMMEDIATE, lsb));
-            break;
-        case 0x45:
-            CMP(get_memory(ZERO_PAGE, lsb));
-            break;
-        case 0x55:
-            CMP(get_memory(ZERO_PAGE_X, lsb));
-            break;
-        case 0x4D:
-            CMP(get_memory(ABSOLUTE, lsb));
-            break;
-        case 0x5D:
-            CMP(get_memory(ABSOLUTE_X, lsb));
-            break;
-        case 0x59:
-            CMP(get_memory(ABSOLUTE_Y, msb));
-            break;
-        case 0x41:
-            CMP(get_memory(INDEXED_INDIRECT, lsb));
-            break;
-        case 0x51:
             CMP(get_memory(INDIRECT_INDEXED, lsb));
             break;
         case 0x29:
@@ -1212,6 +1189,30 @@ void CPU::execute_opcode(uint16_t opcode_address) {
             break;
         case 0xDE:
             DEC(make_address(ABSOLUTE_X, lsb, msb));
+            break;
+        case 0x49:
+            EOR(get_memory(IMMEDIATE, lsb));
+            break;
+        case 0x45:
+            EOR(get_memory(ZERO_PAGE, lsb));
+            break;
+        case 0x55:
+            EOR(get_memory(ZERO_PAGE_X, lsb));
+            break;
+        case 0x4D:
+            EOR(get_memory(ABSOLUTE, lsb, msb));
+            break;
+        case 0x5D:
+            EOR(get_memory(ABSOLUTE_X, lsb, msb));
+            break;
+        case 0x59:
+            EOR(get_memory(ABSOLUTE_Y, lsb, msb));
+            break;
+        case 0x41:
+            EOR(get_memory(INDEXED_INDIRECT, lsb));
+            break;
+        case 0x51:
+            EOR(get_memory(INDIRECT_INDEXED, lsb));
             break;
         
 
