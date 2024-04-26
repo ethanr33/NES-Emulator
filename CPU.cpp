@@ -1310,15 +1310,66 @@ void CPU::execute_opcode(uint16_t opcode_address) {
         case 0xCC:
             CPY(get_memory(ABSOLUTE, lsb));
             break;
-        
-
-        
-        
-
-
-
-        
-
+        case 0x0A:
+            ASL();
+            break;
+        case 0x06:
+            ASL(make_address(ZERO_PAGE, lsb));
+            break;
+        case 0x16:
+            ASL(make_address(ZERO_PAGE_X, lsb));
+            break;
+        case 0x0E:
+            ASL(make_address(ABSOLUTE, lsb, msb));
+            break;
+        case 0x1E:
+            ASL(make_address(ABSOLUTE_X, lsb, msb));
+            break;
+        case 0x4A:
+            LSR();
+            break;
+        case 0x46:
+            LSR(make_address(ZERO_PAGE, lsb));
+            break;
+        case 0x56:
+            LSR(make_address(ZERO_PAGE_X, lsb));
+            break;
+        case 0x4E:
+            LSR(make_address(ABSOLUTE, lsb, msb));
+            break;
+        case 0x5E:
+            LSR(make_address(ABSOLUTE_X, lsb, msb));
+            break;
+        case 0x2A:
+            ROL();
+            break;
+        case 0x26:
+            ROL(make_address(ZERO_PAGE, lsb));
+            break;
+        case 0x36:
+            ROL(make_address(ZERO_PAGE_X, lsb));
+            break;
+        case 0x2E:
+            ROL(make_address(ABSOLUTE, lsb, msb));
+            break;
+        case 0x3E:
+            ROL(make_address(ABSOLUTE_X, lsb, msb));
+            break;
+        case 0x6A:
+            ROR();
+            break;
+        case 0x66:
+            ROR(make_address(ZERO_PAGE, lsb));
+            break;
+        case 0x76:
+            ROR(make_address(ZERO_PAGE_X, lsb));
+            break;
+        case 0x6E:
+            ROR(make_address(ABSOLUTE, lsb, msb));
+            break;
+        case 0x7E:
+            ROR(make_address(ABSOLUTE_X, lsb, msb));
+            break;
 
         
         
