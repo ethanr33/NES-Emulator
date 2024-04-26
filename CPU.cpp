@@ -1177,6 +1177,15 @@ void CPU::execute_opcode(uint16_t opcode_address) {
         case 0xB8:
             CLV();
             break;
+        case 0x38:
+            SEC();
+            break;
+        case 0xF8:
+            SED();
+            break;
+        case 0x78:
+            SEI();
+            break;
         
 
         
