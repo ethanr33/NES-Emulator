@@ -2,7 +2,7 @@
 #include <stdexcept>
 
 #include "CPU.h"
-#include "Helpers.cpp"
+#include "Helpers.h"
 
 /*
 BCC - Branch if Carry Clear

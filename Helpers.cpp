@@ -1,6 +1,6 @@
 
-#pragma once
 #include <cstdint>
+#include "Helpers.h"
 
 bool is_bit_set(int bit_index, uint8_t value) {
     return (value >> bit_index) & 1;
