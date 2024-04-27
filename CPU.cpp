@@ -1379,7 +1379,30 @@ void CPU::execute_opcode(uint16_t opcode_address) {
         case 0x20:
             JSR(make_address(ABSOLUTE, lsb, msb));
             break;
-
+        case 0x90:
+            BCC(get_memory(RELATIVE, lsb));
+            break;
+        case 0xB0:
+            BCS(get_memory(RELATIVE, lsb));
+            break;
+        case 0xF0:
+            BEQ(get_memory(RELATIVE, lsb));
+            break;
+        case 0x30:
+            BMI(get_memory(RELATIVE, lsb));
+            break;
+        case 0xD0:
+            BNE(get_memory(RELATIVE, lsb));
+            break;
+        case 0x10:
+            BPL(get_memory(RELATIVE, lsb));
+            break;
+        case 0x50:
+            BVC(get_memory(RELATIVE, lsb));
+            break;
+        case 0x70:
+            BVS(get_memory(RELATIVE, lsb));
+            break;
         
         
 
