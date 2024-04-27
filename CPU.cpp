@@ -903,7 +903,7 @@ uint8_t CPU::get_memory(addressing_mode mode, uint8_t parameter_lsb, uint8_t par
     }
 }
 
-uint8_t CPU::make_address(addressing_mode mode, uint8_t parameter_lsb) {
+uint16_t CPU::make_address(addressing_mode mode, uint8_t parameter_lsb) {
 
     increment_program_counter(2);
 
@@ -1403,9 +1403,18 @@ void CPU::execute_opcode(uint16_t opcode_address) {
         case 0x70:
             BVS(get_memory(RELATIVE, lsb));
             break;
-        
-        
-
+        case 0xE6:
+            INC(make_address(ZERO_PAGE, lsb));
+            break;
+        case 0xF6:
+            INC(make_address(ZERO_PAGE_X, lsb));
+            break;
+        case 0xEE:
+            INC(make_address(ABSOLUTE, lsb, msb));
+            break;
+        case 0xFE:
+            INC(make_address(ABSOLUTE_X, lsb, msb));
+            break;
         default:
             throw std::runtime_error("Unknown opcode " + std::to_string(opcode));
             break;
