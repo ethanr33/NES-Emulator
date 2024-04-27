@@ -20,8 +20,37 @@ bool NES::load_program(const string& rom_file_name) {
         return false;
     }
 
-    // For now, let's not worry about the standard INES file format. Until we get the CPU and display up and running
-    // let's assume that the program data can be read starting at the beginning of the file
+    // First, we need to get the ROM file format type. This is encoded in the file's extension.
+
+    /*
+        Supported formats:
+        .nes: iNES or NES2.0 format
+    */
+
+    // We don't need to use size_t because string::npos is -1
+    int extension_pos_start = rom_file_name.find('.');
+
+    std::vector<uint8_t> file_header(16);
+
+    if (extension_pos_start == std::string::npos) {
+        std::cerr << "The file name is formatted incorrectly. Be sure to add an extension" << std::endl;
+        return false;
+    } else {
+        std::string extension = rom_file_name.substr(extension_pos_start + 1);
+
+        if (extension == "nes") {
+            // Either iNES or NES2.0 format, header is 16 bytes
+
+            char cur_byte;
+            for (int i = 0; i < 16; i++) {
+                rom_file.get(cur_byte);
+                file_header.at(i) = cur_byte;
+            }
+        } else {
+            std::cerr << "Unsupported ROM format" << std::endl;
+            return false;
+        }
+    }
 
     // We need to read in one byte at a time. However the ifstream.get method is not overloaded to work with uint8_t
     // types. Chars are also one byte big so these will work fine
