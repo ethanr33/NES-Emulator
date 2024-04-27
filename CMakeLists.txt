@@ -4,13 +4,13 @@ project(NES_Emulator)
 find_package(Catch2 3 REQUIRED)
 
 # Add main executable
-add_executable(main main.cpp CPU.cpp)
+add_executable(main main.cpp CPU.cpp NES.cpp Helpers.cpp)
 
 # Add debug executable
-add_executable(debug debug.cpp NES.cpp CPU.cpp)
+add_executable(debug debug.cpp NES.cpp CPU.cpp Helpers.cpp)
 
 # Add test executable
-add_executable(cputest tests/cputest.cpp CPU.cpp)
+add_executable(cputest tests/cputest.cpp CPU.cpp Helpers.cpp)
 
 # Link Catch2 to test executable
 target_link_libraries(cputest Catch2::Catch2WithMain)
