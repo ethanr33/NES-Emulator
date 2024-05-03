@@ -90,7 +90,6 @@ int main() {
             cout << "Breakpoint set at " << std::hex << breakpoint_address;
         } else if (command == 'p') {
             print_cpu_state(nes, cout, true);
-
             cout << endl;
         } else if (command == 'r') {
             while (breakpoints.find(nes.get_cpu()->get_program_counter()) == breakpoints.end()) {
