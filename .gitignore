@@ -11,6 +11,7 @@ _deps
 main
 cputest
 debug
+debug.log
 *.cmake
 Makefile
 /.vscode
