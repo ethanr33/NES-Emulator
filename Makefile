@@ -185,11 +185,42 @@ CPU.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/cputest.dir/build.make CMakeFiles/cputest.dir/CPU.cpp.s
 .PHONY : CPU.cpp.s
 
+Helpers.o: Helpers.cpp.o
+.PHONY : Helpers.o
+
+# target to build an object file
+Helpers.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/Helpers.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/debug.dir/build.make CMakeFiles/debug.dir/Helpers.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/cputest.dir/build.make CMakeFiles/cputest.dir/Helpers.cpp.o
+.PHONY : Helpers.cpp.o
+
+Helpers.i: Helpers.cpp.i
+.PHONY : Helpers.i
+
+# target to preprocess a source file
+Helpers.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/Helpers.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/debug.dir/build.make CMakeFiles/debug.dir/Helpers.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/cputest.dir/build.make CMakeFiles/cputest.dir/Helpers.cpp.i
+.PHONY : Helpers.cpp.i
+
+Helpers.s: Helpers.cpp.s
+.PHONY : Helpers.s
+
+# target to generate assembly for a file
+Helpers.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/Helpers.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/debug.dir/build.make CMakeFiles/debug.dir/Helpers.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/cputest.dir/build.make CMakeFiles/cputest.dir/Helpers.cpp.s
+.PHONY : Helpers.cpp.s
+
 NES.o: NES.cpp.o
 .PHONY : NES.o
 
 # target to build an object file
 NES.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/NES.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/debug.dir/build.make CMakeFiles/debug.dir/NES.cpp.o
 .PHONY : NES.cpp.o
 
@@ -198,6 +229,7 @@ NES.i: NES.cpp.i
 
 # target to preprocess a source file
 NES.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/NES.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/debug.dir/build.make CMakeFiles/debug.dir/NES.cpp.i
 .PHONY : NES.cpp.i
 
@@ -206,6 +238,7 @@ NES.s: NES.cpp.s
 
 # target to generate assembly for a file
 NES.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/NES.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/debug.dir/build.make CMakeFiles/debug.dir/NES.cpp.s
 .PHONY : NES.cpp.s
 
@@ -295,6 +328,9 @@ help:
 	@echo "... CPU.o"
 	@echo "... CPU.i"
 	@echo "... CPU.s"
+	@echo "... Helpers.o"
+	@echo "... Helpers.i"
+	@echo "... Helpers.s"
 	@echo "... NES.o"
 	@echo "... NES.i"
 	@echo "... NES.s"

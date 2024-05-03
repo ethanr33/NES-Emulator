@@ -55,7 +55,9 @@ int main() {
             cout << " Y: " << static_cast<unsigned>(nes.get_cpu()->get_y());
             cout << " PC: " << nes.get_cpu()->get_program_counter();
             cout << " Flags: ";
-
+            //2 things to implement.
+            //print out stack pointer
+            //print out the op code that is currently being executed.
             for (int i = 0; i < 8; i++) {
                 cout << nes.get_cpu()->get_flag(static_cast<flag_type>(i));
             }
