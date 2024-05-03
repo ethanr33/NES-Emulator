@@ -985,30 +985,37 @@ void CPU::execute_opcode(uint16_t opcode_address) {
         case 0xC8:
             //INY
             INY();
+            increment_program_counter(1);
             break;
         case 0xE8:
             //INX
             INX();
+            increment_program_counter(1);
             break;
         case 0xEA:
             //NOP
             NOP();
+            increment_program_counter(1);
             break;
         case 0x48:
             //PHA
             PHA();
+            increment_program_counter(1);
             break;
         case 0x08:
             //PHP
             PHP();
+            increment_program_counter(1);
             break;
         case 0x68:
             //PLA
             PLA();
+            increment_program_counter(1);
             break;
         case 0x28:
             //PLP
             PLP();
+            increment_program_counter(1);
             break;
         case 0xA2:
             LDX(get_memory(IMMEDIATE, lsb));
@@ -1129,54 +1136,71 @@ void CPU::execute_opcode(uint16_t opcode_address) {
             break;
         case 0xAA:
             TAX();
+            increment_program_counter(1);
             break;
         case 0xA8:
             TAY();
+            increment_program_counter(1);
             break;
         case 0xBA:
             TSX();
+            increment_program_counter(1);
             break;
         case 0x8A:
             TXA();
+            increment_program_counter(1);
             break;
         case 0x9A:
             TXS();
+            increment_program_counter(1);
             break;
         case 0x98:
             TYA();
+            increment_program_counter(1);
             break;
         case 0xD8:
             CLD();
+            increment_program_counter(1);
             break;
         case 0x58:
             CLI();
+            increment_program_counter(1);
             break;
         case 0xB8:
             CLV();
+            increment_program_counter(1);
             break;
         case 0x38:
             SEC();
+            increment_program_counter(1);
             break;
         case 0xF8:
             SED();
+            increment_program_counter(1);
             break;
         case 0x78:
             SEI();
+            increment_program_counter(1);
             break;
         case 0x00:
             BRK();
+            increment_program_counter(1);
             break;
         case 0x40:
             RTI();
+            increment_program_counter(1);
             break;
         case 0x60:
             RTS();
+            increment_program_counter(1);
             break;
         case 0xCA:
             DEX();
+            increment_program_counter(1);
             break;
         case 0x88:
             DEY();
+            increment_program_counter(1);
             break;
         case 0xC6:
             DEC(make_address(ZERO_PAGE, lsb));
@@ -1312,6 +1336,7 @@ void CPU::execute_opcode(uint16_t opcode_address) {
             break;
         case 0x0A:
             ASL();
+            increment_program_counter(1);
             break;
         case 0x06:
             ASL(make_address(ZERO_PAGE, lsb));
@@ -1327,6 +1352,7 @@ void CPU::execute_opcode(uint16_t opcode_address) {
             break;
         case 0x4A:
             LSR();
+            increment_program_counter(1);
             break;
         case 0x46:
             LSR(make_address(ZERO_PAGE, lsb));
@@ -1342,6 +1368,7 @@ void CPU::execute_opcode(uint16_t opcode_address) {
             break;
         case 0x2A:
             ROL();
+            increment_program_counter(1);
             break;
         case 0x26:
             ROL(make_address(ZERO_PAGE, lsb));
@@ -1357,6 +1384,7 @@ void CPU::execute_opcode(uint16_t opcode_address) {
             break;
         case 0x6A:
             ROR();
+            increment_program_counter(1);
             break;
         case 0x66:
             ROR(make_address(ZERO_PAGE, lsb));
