@@ -1,6 +1,7 @@
 
 #include <iostream>
 #include <string>
+#include <set>
 #include "NES.h"
 
 using std::cout;
@@ -33,6 +34,8 @@ int main() {
 
     cout << endl;
 
+    std::set<uint16_t> breakpoints;
+
     while (true) {
         cout << "Please enter a command (type h for list of commands): " << endl;
 
@@ -42,11 +45,22 @@ int main() {
         cout << endl;
 
         if (command == 'h') {
+            cout << "b - Make breakpoint" << endl;
             cout << "h - Print help menu" << endl;
             cout << "p - Print CPU status" << endl;
+            cout << "r - Run" << endl;
             cout << "s - Step" << endl;
             cout << "q - Quit debugger" << endl;
             cout << endl;
+        } else if (command == 'b') {
+            cout << "What address do you want to set a breakpoint at?" << endl;
+
+            uint16_t breakpoint_address;
+            cin >> std::hex >> breakpoint_address;
+
+            breakpoints.insert(breakpoint_address);
+
+            cout << "Breakpoint set at " << std::hex << breakpoint_address;
         } else if (command == 'p') {
             cout << "CPU State:" << endl;
             cout << "-------------------------------------------------" << endl;
@@ -61,8 +75,18 @@ int main() {
             }
 
             cout << endl;
+        } else if (command == 'r') {
+            while (breakpoints.find(nes.get_cpu()->get_program_counter()) == breakpoints.end()) {
+                try {
+                    nes.get_cpu()->execute_next_opcode();
+                } catch(std::runtime_error& e) {
+                    cout << e.what() << endl;
+                    break;
+                }
+                
+            }
         } else if (command == 's') {
-            nes.get_cpu()->tick();
+            nes.get_cpu()->execute_next_opcode();
         } else if (command == 'q') {
             return 0;
         } else {
