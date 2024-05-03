@@ -40,6 +40,9 @@ class CPU {
     // Store in units of kilobytes
     uint8_t RAM[0xFFFF];
 
+    int num_clock_cycles = 0;
+    int clock_cycles_remaining = 0;
+
     void increment_program_counter(int);
 
     // Methods to control flags
@@ -70,7 +73,10 @@ class CPU {
     uint8_t stack_pop();
 
     // Execute one opcode
-    void tick();
+    void execute_next_opcode();
+
+    // Tick for a specified number of cycles
+    void tick(int);
 
     // Opcode implementations
     void ADC(uint8_t);

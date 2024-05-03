@@ -1443,6 +1443,10 @@ void CPU::execute_opcode(uint16_t opcode_address) {
         case 0xFE:
             INC(make_address(ABSOLUTE_X, lsb, msb));
             break;
+        case 0x18:
+            CLC();
+            increment_program_counter(1);
+            break;
         default:
             throw std::runtime_error("Unknown opcode " + std::to_string(opcode));
             break;
@@ -1457,8 +1461,28 @@ void CPU::load_rom_into_memory(const std::vector<uint8_t>& rom_data) {
 
 // Execute one cycle of CPU.
 // This will typically run one opcode
-void CPU::tick() {
-    // TODO: check for special end condition
+void CPU::tick(int cycle_increment) {
+    // We may have some cycles left before we can execute the next opcode, but the PC will still be pointed to the next one
+
+    if (cycle_increment >= clock_cycles_remaining) {
+        clock_cycles_remaining = cycle_increment - clock_cycles_remaining;
+        execute_opcode(program_counter);
+    } else {
+        clock_cycles_remaining -= cycle_increment;
+    }
+
+    num_clock_cycles += cycle_increment;
+
+    // TODO: check for special end condition for program termination
+}
+
+void CPU::execute_next_opcode() {
+    // There may be some time remaining before we start the next opcode, we need to account for that
+    // We are just skipping forward
+
+    num_clock_cycles += clock_cycles_remaining;
+    clock_cycles_remaining = 0;
+
     execute_opcode(program_counter);
 }
 
