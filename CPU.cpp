@@ -864,7 +864,7 @@ uint8_t CPU::get_memory(addressing_mode mode, uint8_t parameter_val) {
 
     increment_program_counter(2);
 
-    if (mode == IMMEDIATE) {
+    if (mode == IMMEDIATE || mode == RELATIVE) {
         return parameter_val;
     } else if (mode == ZERO_PAGE) {
         return RAM[parameter_val];
