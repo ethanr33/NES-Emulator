@@ -19,6 +19,7 @@ void print_cpu_state(NES nes, std::ostream& out, bool has_formatting) {
         out << "-------------------------------------------------" << endl;
     }
     out << " PC: " << std::hex << nes.get_cpu()->get_program_counter() << " ";
+    out << "Opcode: " << std::hex << static_cast<unsigned>(nes.get_cpu()->get_current_opcode())<< " ";
     out << "A: " << std::hex << static_cast<unsigned>(nes.get_cpu()->get_a());
     out << " X: " << std::hex << static_cast<unsigned>(nes.get_cpu()->get_x());
     out << " Y: " << std::hex << static_cast<unsigned>(nes.get_cpu()->get_y());

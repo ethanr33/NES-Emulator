@@ -146,6 +146,7 @@ class CPU {
     uint8_t get_x() const;
     uint8_t get_y() const;
     uint16_t get_program_counter() const;
+    uint8_t get_current_opcode() const;
     bool get_flag(flag_type);
 
     // Setters

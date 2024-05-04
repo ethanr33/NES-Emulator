@@ -850,6 +850,11 @@ void CPU::increment_program_counter(int increment_amount) {
     program_counter += increment_amount;
 }
 
+
+uint8_t CPU::get_current_opcode() const
+{
+    return RAM[program_counter];
+}
 /*
 
 addressing_mode mode: The way we want to address memory
