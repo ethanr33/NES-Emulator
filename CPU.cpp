@@ -36,7 +36,7 @@ void CPU::RTS()
     uint8_t highbyte = stack_pop();
     uint16_t stackaddress;
     stackaddress = form_address(lowbyte,highbyte);
-    program_counter = stackaddress+1;
+    program_counter = stackaddress;
 
 }
 
@@ -1197,7 +1197,6 @@ void CPU::execute_opcode(uint16_t opcode_address) {
             break;
         case 0x60:
             RTS();
-            increment_program_counter(1);
             break;
         case 0xCA:
             DEX();
