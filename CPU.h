@@ -9,7 +9,7 @@
     https://www.nesdev.org/obelisk-6502-guide/architecture.html
 */
 
-enum flag_type {CARRY, ZERO, INT_DISABLE, DECIMAL, BREAK, OVER_FLOW, NEGATIVE};
+enum flag_type {CARRY, ZERO, INT_DISABLE, DECIMAL, BREAK, RESERVED, OVER_FLOW, NEGATIVE};
 enum addressing_mode {IMPLICIT, ACCUMULATOR, IMMEDIATE, ZERO_PAGE, ZERO_PAGE_X, ZERO_PAGE_Y, RELATIVE, ABSOLUTE, ABSOLUTE_X, ABSOLUTE_Y, INDIRECT, INDEXED_INDIRECT, INDIRECT_INDEXED};
 
 class CPU {
@@ -32,9 +32,10 @@ class CPU {
     // Index 2: Interrupt disable
     // Index 3: Decimal Mode
     // Index 4: Break command
-    // Index 5: Overflow flag
-    // Index 6: Negative flag
-    bool flags[7] = {0, 0, 0, 0, 0, 0, 0};
+    // Index 5: Reserved
+    // Index 6: Overflow flag
+    // Index 7: Negative flag
+    bool flags[8] = {0, 0, 0, 0, 0, 1, 0, 0};
 
     // Fixed size memory based on NES architecture specs
     // Store in units of kilobytes

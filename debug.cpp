@@ -3,6 +3,7 @@
 #include <string>
 #include <set>
 #include <iostream>
+#include <iomanip>
 #include <fstream>
 #include "NES.h"
 
@@ -18,16 +19,16 @@ void print_cpu_state(NES nes, std::ostream& out, bool has_formatting) {
         out << "CPU State:" << endl;
         out << "-------------------------------------------------" << endl;
     }
-    out << " PC: " << std::hex << nes.get_cpu()->get_program_counter() << " ";
-    out << "Opcode: " << std::hex << static_cast<unsigned>(nes.get_cpu()->get_current_opcode())<< " ";
-    out << "A: " << std::hex << static_cast<unsigned>(nes.get_cpu()->get_a());
-    out << " X: " << std::hex << static_cast<unsigned>(nes.get_cpu()->get_x());
-    out << " Y: " << std::hex << static_cast<unsigned>(nes.get_cpu()->get_y());
-    out << " Flags: ";
+    out << std::hex << nes.get_cpu()->get_program_counter() << " ";
+    out << std::hex << static_cast<unsigned>(nes.get_cpu()->get_current_opcode())<< " ";
+    out << "A:" << std::hex << std::setw(2) << std::setfill('0') << static_cast<unsigned>(nes.get_cpu()->get_a());
+    out << " X:" << std::hex << std::setw(2) << std::setfill('0') << static_cast<unsigned>(nes.get_cpu()->get_x());
+    out << " Y:" << std::hex << std::setw(2) << std::setfill('0') << static_cast<unsigned>(nes.get_cpu()->get_y());
+    /*out << " Flags: ";
 
-    for (int i = 0; i < 8; i++) {
+    for (int i = 7; i >= 0; i--) {
         out << nes.get_cpu()->get_flag(static_cast<flag_type>(i));
-    }
+    }*/
 
     out << endl;
 }

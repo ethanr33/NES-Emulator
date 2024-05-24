@@ -21,11 +21,15 @@ void CPU::INY()
     if( Y==0 )
     {
         set_flag(ZERO,1);
+    } else {
+        set_flag(ZERO, 0);
     }
 
     if(is_bit_set(7,Y))
     {
         set_flag(NEGATIVE, 1);
+    } else {
+        set_flag(NEGATIVE, 0);
     }
 
 }
@@ -47,11 +51,15 @@ void CPU::INX()
     if( X==0 )
     {
         set_flag(ZERO,1);
+    } else {
+        set_flag(ZERO, 0);
     }
 
     if(is_bit_set(7,X))
     {
         set_flag(NEGATIVE, 1);
+    } else {
+        set_flag(NEGATIVE, 0);
     }
 
 }
@@ -63,11 +71,15 @@ void CPU::EOR(uint8_t memory_val)
     if( A==0 )
     {
         set_flag(ZERO,1);
+    } else {
+        set_flag(ZERO, 0);
     }
 
     if(is_bit_set(7,A))
     {
         set_flag(NEGATIVE, 1);
+    } else {
+        set_flag(NEGATIVE, 0);
     }
     
 }
@@ -108,6 +120,8 @@ void CPU::LDY(uint8_t memory_val)
     if(Y==0)
     {
         set_flag(ZERO, 1);
+    } else {
+        set_flag(ZERO, 0);
     }
 
     if(is_bit_set(7,Y));
@@ -132,6 +146,8 @@ void CPU::ADC(uint8_t memory_val) {
 
     if (sum == 0) {
         set_flag(ZERO, 1);
+    } else {
+        set_flag(ZERO, 0);
     }
 
     if (is_positive(A) && is_positive(memory_val) && sum < 0) {
@@ -140,11 +156,17 @@ void CPU::ADC(uint8_t memory_val) {
     } else if (!is_positive(A) && !is_positive(memory_val) && sum > 0) {
         // Check if we add 2 negatives and get a positive (or 0)
         set_flag(OVER_FLOW, 1);
+    } else {
+        set_flag(OVER_FLOW, 0);
     }
 
     if (is_bit_set(7, sum)) {
         set_flag(NEGATIVE, 1);
+    } else {
+        set_flag(NEGATIVE, 0);
     }
+
+    A = sum;
 }
 
 /*
@@ -160,6 +182,7 @@ PHP - Push Processor Status
 Pushes a copy of the status flags on to the stack.
 */
 void CPU::PHP() {
+    set_flag(BREAK, 1);
     stack_push(get_byte_from_flags());
 }
 
@@ -172,10 +195,14 @@ void CPU::PLA() {
 
     if (A == 0) {
         set_flag(ZERO, 1);
+    } else {
+        set_flag(ZERO, 0);
     }
 
     if (is_bit_set(7, A)) {
         set_flag(NEGATIVE, 1);
+    } else {
+        set_flag(NEGATIVE, 0);
     }
 }
 
@@ -202,10 +229,14 @@ void CPU::ORA(uint8_t memory_val) {
 
     if (A == 0) {
         set_flag(ZERO, 1);
+    } else {
+        set_flag(ZERO, 0);
     }
 
     if (is_bit_set(7, A)) {
         set_flag(NEGATIVE, 1);
+    } else {
+        set_flag(NEGATIVE, 0);
     }
 }
 
@@ -219,10 +250,14 @@ void CPU::AND(uint8_t memory_val) {
 
     if (A == 0) {
         set_flag(ZERO, 1);
+    } else {
+        set_flag(ZERO, 0);
     }
 
     if (is_bit_set(7, A)) {
         set_flag(NEGATIVE, 1);
+    } else {
+        set_flag(NEGATIVE, 0);
     }
 }
 
@@ -237,10 +272,14 @@ void CPU::LDA(uint8_t new_a_val) {
 
     if (A == 0) {
         set_flag(ZERO, 1);
+    } else {
+        set_flag(ZERO, 0);
     }
 
     if (is_bit_set(7, A)) {
         set_flag(NEGATIVE, 1);
+    } else {
+        set_flag(NEGATIVE, 0);
     }
 }
 
@@ -254,10 +293,14 @@ void CPU::LDX(uint8_t new_x_val) {
 
     if (X == 0) {
         set_flag(ZERO, 1);
+    } else {
+        set_flag(ZERO, 0);
     }
 
     if (is_bit_set(7, X)) {
         set_flag(NEGATIVE, 1);
+    } else {
+        set_flag(NEGATIVE, 0);
     }
 }
 
@@ -282,10 +325,14 @@ void CPU::TAX() {
 
     if (X == 0) {
         set_flag(ZERO, 1);
+    } else {
+        set_flag(ZERO, 0);
     }
 
     if (is_bit_set(7, X)) {
         set_flag(NEGATIVE, 1);
+    } else {
+        set_flag(NEGATIVE, 0);
     }
 }
 
@@ -299,10 +346,14 @@ void CPU::TXA() {
 
     if (A == 0) {
         set_flag(ZERO, 1);
+    } else {
+        set_flag(ZERO, 0);
     }
 
     if (is_bit_set(7, A)) {
         set_flag(NEGATIVE, 1);
+    } else {
+        set_flag(NEGATIVE, 0);
     }
 }
 
@@ -315,10 +366,14 @@ void CPU::TAY() {
 
     if (Y == 0) {
         set_flag(ZERO, 1);
+    } else {
+        set_flag(ZERO, 0);
     }
 
     if (is_bit_set(7, Y)) {
         set_flag(NEGATIVE, 1);
+    } else {
+        set_flag(NEGATIVE, 0);
     }
 }
 
@@ -328,10 +383,14 @@ void CPU::TYA() {
 
     if (A == 0) {
         set_flag(ZERO, 1);
+    } else {
+        set_flag(ZERO, 0);
     }
 
     if (is_bit_set(7, A)) {
         set_flag(NEGATIVE, 1);
+    } else {
+        set_flag(NEGATIVE, 0);
     }
 
 }
@@ -348,10 +407,14 @@ void CPU::ASL() {
 
     if (A == 0) {
         set_flag(ZERO, 1);
+    } else {
+        set_flag(ZERO, 0);
     }
 
     if (is_bit_set(A, 7) == 1) {
         set_flag(NEGATIVE, 1);
+    } else {
+        set_flag(NEGATIVE, 0);
     }
 }
 
@@ -367,10 +430,14 @@ void CPU::ASL(uint16_t memory_address) {
 
     if (RAM[memory_address] == 0) {
         set_flag(ZERO, 1);
+    } else {
+        set_flag(ZERO, 0);
     }
 
     if (is_bit_set(RAM[memory_address], 7) == 1) {
         set_flag(NEGATIVE, 1);
+    } else {
+        set_flag(NEGATIVE, 0);
     }
 }
 
@@ -402,10 +469,12 @@ void CPU::BIT(uint8_t memory_val) {
 
     if (result == 0) {
         set_flag(ZERO, 1);
+    } else {
+        set_flag(ZERO, 0);
     }
 
-    set_flag(OVER_FLOW, is_bit_set(6, result));
-    set_flag(NEGATIVE, is_bit_set(7, result));
+    set_flag(OVER_FLOW, is_bit_set(6, memory_val));
+    set_flag(NEGATIVE, is_bit_set(7, memory_val));
 }
 
 /*
@@ -568,10 +637,14 @@ void CPU::ROL() {
 
     if (A == 0) {
         set_flag(ZERO, 1);
+    } else {
+        set_flag(ZERO, 0);
     }
 
     if (is_bit_set(7, A)) {
         set_flag(NEGATIVE, 1);
+    } else {
+        set_flag(NEGATIVE, 0);
     }
 
 }
@@ -594,10 +667,14 @@ void CPU::ROL(uint16_t address) {
 
     if (RAM[address] == 0) {
         set_flag(ZERO, 1);
+    } else {
+        set_flag(ZERO, 0);
     }
 
     if (is_bit_set(7, RAM[address])) {
         set_flag(NEGATIVE, 1);
+    } else {
+        set_flag(NEGATIVE, 0);
     }
 
 }
@@ -621,10 +698,14 @@ void CPU::ROR() {
 
     if (A == 0) {
         set_flag(ZERO, 1);
+    } else {
+        set_flag(ZERO, 0);
     }
 
     if (is_bit_set(7, A)) {
         set_flag(NEGATIVE, 1);
+    } else {
+        set_flag(NEGATIVE, 0);
     }
 
 }
@@ -647,10 +728,14 @@ void CPU::ROR(uint16_t address) {
 
     if (RAM[address] == 0) {
         set_flag(ZERO, 1);
+    } else {
+        set_flag(ZERO, 0);
     }
 
     if (is_bit_set(7, RAM[address])) {
         set_flag(NEGATIVE, 1);
+    } else {
+        set_flag(NEGATIVE, 0);
     }
 
 }
@@ -660,10 +745,14 @@ void CPU::TSX() {
 
     if (X == 0) {
         set_flag(ZERO, 1);
+    } else {
+        set_flag(ZERO, 0);
     }
 
     if (is_bit_set(7, X)) {
         set_flag(NEGATIVE, 1);
+    } else {
+        set_flag(NEGATIVE, 0);
     }
 }
 
@@ -672,10 +761,14 @@ void CPU::DEC(uint16_t memory_address) {
 
     if (RAM[memory_address] == 0) {
         set_flag(ZERO, 1);
+    } else {
+        set_flag(ZERO, 0);
     }
 
     if (is_bit_set(7, RAM[memory_address])) {
         set_flag(NEGATIVE, 1);
+    } else {
+        set_flag(NEGATIVE, 0);
     }
 }
 
@@ -684,10 +777,14 @@ void CPU::DEX() {
 
     if (X == 0) {
         set_flag(ZERO, 1);
+    } else {
+        set_flag(ZERO, 0);
     }
 
     if (is_bit_set(7, X)) {
         set_flag(NEGATIVE, 1);
+    } else {
+        set_flag(NEGATIVE, 0);
     }
 }
 
@@ -696,10 +793,14 @@ void CPU::DEY() {
 
     if (Y == 0) {
         set_flag(ZERO, 1);
+    } else {
+        set_flag(ZERO, 0);
     }
 
     if (is_bit_set(7, Y)) {
         set_flag(NEGATIVE, 1);
+    } else {
+        set_flag(NEGATIVE, 0);
     }
 }
 
@@ -710,6 +811,8 @@ void CPU::LSR() {
 
     if (A == 0) {
         set_flag(ZERO, 1);
+    } else {
+        set_flag(ZERO, 0);
     }
 
     // don't know why this is necessary
@@ -725,6 +828,8 @@ void CPU::LSR(uint16_t address) {
 
     if (RAM[address] == 0) {
         set_flag(ZERO, 1);
+    } else {
+        set_flag(ZERO, 0);
     }
 
     // don't know why this is necessary
@@ -743,6 +848,8 @@ void CPU::INC(uint16_t address) {
 
     if (RAM[address] == 0) {
         set_flag(ZERO, 1);
+    } else {
+        set_flag(ZERO, 0);
     }
 
     if (is_bit_set(7, RAM[address])) {
@@ -780,10 +887,14 @@ void CPU::SBC(uint8_t mem_val) {
 
     if (result == 0) {
         set_flag(ZERO, 1);
+    } else {
+        set_flag(ZERO, 0);
     }
 
     if (result < 0) {
         set_flag(NEGATIVE, 1);
+    } else {
+        set_flag(NEGATIVE, 0);
     }
 
     if (result > 127 || result < -128) {
@@ -830,13 +941,16 @@ bool CPU::get_flag(flag_type flag_to_get) {
 // Turns the flag array into a byte
 // If the i-th flag is set in the flag array, the i-th bit will be 1 in the returned byte
 // If the i-th flag is not set in the flag array, the i-th bit will be 0.
-// The MSB of the returned byte will be position 0 in the flag array
+// The MSB of the returned byte will be position 7 in the flag array
 uint8_t CPU::get_byte_from_flags() const {
     uint8_t flag_byte = 0;
 
-    for (int i = 0; i < 8; i++) {
-        flag_byte = flag_byte + static_cast<uint8_t>(flags[i]);
-        flag_byte = flag_byte << 1;
+    for (int i = 7; i >= 0; i--) {
+        flag_byte = flag_byte | flags[i];
+
+        if (i > 0) {
+            flag_byte = flag_byte << 1;
+        }
     }
 
     return flag_byte;
