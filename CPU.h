@@ -21,7 +21,7 @@ class CPU {
     
     // The stack pointer stores the low 8 bytes of the next memory location available on the stack
     // 
-    uint8_t stack_pointer = STACK_LOCATION & 0xFF;
+    uint8_t stack_pointer = STACK_LOCATION & 0xFD;
     uint16_t program_counter = PROGRAM_MEMORY_START;
     uint8_t A = 0; // Accumulator register A
     uint8_t X = 0; // Index register X
@@ -149,6 +149,7 @@ class CPU {
     uint16_t get_program_counter() const;
     uint8_t get_current_opcode() const;
     bool get_flag(flag_type);
+    uint8_t get_stack_pointer() const;
 
     // Setters
     void set_a(uint8_t);

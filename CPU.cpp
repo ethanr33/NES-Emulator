@@ -143,6 +143,10 @@ void CPU::ADC(uint8_t memory_val) {
     if (sum > 0xFF) {
         set_flag(CARRY, 1);
     }
+    else {
+        set_flag(CARRY, 0);
+    }
+    
 
     if (sum == 0) {
         set_flag(ZERO, 1);
@@ -904,6 +908,9 @@ void CPU::SBC(uint8_t mem_val) {
     if (is_bit_set(7, A) == 0 && is_bit_set(7, result) == 1) {
         set_flag(CARRY, 0);
     }
+    else{
+        set_flag(CARRY, 1);
+    }
 
     A = result;
 
@@ -1617,6 +1624,10 @@ void CPU::stack_push(uint16_t new_val) {
     stack_push(lsb);
 } 
 
+uint8_t CPU::get_stack_pointer() const
+{
+    return stack_pointer;
+}
 uint8_t CPU::stack_pop() {
     uint16_t temp = RAM[0x100 + stack_pointer + 1];
     stack_pointer++;
