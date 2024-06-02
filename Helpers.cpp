@@ -16,5 +16,5 @@ bool is_positive(uint8_t value) {
         return true;
     }
 
-    return value & 0x80;
+    return !(value & 0x80);
 }

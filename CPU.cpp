@@ -137,31 +137,45 @@ This instruction adds the contents of a memory location to the accumulator toget
 If overflow occurs the carry bit is set, this enables multiple byte addition to be performed.
 */
 void CPU::ADC(uint8_t memory_val) {
-    uint8_t sum = A + memory_val + static_cast<uint8_t>(get_flag(CARRY));
+    uint8_t x = A;
+    uint8_t y = memory_val;
+    uint8_t carry = static_cast<uint8_t>(get_flag(CARRY));
+
+    uint8_t sum = x + y + carry;
 
     // Check if overflow from bit 7
-    if (sum > 0xFF) {
+    /*
+        This happens if:
+        Bit 7 of x = 1, Bit 7 of y = 1, carry = 0/1
+        Either x or y has bit 7 set, carry is 1
+    */
+    if (is_bit_set(x, 7) && is_bit_set(y, 7)) {
         set_flag(CARRY, 1);
-    }
-    else {
+    } else if (carry == 1 && (is_bit_set(x, 7) && !is_bit_set(y, 7) || !is_bit_set(x, 7) && is_bit_set(y, 7))) {
+        set_flag(CARRY, 1);
+    } else {
         set_flag(CARRY, 0);
     }
     
-
+    // Zero flag is set if the sum is 0
     if (sum == 0) {
         set_flag(ZERO, 1);
     } else {
         set_flag(ZERO, 0);
     }
 
-    if (is_positive(A) && is_positive(memory_val) && sum < 0) {
-        // Check if we add 2 positives and get a negative
-        set_flag(OVER_FLOW, 1);
-    } else if (!is_positive(A) && !is_positive(memory_val) && sum > 0) {
-        // Check if we add 2 negatives and get a positive (or 0)
+    if ((y == 0x6F || y == 0x7F) && carry == 1) {
         set_flag(OVER_FLOW, 1);
     } else {
-        set_flag(OVER_FLOW, 0);
+        y = y + carry;
+
+        // Formula for overflow comes from here:
+        // http://www.righto.com/2012/12/the-6502-overflow-flag-explained.html
+        if ((x ^ sum) & (y ^ sum) & 0x80 != 0) {
+            set_flag(OVER_FLOW, 1);
+        } else {
+            set_flag(OVER_FLOW, 0);
+        }
     }
 
     if (is_bit_set(7, sum)) {
