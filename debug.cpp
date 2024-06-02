@@ -5,6 +5,7 @@
 #include <iostream>
 #include <fstream>
 #include "NES.h"
+#include "Helpers.h"
 
 using std::cout;
 using std::cin;
@@ -74,6 +75,7 @@ int main() {
 
         if (command == 'h') {
             cout << "b - Make breakpoint" << endl;
+            cout << "c - Compare to expected output" << endl;
             cout << "h - Print help menu" << endl;
             cout << "p - Print CPU status" << endl;
             cout << "r - Run" << endl;
@@ -106,6 +108,27 @@ int main() {
         } else if (command == 's') {
             print_cpu_state(nes, log_file, false);
             nes.get_cpu()->execute_next_opcode();
+        } else if (command == 'c') {
+            std::ifstream expected_output("nestest.log");
+
+            bool matching = true;
+
+            while (matching) {
+                string line;
+                string expected_pc;
+
+                expected_output >> expected_pc;
+                expected_output.ignore();
+                std::getline(expected_output, line);
+
+                string actual_pc = get_hex_string(nes.get_cpu()->get_program_counter());
+
+                matching = (expected_pc == actual_pc);
+
+                print_cpu_state(nes, log_file, false);
+
+                nes.get_cpu()->execute_next_opcode();
+            }
         } else if (command == 'q') {
             return 0;
         } else {

@@ -1,5 +1,6 @@
 
 #include <cstdint>
+#include <sstream>
 #include "Helpers.h"
 
 bool is_bit_set(int bit_index, uint8_t value) {
@@ -17,4 +18,18 @@ bool is_positive(uint8_t value) {
     }
 
     return !(value & 0x80);
+}
+
+std::string get_hex_string(uint16_t value) {
+    std::stringstream stream;
+    stream << std::hex << value;
+    
+
+    std::string str = stream.str();
+
+    for (char& c : str) {
+        c = std::toupper(c);
+    }
+
+    return str;
 }

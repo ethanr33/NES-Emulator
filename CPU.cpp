@@ -149,9 +149,9 @@ void CPU::ADC(uint8_t memory_val) {
         Bit 7 of x = 1, Bit 7 of y = 1, carry = 0/1
         Either x or y has bit 7 set, carry is 1
     */
-    if (is_bit_set(x, 7) && is_bit_set(y, 7)) {
+    if (is_bit_set(7, x) && is_bit_set(7, y)) {
         set_flag(CARRY, 1);
-    } else if (carry == 1 && (is_bit_set(x, 7) && !is_bit_set(y, 7) || !is_bit_set(x, 7) && is_bit_set(y, 7))) {
+    } else if (carry == 1 && (is_bit_set(7, x) || is_bit_set(7, y))) {
         set_flag(CARRY, 1);
     } else {
         set_flag(CARRY, 0);
@@ -169,9 +169,12 @@ void CPU::ADC(uint8_t memory_val) {
     } else {
         y = y + carry;
 
-        // Formula for overflow comes from here:
-        // http://www.righto.com/2012/12/the-6502-overflow-flag-explained.html
-        if ((x ^ sum) & (y ^ sum) & 0x80 != 0) {
+        bool same_signs = (x > 0 && y > 0) || (x < 0 && y < 0);
+        bool opposite_result = (x > 0 && sum < 0) || (x < 0 && sum >= 0);
+
+        // Overflow occurs when we are adding two numbers with the same sign, and their sum doesn't
+        // match the signs of the input
+        if (same_signs && opposite_result) {
             set_flag(OVER_FLOW, 1);
         } else {
             set_flag(OVER_FLOW, 0);
