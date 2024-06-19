@@ -115,16 +115,20 @@ void CPU::SEC()
     set_flag(CARRY, 1);
 }
 
-void CPU::LDY(uint8_t memory_val)
-{
-    if(Y==0)
-    {
+void CPU::LDY(uint8_t memory_val) {
+    Y = memory_val;
+
+    if (Y == 0) {
         set_flag(ZERO, 1);
     } else {
         set_flag(ZERO, 0);
     }
 
-    if(is_bit_set(7,Y));
+    if (is_bit_set(7,Y)) {
+        set_flag(NEGATIVE, 1);
+    } else {
+        set_flag(NEGATIVE, 0);
+    }
 }
 
 void CPU::CLV()
@@ -151,7 +155,7 @@ void CPU::ADC(uint8_t memory_val) {
     */
     if (is_bit_set(7, x) && is_bit_set(7, y)) {
         set_flag(CARRY, 1);
-    } else if (carry == 1 && (is_bit_set(7, x) || is_bit_set(7, y))) {
+    } else if (carry == 1 && ((is_bit_set(7, x) && y == 0x7F) || (is_bit_set(7, y) && x == 0x7F))) {
         set_flag(CARRY, 1);
     } else {
         set_flag(CARRY, 0);
@@ -557,14 +561,20 @@ void CPU::CMP(uint8_t memory_val) {
 
     if (memory_val == A) {
         set_flag(ZERO, 1);
+    } else {
+        set_flag(ZERO, 0);
     }
 
     if (A >= memory_val) {
         set_flag(CARRY, 1);
+    } else {
+        set_flag(CARRY, 0);
     }
 
     if (is_bit_set(7, compare) == 1) {
         set_flag(NEGATIVE, 1);
+    } else {
+        set_flag(NEGATIVE, 0);
     }
 }
 
@@ -577,14 +587,20 @@ void CPU::CPX(uint8_t memory_val) {
 
     if (memory_val == X) {
         set_flag(ZERO, 1);
+    } else {
+        set_flag(ZERO, 0);
     }
 
     if (X >= memory_val) {
         set_flag(CARRY, 1);
+    } else {
+        set_flag(CARRY, 0);
     }
 
     if (is_bit_set(7, compare) == 1) {
         set_flag(NEGATIVE, 1);
+    } else {
+        set_flag(NEGATIVE, 0);
     }
 }
 
@@ -597,14 +613,20 @@ void CPU::CPY(uint8_t memory_val) {
 
     if (memory_val == Y) {
         set_flag(ZERO, 1);
+    } else {
+        set_flag(ZERO, 0);
     }
 
     if (Y >= memory_val) {
         set_flag(CARRY, 1);
+    } else {
+        set_flag(CARRY, 0);
     }
 
     if (is_bit_set(7, compare) == 1) {
         set_flag(NEGATIVE, 1);
+    } else {
+        set_flag(NEGATIVE, 0);
     }
 }
 
@@ -904,34 +926,51 @@ void CPU::RTI() {
 }
 
 void CPU::SBC(uint8_t mem_val) {
-    int result = A - mem_val - (1 - static_cast<int>(get_flag(CARRY)));
+    uint8_t x = A;
+    uint8_t y = ~mem_val;
+    uint8_t carry = static_cast<uint8_t>(get_flag(CARRY));
 
-    if (result == 0) {
+    uint8_t diff = x + y + carry;
+
+    // Check if overflow from bit 7
+    /*
+        This happens if:
+        Bit 7 of x = 1, Bit 7 of y = 1, carry = 0/1
+        Either x or y has bit 7 set, carry is 1
+    */
+
+    // By default, when subtracting the carry flag should be set to 1
+    // And only set to 0 if the result is less than 0
+    // If it is less than 0, this means that we "borrowed" a bit to do the subtraction
+    set_flag(CARRY, 1);
+
+    if (!is_positive(diff)) {
+        set_flag(CARRY, 0);
+    }
+    
+    // Zero flag is set if the difference is 0
+    if (diff == 0) {
         set_flag(ZERO, 1);
     } else {
         set_flag(ZERO, 0);
     }
 
-    if (result < 0) {
+    // See table for overflow cases: http://www.righto.com/2012/12/the-6502-overflow-flag-explained.html
+    if (!is_bit_set(7, x) && is_bit_set(7, mem_val) && is_bit_set(7, diff) == 0) {
+        set_flag(OVER_FLOW, 1);
+    } else if (is_bit_set(7, x) && !is_bit_set(7, mem_val) && !is_bit_set(7, diff)) {
+        set_flag(OVER_FLOW, 1);
+    } else {
+        set_flag(OVER_FLOW, 0);
+    }
+
+    if (is_bit_set(7, diff)) {
         set_flag(NEGATIVE, 1);
     } else {
         set_flag(NEGATIVE, 0);
     }
 
-    if (result > 127 || result < -128) {
-        set_flag(OVER_FLOW, 1);
-    }
-
-    if (is_bit_set(7, A) == 0 && is_bit_set(7, result) == 1) {
-        set_flag(CARRY, 0);
-    }
-    else{
-        set_flag(CARRY, 1);
-    }
-
-    A = result;
-
-
+    A = diff;
 }
 
 void CPU::set_flag(flag_type flag_to_set, bool new_flag_val) {
