@@ -898,7 +898,9 @@ void CPU::INC(uint16_t address) {
     }
 
     if (is_bit_set(7, RAM[address])) {
-        set_flag(CARRY, 1);
+        set_flag(NEGATIVE, 1);
+    } else {
+        set_flag(NEGATIVE, 0);
     }
 }
 
@@ -1237,7 +1239,7 @@ void CPU::execute_opcode(uint16_t opcode_address) {
             CMP(get_memory(ZERO_PAGE_X,lsb));
             break;
         case 0xCD:
-            CMP(get_memory(ABSOLUTE, lsb));
+            CMP(get_memory(ABSOLUTE, lsb, msb));
             break;
         case 0xDD:
             CMP(get_memory(ABSOLUTE_X, lsb, msb));
@@ -1517,7 +1519,7 @@ void CPU::execute_opcode(uint16_t opcode_address) {
             CPX(get_memory(ZERO_PAGE, lsb));
             break;
         case 0xEC:
-            CPX(get_memory(ABSOLUTE, lsb));
+            CPX(get_memory(ABSOLUTE, lsb, msb));
             break;
         case 0xC0:
             CPY(get_memory(IMMEDIATE, lsb));
@@ -1526,7 +1528,7 @@ void CPU::execute_opcode(uint16_t opcode_address) {
             CPY(get_memory(ZERO_PAGE, lsb));
             break;
         case 0xCC:
-            CPY(get_memory(ABSOLUTE, lsb));
+            CPY(get_memory(ABSOLUTE, lsb, msb));
             break;
         case 0x0A:
             ASL();
