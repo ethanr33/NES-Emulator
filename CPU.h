@@ -18,6 +18,7 @@ class CPU {
 
     const uint16_t PROGRAM_MEMORY_START = 0xC000;
     const uint16_t STACK_LOCATION = 0x1FF;
+    const uint16_t PAGE_SIZE = 0x100;
     
     // The stack pointer stores the low 8 bytes of the next memory location available on the stack
     // 

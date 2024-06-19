@@ -40,7 +40,7 @@ void CPU::RTS()
     uint8_t highbyte = stack_pop();
     uint16_t stackaddress;
     stackaddress = form_address(lowbyte,highbyte);
-    program_counter = stackaddress;
+    program_counter = stackaddress + 1;
 
 }
 
@@ -436,7 +436,7 @@ void CPU::ASL() {
         set_flag(ZERO, 0);
     }
 
-    if (is_bit_set(A, 7) == 1) {
+    if (is_bit_set(7, A) == 1) {
         set_flag(NEGATIVE, 1);
     } else {
         set_flag(NEGATIVE, 0);
@@ -860,7 +860,9 @@ void CPU::LSR() {
 
     // don't know why this is necessary
     if (is_bit_set(7, A)) {
-        set_flag(CARRY, 1);
+        set_flag(NEGATIVE, 1);
+    } else {
+        set_flag(NEGATIVE, 0);
     }
 }
 
@@ -901,7 +903,8 @@ void CPU::INC(uint16_t address) {
 }
 
 void CPU::JSR(uint16_t address) {
-    stack_push(program_counter);
+    uint16_t new_pc = program_counter - 1;
+    stack_push(new_pc);
     program_counter = address;
 }
 
@@ -918,7 +921,7 @@ void CPU::RTI() {
     uint8_t pc_lsb = stack_pop();
     uint8_t pc_msb = stack_pop();
 
-    program_counter = form_address(pc_lsb, pc_msb);
+    program_counter = form_address(pc_lsb, pc_msb) - 1;
 
     for (int i = 0; i < 8; i++) {
         flags[i] = is_bit_set(i, new_flags);
@@ -1055,8 +1058,13 @@ uint8_t CPU::get_memory(addressing_mode mode, uint8_t parameter_val) {
     } else if (mode == ZERO_PAGE_Y) {
         return RAM[parameter_val + Y];
     } else if (mode == INDEXED_INDIRECT) {
-        uint8_t least_significant_byte = RAM[parameter_val + X];
-        uint8_t most_significant_byte = RAM[parameter_val + X + 1];
+        // Zero page wrap around may occur here, so we mod the address by the page size.
+        // Luckily we can do this by only keeping the first 8 bits of the address and discarding the higher ones
+        uint8_t lsb_address = parameter_val + X;
+        uint8_t msb_address = lsb_address + 1;
+        
+        uint8_t least_significant_byte = RAM[lsb_address];
+        uint8_t most_significant_byte = RAM[msb_address];
 
         return RAM[form_address(least_significant_byte, most_significant_byte)];
     } else if (mode == INDIRECT_INDEXED) {
@@ -1096,8 +1104,13 @@ uint16_t CPU::make_address(addressing_mode mode, uint8_t parameter_lsb) {
     } else if (mode == ZERO_PAGE_Y) {
         return parameter_lsb + Y;
     } else if (mode == INDEXED_INDIRECT) {
-        uint8_t least_significant_byte = RAM[parameter_lsb + X];
-        uint8_t most_significant_byte = RAM[parameter_lsb + X + 1];
+        // Zero page wrap around may occur here, so we mod the address by the page size.
+        // Luckily we can do this by only keeping the first 8 bits of the address and discarding the higher ones
+        uint8_t lsb_address = parameter_lsb + X;
+        uint8_t msb_address = lsb_address + 1;
+
+        uint8_t least_significant_byte = RAM[lsb_address];
+        uint8_t most_significant_byte = RAM[msb_address];
 
         return form_address(least_significant_byte, most_significant_byte);
     } else if (mode == INDIRECT_INDEXED) {
