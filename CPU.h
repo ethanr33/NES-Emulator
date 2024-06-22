@@ -12,10 +12,7 @@
 enum flag_type {CARRY, ZERO, INT_DISABLE, DECIMAL, BREAK, RESERVED, OVER_FLOW, NEGATIVE};
 enum addressing_mode {IMPLICIT, ACCUMULATOR, IMMEDIATE, ZERO_PAGE, ZERO_PAGE_X, ZERO_PAGE_Y, RELATIVE, ABSOLUTE, ABSOLUTE_X, ABSOLUTE_Y, INDIRECT, INDEXED_INDIRECT, INDIRECT_INDEXED};
 
-class CPU {
-
-    private:
-
+struct CPU {
     const uint16_t PROGRAM_MEMORY_START = 0xC000;
     const uint16_t STACK_LOCATION = 0x1FF;
     const uint16_t PAGE_SIZE = 0x100;
@@ -51,8 +48,6 @@ class CPU {
     void set_flag(flag_type, bool);
     void toggle_flag(flag_type);
     uint8_t get_byte_from_flags() const;
-
-    public:
 
     // Given an addressing mode and parameters, return the value stored in memory
     // Some addressing modes only require one parameter, so there are 2 versions of the method:

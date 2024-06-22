@@ -207,8 +207,9 @@ PHP - Push Processor Status
 Pushes a copy of the status flags on to the stack.
 */
 void CPU::PHP() {
-    set_flag(BREAK, 1);
-    stack_push(get_byte_from_flags());
+    // Break flag is always set to 1 on the pushed flags
+    uint8_t new_flags = get_byte_from_flags() | (1 << BREAK);
+    stack_push(new_flags);
 }
 
 /*
@@ -239,9 +240,14 @@ void CPU::PLP() {
     uint8_t flag_byte = stack_pop();
 
     for (int i = 7; i >= 0; i--) {
-        set_flag(static_cast<flag_type>(i), flag_byte & 1);
-        flag_byte = flag_byte >> 1;
+        // Break flag is always ignored when retrieving flags using PLP
+        if (i != BREAK) {
+            set_flag(static_cast<flag_type>(i), flag_byte & 1);
+            flag_byte = flag_byte >> 1;
+        }
     }
+
+    //set_flag(BREAK, 0);
 }
 
 
@@ -472,7 +478,7 @@ void CPU::ASL(uint16_t memory_address) {
 */
 void CPU::BCS(uint8_t displacement) {
     if (get_flag(CARRY) == 1) {
-        program_counter += displacement;
+        program_counter += (int8_t) displacement;
     }
 }
 
@@ -482,7 +488,7 @@ void CPU::BCS(uint8_t displacement) {
 */
 void CPU::BEQ(uint8_t displacement) {
     if (get_flag(ZERO) == 1) {
-        program_counter += displacement;
+        program_counter += (int8_t) displacement;
     }
 }
 
@@ -508,7 +514,7 @@ void CPU::BIT(uint8_t memory_val) {
 */
 void CPU::BMI(uint8_t displacement) {
     if (get_flag(NEGATIVE) == 1) {
-        program_counter += displacement;
+        program_counter += (int8_t) displacement;
     }
 }
 
@@ -518,7 +524,7 @@ void CPU::BMI(uint8_t displacement) {
 */
 void CPU::BNE(uint8_t displacement) {
     if (get_flag(ZERO) == 0) {
-        program_counter += displacement;
+        program_counter += (int8_t) displacement;
     }
 }
 
@@ -528,7 +534,7 @@ void CPU::BNE(uint8_t displacement) {
 */
 void CPU::BPL(uint8_t displacement) {
     if (get_flag(NEGATIVE) == 0) {
-        program_counter += displacement;
+        program_counter += (int8_t) displacement;
     }
 }
 
@@ -538,7 +544,7 @@ void CPU::BPL(uint8_t displacement) {
 */
 void CPU::BVC(uint8_t displacement) {
     if (get_flag(OVER_FLOW) == 0) {
-        program_counter += displacement;
+        program_counter += (int8_t) displacement;
     }
 }
 
@@ -548,7 +554,7 @@ void CPU::BVC(uint8_t displacement) {
 */
 void CPU::BVS(uint8_t displacement) {
     if (get_flag(OVER_FLOW) == 1) {
-        program_counter += displacement;
+        program_counter += (int8_t) displacement;
     }
 }
 
@@ -913,9 +919,9 @@ void CPU::JSR(uint16_t address) {
 void CPU::BRK() {
     // for this we push in the order of program_counter (little endian) then processor status (flags)
     stack_push(program_counter);
+    set_flag(BREAK, 1);
     stack_push(get_byte_from_flags());
     program_counter = form_address(RAM[0xFFFE], RAM[0xFFFF]);
-    set_flag(BREAK, 1);
 }
 
 void CPU::RTI() {
@@ -928,6 +934,9 @@ void CPU::RTI() {
     for (int i = 0; i < 8; i++) {
         flags[i] = is_bit_set(i, new_flags);
     }
+
+    // Break flag is always set to 0 when getting flags from RTI
+    flags[BREAK] = 0;
 }
 
 void CPU::SBC(uint8_t mem_val) {
@@ -1056,9 +1065,11 @@ uint8_t CPU::get_memory(addressing_mode mode, uint8_t parameter_val) {
     } else if (mode == ZERO_PAGE) {
         return RAM[parameter_val];
     } else if (mode == ZERO_PAGE_X) {
-        return RAM[parameter_val + X];
+        // We always want to stay on zero page, and address may overflow here
+        return RAM[(parameter_val + X) & 0xFF];
     } else if (mode == ZERO_PAGE_Y) {
-        return RAM[parameter_val + Y];
+        // We always want to stay on zero page, and address may overflow here
+        return RAM[(parameter_val + Y) & 0xFF];
     } else if (mode == INDEXED_INDIRECT) {
         // Zero page wrap around may occur here, so we mod the address by the page size.
         // Luckily we can do this by only keeping the first 8 bits of the address and discarding the higher ones
@@ -1071,9 +1082,12 @@ uint8_t CPU::get_memory(addressing_mode mode, uint8_t parameter_val) {
         return RAM[form_address(least_significant_byte, most_significant_byte)];
     } else if (mode == INDIRECT_INDEXED) {
         uint8_t least_significant_byte = RAM[parameter_val];
-        uint8_t most_significant_byte = RAM[parameter_val + 1];
+        // If parameter_val = 0xFF, adding one may overflow.
+        uint8_t most_significant_byte = RAM[(parameter_val + 1) & 0xFF];
 
-        return RAM[form_address(least_significant_byte, most_significant_byte) + Y];
+        uint16_t new_address = form_address(least_significant_byte, most_significant_byte) + Y;
+
+        return RAM[new_address];
     } else {
         throw std::runtime_error("Memory addressing mode not implemented: " + std::to_string(mode));
     }
@@ -1087,9 +1101,11 @@ uint8_t CPU::get_memory(addressing_mode mode, uint8_t parameter_lsb, uint8_t par
     if (mode == ABSOLUTE) {
         return RAM[full_address];
     } else if (mode == ABSOLUTE_X) {
-        return RAM[full_address + X];
+        // If address is too big, we may overflow
+        return RAM[(full_address + X) & 0xFFFF];
     } else if (mode == ABSOLUTE_Y) {
-        return RAM[full_address + Y];
+        // If address is too big, we may overflow
+        return RAM[(full_address + Y) & 0xFFFF];
     } else {
         throw std::runtime_error("Memory addressing mode not implemented: " + std::to_string(mode));
     }
@@ -1102,9 +1118,11 @@ uint16_t CPU::make_address(addressing_mode mode, uint8_t parameter_lsb) {
     if (mode == ZERO_PAGE) {
         return parameter_lsb;
     } else if (mode == ZERO_PAGE_X) {
-        return parameter_lsb + X;
+        // We always want to stay on zero page, and address may overflow here
+        return (parameter_lsb + X) & 0xFF;
     } else if (mode == ZERO_PAGE_Y) {
-        return parameter_lsb + Y;
+        // We always want to stay on zero page, and address may overflow here
+        return (parameter_lsb + Y) & 0xFF;
     } else if (mode == INDEXED_INDIRECT) {
         // Zero page wrap around may occur here, so we mod the address by the page size.
         // Luckily we can do this by only keeping the first 8 bits of the address and discarding the higher ones
@@ -1132,6 +1150,21 @@ uint16_t CPU::make_address(addressing_mode mode, uint8_t parameter_lsb, uint8_t 
         return form_address(parameter_lsb, parameter_msb) + X;
     } else if (mode == ABSOLUTE_Y) {
         return form_address(parameter_lsb, parameter_msb) + Y;
+    } else if (mode == INDIRECT) {
+        /*
+            An original 6502 has does not correctly fetch the target address if the indirect vector falls on a page boundary (e.g. $xxFF where xx is any value from $00 to $FF).
+            In this case fetches the LSB from $xxFF as expected but takes the MSB from $xx00.
+            This is fixed in some later chips like the 65SC02 so for compatibility always ensure the indirect vector is not at the end of the page.
+        */
+
+        uint16_t target_address = form_address(parameter_lsb, parameter_msb);
+        
+        if (parameter_lsb != 0xFF) {
+            return form_address(RAM[target_address], RAM[target_address + 1]);
+        } else {
+            // Buggy case
+            return form_address(RAM[target_address], RAM[target_address & 0xFF00]);
+        }
     } else {
         throw std::runtime_error("Memory addressing mode not implemented: " + std::to_string(mode));
     }
@@ -1190,9 +1223,124 @@ void CPU::execute_opcode(uint16_t opcode_address) {
             increment_program_counter(1);
             break;
         case 0xEA:
-            //NOP
+            //NOP immediate
             NOP();
             increment_program_counter(1);
+            break;
+        case 0x04:
+            //NOP zero page
+            NOP();
+            increment_program_counter(2);
+            break;
+        case 0x44:
+            //NOP zero page
+            NOP();
+            increment_program_counter(2);
+            break;
+        case 0x64:
+            //NOP zero page
+            NOP();
+            increment_program_counter(2);
+            break;
+        case 0x14:
+            //NOP zero page x
+            NOP();
+            increment_program_counter(2);
+            break;
+        case 0x0C:
+            //NOP absolute
+            NOP();
+            increment_program_counter(3);
+            break;
+        case 0x34:
+            //NOP zero page x
+            NOP();
+            increment_program_counter(2);
+            break;
+        case 0x54:
+            //NOP zero page x
+            NOP();
+            increment_program_counter(2);
+            break;
+        case 0x74:
+            //NOP zero page x
+            NOP();
+            increment_program_counter(2);
+            break;
+        case 0xD4:
+            //NOP zero page x
+            NOP();
+            increment_program_counter(2);
+            break;
+        case 0xF4:
+            //NOP zero page x
+            NOP();
+            increment_program_counter(2);
+            break;
+        case 0x1A:
+            //NOP implied
+            NOP();
+            increment_program_counter(1);
+            break;
+        case 0x3A:
+            //NOP immediate
+            NOP();
+            increment_program_counter(1);
+            break;
+        case 0x5A:
+            //NOP implied
+            NOP();
+            increment_program_counter(1);
+            break;
+        case 0x7A:
+            //NOP implied
+            NOP();
+            increment_program_counter(1);
+            break;
+        case 0xDA:
+            //NOP implied
+            NOP();
+            increment_program_counter(1);
+            break;
+        case 0xFA:
+            //NOP implied
+            NOP();
+            increment_program_counter(1);
+            break;
+        case 0x80:
+            //NOP immediate
+            NOP();
+            increment_program_counter(2);
+            break;
+        case 0x1C:
+            //NOP absolute x
+            NOP();
+            increment_program_counter(3);
+            break;
+        case 0x3C:
+            //NOP absolute x
+            NOP();
+            increment_program_counter(3);
+            break;
+        case 0x5C:
+            //NOP absolute x
+            NOP();
+            increment_program_counter(3);
+            break;
+        case 0x7C:
+            //NOP absolute x
+            NOP();
+            increment_program_counter(3);
+            break;
+        case 0xDC:
+            //NOP absolute x
+            NOP();
+            increment_program_counter(3);
+            break;
+        case 0xFC:
+            //NOP absolute x
+            NOP();
+            increment_program_counter(3);
             break;
         case 0x48:
             //PHA

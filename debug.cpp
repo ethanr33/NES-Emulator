@@ -38,13 +38,13 @@ int main() {
     NES nes = NES();
 
     cout << "Welcome to the CPU debugger" << endl;
-    cout << "First, enter the file name of the ROM to test:" << endl;
+    //cout << "First, enter the file name of the ROM to test:" << endl;
 
-    string rom_name;
+    string rom_name = "nestest.nes";
 
-    getline(cin, rom_name);
+    //getline(cin, rom_name);
 
-    cout << endl;
+    //cout << endl;
 
     bool load_success = nes.load_program(rom_name);
 
@@ -116,19 +116,36 @@ int main() {
             while (matching) {
                 string line;
                 string expected_pc;
+                string expected_a;
 
                 expected_output >> expected_pc;
                 expected_output.ignore();
                 std::getline(expected_output, line);
 
-                string actual_pc = get_hex_string(nes.get_cpu()->get_program_counter());
+                size_t a_pos = line.find(':');
+                expected_a = line.substr(a_pos + 1, 2);
 
-                matching = (expected_pc == actual_pc);
+                string actual_pc = get_hex_string(nes.get_cpu()->get_program_counter(), 4);
+                string actual_A = get_hex_string(nes.get_cpu()->get_a(), 2);
+
+                bool pc_matches = (expected_pc == actual_pc);
+                bool A_matches = (expected_a == actual_A);
+
+                matching = pc_matches && A_matches;
 
                 print_cpu_state(nes, log_file, false);
 
+                if (!pc_matches) {
+                    log_file << "PC does not match!" << endl;
+                }
+
+                if (!A_matches) {
+                    log_file << "A does not match!" << endl;
+                }
+
                 nes.get_cpu()->execute_next_opcode();
             }
+
         } else if (command == 'q') {
             return 0;
         } else {
