@@ -16,6 +16,10 @@ struct CPU {
     const uint16_t PROGRAM_MEMORY_START = 0xC000;
     const uint16_t STACK_LOCATION = 0x1FF;
     const uint16_t PAGE_SIZE = 0x100;
+
+    // On a normal NES, when we load a game we need to call the interrupt handler for RESET. This takes 7 cycles
+    int num_clock_cycles = 7;
+    int clock_cycles_remaining = 0;
     
     // The stack pointer stores the low 8 bytes of the next memory location available on the stack
     // 
@@ -39,9 +43,6 @@ struct CPU {
     // Store in units of kilobytes
     uint8_t RAM[0xFFFF];
 
-    int num_clock_cycles = 0;
-    int clock_cycles_remaining = 0;
-
     void increment_program_counter(int);
 
     // Methods to control flags
@@ -57,6 +58,9 @@ struct CPU {
 
     uint16_t make_address(addressing_mode, uint8_t);
     uint16_t make_address(addressing_mode, uint8_t, uint8_t);
+
+    bool crosses_page(addressing_mode, uint8_t);
+    bool crosses_page(addressing_mode, uint8_t, uint8_t);
 
     // Given an address, execute the opcode at that address
     void execute_opcode(uint16_t);

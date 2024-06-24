@@ -10,7 +10,8 @@ If the carry flag is clear then add the relative displacement to the program cou
 */
 void CPU::BCC(uint8_t displacement) {
     if (!get_flag(CARRY)) {
-        program_counter += displacement;
+        clock_cycles_remaining += 1;
+        program_counter += (int8_t) displacement;
     }
 }
 
@@ -478,6 +479,7 @@ void CPU::ASL(uint16_t memory_address) {
 */
 void CPU::BCS(uint8_t displacement) {
     if (get_flag(CARRY) == 1) {
+        clock_cycles_remaining += 1;
         program_counter += (int8_t) displacement;
     }
 }
@@ -488,6 +490,7 @@ void CPU::BCS(uint8_t displacement) {
 */
 void CPU::BEQ(uint8_t displacement) {
     if (get_flag(ZERO) == 1) {
+        clock_cycles_remaining += 1;
         program_counter += (int8_t) displacement;
     }
 }
@@ -514,6 +517,7 @@ void CPU::BIT(uint8_t memory_val) {
 */
 void CPU::BMI(uint8_t displacement) {
     if (get_flag(NEGATIVE) == 1) {
+        clock_cycles_remaining += 1;
         program_counter += (int8_t) displacement;
     }
 }
@@ -524,6 +528,7 @@ void CPU::BMI(uint8_t displacement) {
 */
 void CPU::BNE(uint8_t displacement) {
     if (get_flag(ZERO) == 0) {
+        clock_cycles_remaining += 1;
         program_counter += (int8_t) displacement;
     }
 }
@@ -534,6 +539,7 @@ void CPU::BNE(uint8_t displacement) {
 */
 void CPU::BPL(uint8_t displacement) {
     if (get_flag(NEGATIVE) == 0) {
+        clock_cycles_remaining += 1;
         program_counter += (int8_t) displacement;
     }
 }
@@ -544,6 +550,7 @@ void CPU::BPL(uint8_t displacement) {
 */
 void CPU::BVC(uint8_t displacement) {
     if (get_flag(OVER_FLOW) == 0) {
+        clock_cycles_remaining += 1;
         program_counter += (int8_t) displacement;
     }
 }
@@ -554,6 +561,7 @@ void CPU::BVC(uint8_t displacement) {
 */
 void CPU::BVS(uint8_t displacement) {
     if (get_flag(OVER_FLOW) == 1) {
+        clock_cycles_remaining += 1;
         program_counter += (int8_t) displacement;
     }
 }
@@ -1170,6 +1178,38 @@ uint16_t CPU::make_address(addressing_mode mode, uint8_t parameter_lsb, uint8_t 
     }
 }
 
+bool CPU::crosses_page(addressing_mode mode, uint8_t lsb, uint8_t msb) {
+    uint16_t address = form_address(lsb, msb);
+    if (mode == ABSOLUTE_X) {
+        return (address + X) & 0xFF < address & 0xFF;
+    } else if (mode == ABSOLUTE_Y) {
+        return (address + Y) & 0xFF < address & 0xFF; 
+    } else {
+        throw std::runtime_error("Tried to check crossing page with addressing mode " + std::to_string(mode));
+    }
+}
+
+bool CPU::crosses_page(addressing_mode mode, uint8_t lsb) {
+    if (mode == INDIRECT_INDEXED) {
+        if (lsb == 0xFF) {
+            return true;
+        }
+
+        uint8_t target_lsb = RAM[lsb];
+        uint8_t target_msb = RAM[lsb + 1];
+
+        uint8_t target_address = form_address(target_lsb, target_msb);
+
+        return target_address + Y > 0xFF;
+    } else if (mode == RELATIVE) {
+        uint16_t target_address = program_counter + (uint8_t) lsb;
+
+        return target_address & 0xFF < program_counter & 0xFF;
+    } else {
+        throw std::runtime_error("Tried to check crossing page with addressing mode " + std::to_string(mode));
+    }
+}
+
 void CPU::execute_opcode(uint16_t opcode_address) {
     uint8_t opcode = RAM[opcode_address];
     uint8_t lsb = RAM[opcode_address + 1];
@@ -1182,612 +1222,764 @@ void CPU::execute_opcode(uint16_t opcode_address) {
     switch (opcode) {
         case 0xA1:
             // LDA, indirect x
+            clock_cycles_remaining += 6;
             LDA(get_memory(INDEXED_INDIRECT, lsb));
             break;
         case 0xA5:
             // LDA, zero page
+            clock_cycles_remaining += 3;
             LDA(get_memory(ZERO_PAGE, lsb));
             break;
         case 0xA9:
             // LDA, immediate
+            clock_cycles_remaining += 2;
             LDA(get_memory(IMMEDIATE, lsb));
             break;
         case 0xAD:
             // LDA, absolute
+            clock_cycles_remaining += 3;
             LDA(get_memory(ABSOLUTE, lsb, msb));
             break;
         case 0xB1:
             // LDA, indirect y
+            if (crosses_page(INDIRECT_INDEXED, lsb)) {
+                clock_cycles_remaining += 6;
+            } else {
+                clock_cycles_remaining += 5;
+            }
             LDA(get_memory(INDIRECT_INDEXED, lsb));
             break;
         case 0xB5:
             // LDA, zero page x
+            clock_cycles_remaining += 4;
             LDA(get_memory(ZERO_PAGE_X, lsb));
             break;
         case 0xBD:
             // LDA, absolute x
+            if (crosses_page(ABSOLUTE_X, lsb, msb)) {
+                clock_cycles_remaining += 5;
+            } else {
+                clock_cycles_remaining += 4;
+            }
             LDA(get_memory(ABSOLUTE_X, lsb, msb));
             break;
         case 0xB9:
             // LDA, absolute y
+            if (crosses_page(ABSOLUTE_X, lsb, msb)) {
+                clock_cycles_remaining += 5;
+            } else {
+                clock_cycles_remaining += 4;
+            }
             LDA(get_memory(ABSOLUTE_Y, lsb, msb));
             break;
         case 0xC8:
             //INY
+            clock_cycles_remaining += 2;
             INY();
             increment_program_counter(1);
             break;
         case 0xE8:
             //INX
+            clock_cycles_remaining += 2;
             INX();
             increment_program_counter(1);
             break;
         case 0xEA:
-            //NOP immediate
+            //NOP
+            clock_cycles_remaining += 2;
             NOP();
             increment_program_counter(1);
-            break;
-        case 0x04:
-            //NOP zero page
-            NOP();
-            increment_program_counter(2);
-            break;
-        case 0x44:
-            //NOP zero page
-            NOP();
-            increment_program_counter(2);
-            break;
-        case 0x64:
-            //NOP zero page
-            NOP();
-            increment_program_counter(2);
-            break;
-        case 0x14:
-            //NOP zero page x
-            NOP();
-            increment_program_counter(2);
-            break;
-        case 0x0C:
-            //NOP absolute
-            NOP();
-            increment_program_counter(3);
-            break;
-        case 0x34:
-            //NOP zero page x
-            NOP();
-            increment_program_counter(2);
-            break;
-        case 0x54:
-            //NOP zero page x
-            NOP();
-            increment_program_counter(2);
-            break;
-        case 0x74:
-            //NOP zero page x
-            NOP();
-            increment_program_counter(2);
-            break;
-        case 0xD4:
-            //NOP zero page x
-            NOP();
-            increment_program_counter(2);
-            break;
-        case 0xF4:
-            //NOP zero page x
-            NOP();
-            increment_program_counter(2);
-            break;
-        case 0x1A:
-            //NOP implied
-            NOP();
-            increment_program_counter(1);
-            break;
-        case 0x3A:
-            //NOP immediate
-            NOP();
-            increment_program_counter(1);
-            break;
-        case 0x5A:
-            //NOP implied
-            NOP();
-            increment_program_counter(1);
-            break;
-        case 0x7A:
-            //NOP implied
-            NOP();
-            increment_program_counter(1);
-            break;
-        case 0xDA:
-            //NOP implied
-            NOP();
-            increment_program_counter(1);
-            break;
-        case 0xFA:
-            //NOP implied
-            NOP();
-            increment_program_counter(1);
-            break;
-        case 0x80:
-            //NOP immediate
-            NOP();
-            increment_program_counter(2);
-            break;
-        case 0x1C:
-            //NOP absolute x
-            NOP();
-            increment_program_counter(3);
-            break;
-        case 0x3C:
-            //NOP absolute x
-            NOP();
-            increment_program_counter(3);
-            break;
-        case 0x5C:
-            //NOP absolute x
-            NOP();
-            increment_program_counter(3);
-            break;
-        case 0x7C:
-            //NOP absolute x
-            NOP();
-            increment_program_counter(3);
-            break;
-        case 0xDC:
-            //NOP absolute x
-            NOP();
-            increment_program_counter(3);
-            break;
-        case 0xFC:
-            //NOP absolute x
-            NOP();
-            increment_program_counter(3);
             break;
         case 0x48:
             //PHA
+            clock_cycles_remaining += 3;
             PHA();
             increment_program_counter(1);
             break;
         case 0x08:
             //PHP
+            clock_cycles_remaining += 3;
             PHP();
             increment_program_counter(1);
             break;
         case 0x68:
             //PLA
+            clock_cycles_remaining += 4;
             PLA();
             increment_program_counter(1);
             break;
         case 0x28:
             //PLP
+            clock_cycles_remaining += 4;
             PLP();
             increment_program_counter(1);
             break;
         case 0xA2:
+            clock_cycles_remaining += 2;
             LDX(get_memory(IMMEDIATE, lsb));
             break;
         case 0xAE:
+            clock_cycles_remaining += 4;
             LDX(get_memory(ABSOLUTE, lsb, msb));
             break;
         case 0xA6:
+            clock_cycles_remaining += 3;
             LDX(get_memory(ZERO_PAGE, lsb));
             break;
         case 0xB6:
+            clock_cycles_remaining += 4;
             LDX(get_memory(ZERO_PAGE_Y,lsb));
             break;
         case 0xBE:
+            if (crosses_page(ABSOLUTE_Y, lsb, msb)) {
+                clock_cycles_remaining += 5;
+            } else {
+                clock_cycles_remaining += 4;
+            }
             LDX(get_memory(ABSOLUTE_Y, lsb, msb));
             break;
         case 0xC9:
+            clock_cycles_remaining += 2;
             CMP(get_memory(IMMEDIATE, lsb));
             break;
         case 0xC5:
+            clock_cycles_remaining += 3;
             CMP(get_memory(ZERO_PAGE,lsb));
             break;
         case 0xD5:
+            clock_cycles_remaining += 4;
             CMP(get_memory(ZERO_PAGE_X,lsb));
             break;
         case 0xCD:
+            clock_cycles_remaining += 4;
             CMP(get_memory(ABSOLUTE, lsb, msb));
             break;
         case 0xDD:
+            if (crosses_page(ABSOLUTE_X, lsb, msb)) {
+                clock_cycles_remaining += 5;
+            } else {
+                clock_cycles_remaining += 4;
+            }
             CMP(get_memory(ABSOLUTE_X, lsb, msb));
             break;
         case 0xD9:
+            if (crosses_page(ABSOLUTE_Y, lsb, msb)) {
+                clock_cycles_remaining += 5;
+            } else {
+                clock_cycles_remaining += 4;
+            }
             CMP(get_memory(ABSOLUTE_Y, lsb, msb));
             break;
         case 0xC1:
+            clock_cycles_remaining += 6;
             CMP(get_memory(INDEXED_INDIRECT, lsb));
             break;
         case 0xD1:
+            if (crosses_page(INDIRECT_INDEXED, lsb)) {
+                clock_cycles_remaining += 6;
+            } else {
+                clock_cycles_remaining += 5;
+            }
             CMP(get_memory(INDIRECT_INDEXED, lsb));
             break;
         case 0x29:
+            clock_cycles_remaining += 2;
             AND(get_memory(IMMEDIATE, lsb));
             break;
         case 0x25:
+            clock_cycles_remaining += 3;
             AND(get_memory(ZERO_PAGE, lsb));
             break;
         case 0x35:
+            clock_cycles_remaining += 4;
             AND(get_memory(ZERO_PAGE_X, lsb));
             break;
         case 0x2D:
+            clock_cycles_remaining += 4;
             AND(get_memory(ABSOLUTE, lsb, msb));
             break;
         case 0x3D:
+            if (crosses_page(ABSOLUTE_X, lsb, msb)) {
+                clock_cycles_remaining += 5;
+            } else {
+                clock_cycles_remaining += 4;
+            }
             AND(get_memory(ABSOLUTE_X, lsb, msb));
             break;
         case 0x39:
+            if (crosses_page(ABSOLUTE_Y, lsb, msb)) {
+                clock_cycles_remaining += 5;
+            } else {
+                clock_cycles_remaining += 4;
+            }
             AND(get_memory(ABSOLUTE_Y, lsb, msb));
             break;
         case 0x21:
+            clock_cycles_remaining += 6;
             AND(get_memory(INDEXED_INDIRECT, lsb));
             break;
         case 0x31:
+            if (crosses_page(INDIRECT_INDEXED, lsb)) {
+                clock_cycles_remaining += 6;
+            } else {
+                clock_cycles_remaining += 5;
+            }
             AND(get_memory(INDIRECT_INDEXED, lsb));
             break;
         case 0xA0:
+            clock_cycles_remaining += 2;
             LDY(get_memory(IMMEDIATE, lsb));
             break;
         case 0xA4:
+            clock_cycles_remaining += 3;
             LDY(get_memory(ZERO_PAGE, lsb));
             break;
         case 0xB4:
+            clock_cycles_remaining += 4;
             LDY(get_memory(ZERO_PAGE_X, lsb));
             break;
         case 0xAC:
+            clock_cycles_remaining += 4;
             LDY(get_memory(ABSOLUTE, lsb, msb));
             break;
         case 0xBC:
+            if (crosses_page(ABSOLUTE_X, lsb, msb)) {
+                clock_cycles_remaining += 5;
+            } else {
+                clock_cycles_remaining += 4;
+            }
             LDY(get_memory(ABSOLUTE_X, lsb, msb));
             break;
         case 0x85:
+            clock_cycles_remaining += 3;
             STA(make_address(ZERO_PAGE, lsb));
             break;
         case 0x95:
+            clock_cycles_remaining += 4;
             STA(make_address(ZERO_PAGE_X, lsb));
             break;
         case 0x8D:
+            clock_cycles_remaining += 4;
             STA(make_address(ABSOLUTE, lsb, msb));
             break;
         case 0x9D:
+            clock_cycles_remaining += 5;
             STA(make_address(ABSOLUTE_X, lsb, msb));
             break;
         case 0x99:
+            clock_cycles_remaining += 5;
             STA(make_address(ABSOLUTE_Y, lsb, msb));
             break;
         case 0x81:
+            clock_cycles_remaining += 6;
             STA(make_address(INDEXED_INDIRECT, lsb));
             break;
         case 0x91:
+            clock_cycles_remaining += 6;
             STA(make_address(INDIRECT_INDEXED, lsb));
             break;
         case 0x86:
+            clock_cycles_remaining += 3;
             STX(make_address(ZERO_PAGE, lsb));
             break;
         case 0x96:
+            clock_cycles_remaining += 4;
             STX(make_address(ZERO_PAGE_Y, lsb));
             break;
         case 0x8E:
+            clock_cycles_remaining += 4;
             STX(make_address(ABSOLUTE, lsb, msb));
             break;
         case 0x84:
+            clock_cycles_remaining += 3;
             STY(make_address(ZERO_PAGE, lsb));
             break;
         case 0x94:
+            clock_cycles_remaining += 4;
             STY(make_address(ZERO_PAGE_X, lsb));
             break;
         case 0x8C:
+            clock_cycles_remaining += 4;
             STY(make_address(ABSOLUTE, lsb, msb));
             break;
         case 0xAA:
+            clock_cycles_remaining += 2;
             TAX();
             increment_program_counter(1);
             break;
         case 0xA8:
+            clock_cycles_remaining += 2;
             TAY();
             increment_program_counter(1);
             break;
         case 0xBA:
+            clock_cycles_remaining += 2;
             TSX();
             increment_program_counter(1);
             break;
         case 0x8A:
+            clock_cycles_remaining += 2;
             TXA();
             increment_program_counter(1);
             break;
         case 0x9A:
+            clock_cycles_remaining += 2;
             TXS();
             increment_program_counter(1);
             break;
         case 0x98:
+            clock_cycles_remaining += 2;
             TYA();
             increment_program_counter(1);
             break;
         case 0xD8:
+            clock_cycles_remaining += 2;
             CLD();
             increment_program_counter(1);
             break;
         case 0x58:
+            clock_cycles_remaining += 2;
             CLI();
             increment_program_counter(1);
             break;
         case 0xB8:
+            clock_cycles_remaining += 2;
             CLV();
             increment_program_counter(1);
             break;
         case 0x38:
+            clock_cycles_remaining += 2;
             SEC();
             increment_program_counter(1);
             break;
         case 0xF8:
+            clock_cycles_remaining += 2;
             SED();
             increment_program_counter(1);
             break;
         case 0x78:
+            clock_cycles_remaining += 2;
             SEI();
             increment_program_counter(1);
             break;
         case 0x00:
+            clock_cycles_remaining += 7;
             BRK();
             increment_program_counter(1);
             break;
         case 0x40:
+            clock_cycles_remaining += 6;
             RTI();
             increment_program_counter(1);
             break;
         case 0x60:
+            clock_cycles_remaining += 6;
             RTS();
             break;
         case 0xCA:
+            clock_cycles_remaining += 2;
             DEX();
             increment_program_counter(1);
             break;
         case 0x88:
+            clock_cycles_remaining += 2;
             DEY();
             increment_program_counter(1);
             break;
         case 0xC6:
+            clock_cycles_remaining += 5;
             DEC(make_address(ZERO_PAGE, lsb));
             break;
         case 0xD6:
+            clock_cycles_remaining += 6;
             DEC(make_address(ZERO_PAGE_X, lsb));
             break;
         case 0xCE:
+            clock_cycles_remaining += 6;
             DEC(make_address(ABSOLUTE, lsb, msb));
             break;
         case 0xDE:
+            clock_cycles_remaining += 7;
             DEC(make_address(ABSOLUTE_X, lsb, msb));
             break;
         case 0x49:
+            clock_cycles_remaining += 2;
             EOR(get_memory(IMMEDIATE, lsb));
             break;
         case 0x45:
+            clock_cycles_remaining += 3;
             EOR(get_memory(ZERO_PAGE, lsb));
             break;
         case 0x55:
+            clock_cycles_remaining += 4;
             EOR(get_memory(ZERO_PAGE_X, lsb));
             break;
         case 0x4D:
+            clock_cycles_remaining += 4;
             EOR(get_memory(ABSOLUTE, lsb, msb));
             break;
         case 0x5D:
+            if (crosses_page(ABSOLUTE_X, lsb, msb)) {
+                clock_cycles_remaining += 5;
+            } else {
+                clock_cycles_remaining += 4;
+            }
             EOR(get_memory(ABSOLUTE_X, lsb, msb));
             break;
         case 0x59:
+            if (crosses_page(ABSOLUTE_Y, lsb, msb)) {
+                clock_cycles_remaining += 5;
+            } else {
+                clock_cycles_remaining += 4;
+            }
             EOR(get_memory(ABSOLUTE_Y, lsb, msb));
             break;
         case 0x41:
+            clock_cycles_remaining += 6;
             EOR(get_memory(INDEXED_INDIRECT, lsb));
             break;
         case 0x51:
+            if (crosses_page(INDIRECT_INDEXED, lsb)) {
+                clock_cycles_remaining += 6;
+            } else {
+                clock_cycles_remaining += 5;
+            }
             EOR(get_memory(INDIRECT_INDEXED, lsb));
             break;
         case 0x09:
+            clock_cycles_remaining += 2;
             ORA(get_memory(IMMEDIATE, lsb));
             break;
         case 0x05:
+            clock_cycles_remaining += 3;
             ORA(get_memory(ZERO_PAGE, lsb));
             break;
         case 0x15:
+            clock_cycles_remaining += 4;
             ORA(get_memory(ZERO_PAGE_X, lsb));
             break;
         case 0x0D:
+            clock_cycles_remaining += 4;
             ORA(get_memory(ABSOLUTE, lsb, msb));
             break;
         case 0x1D:
+            if (crosses_page(ABSOLUTE_X, lsb, msb)) {
+                clock_cycles_remaining += 5;
+            } else {
+                clock_cycles_remaining += 4;
+            }
             ORA(get_memory(ABSOLUTE_X, lsb, msb));
             break;
         case 0x19:
+            if (crosses_page(ABSOLUTE_Y, lsb, msb)) {
+                clock_cycles_remaining += 5;
+            } else {
+                clock_cycles_remaining += 4;
+            }
             ORA(get_memory(ABSOLUTE_Y, lsb, msb));
             break;
         case 0x01:
+            clock_cycles_remaining += 6;
             ORA(get_memory(INDEXED_INDIRECT, lsb));
             break;
         case 0x11:
+            if (crosses_page(INDIRECT_INDEXED, lsb)) {
+                clock_cycles_remaining += 6;
+            } else {
+                clock_cycles_remaining += 5;
+            }
             ORA(get_memory(INDIRECT_INDEXED, lsb));
             break;
         case 0x24:
+            clock_cycles_remaining += 3;
             BIT(get_memory(ZERO_PAGE, lsb));
             break;
         case 0x2C:
+            clock_cycles_remaining += 4;
             BIT(get_memory(ABSOLUTE, lsb, msb));
             break;
         case 0x69:
+            clock_cycles_remaining += 2;
             ADC(get_memory(IMMEDIATE, lsb));
             break;
         case 0x65:
+            clock_cycles_remaining += 3;
             ADC(get_memory(ZERO_PAGE, lsb));
             break;
         case 0x75:
+            clock_cycles_remaining += 4;
             ADC(get_memory(ZERO_PAGE_X, lsb));
             break;
         case 0x6D:
+            clock_cycles_remaining += 4;
             ADC(get_memory(ABSOLUTE, lsb, msb));
             break;
         case 0x7D:
+            if (crosses_page(ABSOLUTE_X, lsb, msb)) {
+                clock_cycles_remaining += 5;
+            } else {
+                clock_cycles_remaining += 4;
+            }
             ADC(get_memory(ABSOLUTE_X, lsb, msb));
             break;
         case 0x79:
+            if (crosses_page(ABSOLUTE_Y, lsb, msb)) {
+                clock_cycles_remaining += 5;
+            } else {
+                clock_cycles_remaining += 4;
+            }
             ADC(get_memory(ABSOLUTE_Y, lsb, msb));
             break;
         case 0x61:
+            clock_cycles_remaining += 6;
             ADC(get_memory(INDEXED_INDIRECT, lsb));
             break;
         case 0x71:
+            if (crosses_page(INDIRECT_INDEXED, lsb)) {
+                clock_cycles_remaining += 6;
+            } else {
+                clock_cycles_remaining += 5;
+            }
             ADC(get_memory(INDIRECT_INDEXED, lsb));
             break;
         case 0xE9:
+            clock_cycles_remaining += 2;
             SBC(get_memory(IMMEDIATE, lsb));
             break;
         case 0xE5:
+            clock_cycles_remaining += 3;
             SBC(get_memory(ZERO_PAGE, lsb));
             break;
         case 0xF5:
+            clock_cycles_remaining += 4;
             SBC(get_memory(ZERO_PAGE_X, lsb));
             break;
         case 0xED:
+            clock_cycles_remaining += 4;
             SBC(get_memory(ABSOLUTE, lsb, msb));
             break;
         case 0xFD:
+            if (crosses_page(ABSOLUTE_X, lsb, msb)) {
+                clock_cycles_remaining += 5;
+            } else {
+                clock_cycles_remaining += 4;
+            }
             SBC(get_memory(ABSOLUTE_X, lsb, msb));
             break;
         case 0xF9:
+            if (crosses_page(ABSOLUTE_Y, lsb, msb)) {
+                clock_cycles_remaining += 5;
+            } else {
+                clock_cycles_remaining += 4;
+            }
             SBC(get_memory(ABSOLUTE_Y, lsb, msb));
             break;
         case 0xE1:
+            clock_cycles_remaining += 6;
             SBC(get_memory(INDEXED_INDIRECT, lsb));
             break;
         case 0xF1:
+            if (crosses_page(INDIRECT_INDEXED, lsb)) {
+                clock_cycles_remaining += 6;
+            } else {
+                clock_cycles_remaining += 5;
+            }
             SBC(get_memory(INDIRECT_INDEXED, lsb));
             break;
         case 0xE0:
+            clock_cycles_remaining += 2;
             CPX(get_memory(IMMEDIATE, lsb));
             break;
         case 0xE4:
+            clock_cycles_remaining += 3;
             CPX(get_memory(ZERO_PAGE, lsb));
             break;
         case 0xEC:
+            clock_cycles_remaining += 4;
             CPX(get_memory(ABSOLUTE, lsb, msb));
             break;
         case 0xC0:
+            clock_cycles_remaining += 2;
             CPY(get_memory(IMMEDIATE, lsb));
             break;
         case 0xC4:
+            clock_cycles_remaining += 3;
             CPY(get_memory(ZERO_PAGE, lsb));
             break;
         case 0xCC:
+            clock_cycles_remaining += 4;
             CPY(get_memory(ABSOLUTE, lsb, msb));
             break;
         case 0x0A:
+            clock_cycles_remaining += 2;
             ASL();
             increment_program_counter(1);
             break;
         case 0x06:
+            clock_cycles_remaining += 5;
             ASL(make_address(ZERO_PAGE, lsb));
             break;
         case 0x16:
+            clock_cycles_remaining += 6;
             ASL(make_address(ZERO_PAGE_X, lsb));
             break;
         case 0x0E:
+            clock_cycles_remaining += 6;
             ASL(make_address(ABSOLUTE, lsb, msb));
             break;
         case 0x1E:
+            clock_cycles_remaining += 7;
             ASL(make_address(ABSOLUTE_X, lsb, msb));
             break;
         case 0x4A:
+            clock_cycles_remaining += 2;
             LSR();
             increment_program_counter(1);
             break;
         case 0x46:
+            clock_cycles_remaining += 5;
             LSR(make_address(ZERO_PAGE, lsb));
             break;
         case 0x56:
+            clock_cycles_remaining += 6;
             LSR(make_address(ZERO_PAGE_X, lsb));
             break;
         case 0x4E:
+            clock_cycles_remaining += 6;
             LSR(make_address(ABSOLUTE, lsb, msb));
             break;
         case 0x5E:
+            clock_cycles_remaining += 7;
             LSR(make_address(ABSOLUTE_X, lsb, msb));
             break;
         case 0x2A:
+            clock_cycles_remaining += 2;
             ROL();
             increment_program_counter(1);
             break;
         case 0x26:
+            clock_cycles_remaining += 5;
             ROL(make_address(ZERO_PAGE, lsb));
             break;
         case 0x36:
+            clock_cycles_remaining += 6;
             ROL(make_address(ZERO_PAGE_X, lsb));
             break;
         case 0x2E:
+            clock_cycles_remaining += 6;
             ROL(make_address(ABSOLUTE, lsb, msb));
             break;
         case 0x3E:
+            clock_cycles_remaining += 7;
             ROL(make_address(ABSOLUTE_X, lsb, msb));
             break;
         case 0x6A:
+            clock_cycles_remaining += 2;
             ROR();
             increment_program_counter(1);
             break;
         case 0x66:
+            clock_cycles_remaining += 5;
             ROR(make_address(ZERO_PAGE, lsb));
             break;
         case 0x76:
+            clock_cycles_remaining += 6;
             ROR(make_address(ZERO_PAGE_X, lsb));
             break;
         case 0x6E:
+            clock_cycles_remaining += 6;
             ROR(make_address(ABSOLUTE, lsb, msb));
             break;
         case 0x7E:
+            clock_cycles_remaining += 7;
             ROR(make_address(ABSOLUTE_X, lsb, msb));
             break;
         case 0x4C:
+            clock_cycles_remaining =+ 3;
             JMP(make_address(ABSOLUTE, lsb, msb));
             break;
         case 0x6C:
+            clock_cycles_remaining += 5;
             JMP(make_address(INDIRECT, lsb, msb));
             break;
         case 0x20:
+            clock_cycles_remaining += 6;
             JSR(make_address(ABSOLUTE, lsb, msb));
             break;
         case 0x90:
+            clock_cycles_remaining += 2;
+            if (crosses_page(RELATIVE, lsb)) {
+                clock_cycles_remaining += 1;
+            }
             BCC(get_memory(RELATIVE, lsb));
             break;
         case 0xB0:
+            clock_cycles_remaining += 2;
+            if (crosses_page(RELATIVE, lsb)) {
+                clock_cycles_remaining += 1;
+            }
             BCS(get_memory(RELATIVE, lsb));
             break;
         case 0xF0:
+            clock_cycles_remaining += 2;
+            if (crosses_page(RELATIVE, lsb)) {
+                clock_cycles_remaining += 1;
+            }
             BEQ(get_memory(RELATIVE, lsb));
             break;
         case 0x30:
+            clock_cycles_remaining += 2;
+            if (crosses_page(RELATIVE, lsb)) {
+                clock_cycles_remaining += 1;
+            }
             BMI(get_memory(RELATIVE, lsb));
             break;
         case 0xD0:
+            clock_cycles_remaining += 2;
+            if (crosses_page(RELATIVE, lsb)) {
+                clock_cycles_remaining += 1;
+            }
             BNE(get_memory(RELATIVE, lsb));
             break;
         case 0x10:
+            clock_cycles_remaining += 2;
+            if (crosses_page(RELATIVE, lsb)) {
+                clock_cycles_remaining += 1;
+            }
             BPL(get_memory(RELATIVE, lsb));
             break;
         case 0x50:
+            clock_cycles_remaining += 2;
+            if (crosses_page(RELATIVE, lsb)) {
+                clock_cycles_remaining += 1;
+            }
             BVC(get_memory(RELATIVE, lsb));
             break;
         case 0x70:
+            clock_cycles_remaining += 2;
+            if (crosses_page(RELATIVE, lsb)) {
+                clock_cycles_remaining += 1;
+            }
             BVS(get_memory(RELATIVE, lsb));
             break;
         case 0xE6:
+            clock_cycles_remaining += 5;
             INC(make_address(ZERO_PAGE, lsb));
             break;
         case 0xF6:
+            clock_cycles_remaining += 6;
             INC(make_address(ZERO_PAGE_X, lsb));
             break;
         case 0xEE:
+            clock_cycles_remaining += 6;
             INC(make_address(ABSOLUTE, lsb, msb));
             break;
         case 0xFE:
+            clock_cycles_remaining += 7;
             INC(make_address(ABSOLUTE_X, lsb, msb));
             break;
         case 0x18:
+            clock_cycles_remaining += 2;
             CLC();
             increment_program_counter(1);
             break;
@@ -1824,10 +2016,10 @@ void CPU::execute_next_opcode() {
     // There may be some time remaining before we start the next opcode, we need to account for that
     // We are just skipping forward
 
+    execute_opcode(program_counter);
+
     num_clock_cycles += clock_cycles_remaining;
     clock_cycles_remaining = 0;
-
-    execute_opcode(program_counter);
 }
 
 void CPU::stack_push(uint8_t new_val) {

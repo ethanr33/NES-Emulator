@@ -25,6 +25,7 @@ void print_cpu_state(NES nes, std::ostream& out, bool has_formatting) {
     out << " X: " << std::hex << static_cast<unsigned>(nes.get_cpu()->get_x());
     out << " Y: " << std::hex << static_cast<unsigned>(nes.get_cpu()->get_y());
     out << " SP: " << std::hex << static_cast<unsigned>(nes.get_cpu()->get_stack_pointer())<< " ";
+    out << " Cycles: " << std::dec << nes.get_cpu()->num_clock_cycles << " ";
 
     for (int i = 0; i < 8; i++) {
         out << nes.get_cpu()->get_flag(static_cast<flag_type>(i));
