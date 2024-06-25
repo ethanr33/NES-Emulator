@@ -1204,7 +1204,7 @@ bool CPU::crosses_page(addressing_mode mode, uint8_t lsb) {
     } else if (mode == RELATIVE) {
         uint16_t target_address = program_counter + (uint8_t) lsb;
 
-        return target_address & 0xFF < program_counter & 0xFF;
+        return (target_address & 0xFF) < (program_counter & 0xFF);
     } else {
         throw std::runtime_error("Tried to check crossing page with addressing mode " + std::to_string(mode));
     }
