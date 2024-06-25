@@ -118,6 +118,7 @@ int main() {
                 string line;
                 string expected_pc;
                 string expected_a;
+                int expected_cyc;
 
                 expected_output >> expected_pc;
                 expected_output.ignore();
@@ -126,13 +127,19 @@ int main() {
                 size_t a_pos = line.find(':');
                 expected_a = line.substr(a_pos + 1, 2);
 
+                size_t cyc_pos = line.find("CYC:");
+                expected_cyc = stoi(line.substr(cyc_pos));
+
                 string actual_pc = get_hex_string(nes.get_cpu()->get_program_counter(), 4);
                 string actual_A = get_hex_string(nes.get_cpu()->get_a(), 2);
+                int actual_cycles = nes.get_cpu()->num_clock_cycles;
 
                 bool pc_matches = (expected_pc == actual_pc);
                 bool A_matches = (expected_a == actual_A);
+                bool cycles_match (expected_cyc == actual_cycles);
 
-                matching = pc_matches && A_matches;
+
+                matching = pc_matches && A_matches && cycles_match;
 
                 print_cpu_state(nes, log_file, false);
 
@@ -142,6 +149,10 @@ int main() {
 
                 if (!A_matches) {
                     log_file << "A does not match!" << endl;
+                }
+
+                if (!cycles_match) {
+                    log_file << "Cycles do not match!" << endl;
                 }
 
                 nes.get_cpu()->execute_next_opcode();
