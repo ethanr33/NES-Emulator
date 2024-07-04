@@ -129,31 +129,29 @@ main/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/build
 .PHONY : main/fast
 
-#=============================================================================
-# Target rules for targets named debug
+Bus.o: Bus.cpp.o
+.PHONY : Bus.o
 
-# Build rule for target.
-debug: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 debug
-.PHONY : debug
+# target to build an object file
+Bus.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/Bus.cpp.o
+.PHONY : Bus.cpp.o
 
-# fast build rule for target.
-debug/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/debug.dir/build.make CMakeFiles/debug.dir/build
-.PHONY : debug/fast
+Bus.i: Bus.cpp.i
+.PHONY : Bus.i
 
-#=============================================================================
-# Target rules for targets named cputest
+# target to preprocess a source file
+Bus.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/Bus.cpp.i
+.PHONY : Bus.cpp.i
 
-# Build rule for target.
-cputest: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 cputest
-.PHONY : cputest
+Bus.s: Bus.cpp.s
+.PHONY : Bus.s
 
-# fast build rule for target.
-cputest/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cputest.dir/build.make CMakeFiles/cputest.dir/build
-.PHONY : cputest/fast
+# target to generate assembly for a file
+Bus.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/Bus.cpp.s
+.PHONY : Bus.cpp.s
 
 CPU.o: CPU.cpp.o
 .PHONY : CPU.o
@@ -161,8 +159,6 @@ CPU.o: CPU.cpp.o
 # target to build an object file
 CPU.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/CPU.cpp.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/debug.dir/build.make CMakeFiles/debug.dir/CPU.cpp.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cputest.dir/build.make CMakeFiles/cputest.dir/CPU.cpp.o
 .PHONY : CPU.cpp.o
 
 CPU.i: CPU.cpp.i
@@ -171,8 +167,6 @@ CPU.i: CPU.cpp.i
 # target to preprocess a source file
 CPU.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/CPU.cpp.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/debug.dir/build.make CMakeFiles/debug.dir/CPU.cpp.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cputest.dir/build.make CMakeFiles/cputest.dir/CPU.cpp.i
 .PHONY : CPU.cpp.i
 
 CPU.s: CPU.cpp.s
@@ -181,9 +175,31 @@ CPU.s: CPU.cpp.s
 # target to generate assembly for a file
 CPU.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/CPU.cpp.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/debug.dir/build.make CMakeFiles/debug.dir/CPU.cpp.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cputest.dir/build.make CMakeFiles/cputest.dir/CPU.cpp.s
 .PHONY : CPU.cpp.s
+
+Cartridge.o: Cartridge.cpp.o
+.PHONY : Cartridge.o
+
+# target to build an object file
+Cartridge.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/Cartridge.cpp.o
+.PHONY : Cartridge.cpp.o
+
+Cartridge.i: Cartridge.cpp.i
+.PHONY : Cartridge.i
+
+# target to preprocess a source file
+Cartridge.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/Cartridge.cpp.i
+.PHONY : Cartridge.cpp.i
+
+Cartridge.s: Cartridge.cpp.s
+.PHONY : Cartridge.s
+
+# target to generate assembly for a file
+Cartridge.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/Cartridge.cpp.s
+.PHONY : Cartridge.cpp.s
 
 Helpers.o: Helpers.cpp.o
 .PHONY : Helpers.o
@@ -191,8 +207,6 @@ Helpers.o: Helpers.cpp.o
 # target to build an object file
 Helpers.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/Helpers.cpp.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/debug.dir/build.make CMakeFiles/debug.dir/Helpers.cpp.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cputest.dir/build.make CMakeFiles/cputest.dir/Helpers.cpp.o
 .PHONY : Helpers.cpp.o
 
 Helpers.i: Helpers.cpp.i
@@ -201,8 +215,6 @@ Helpers.i: Helpers.cpp.i
 # target to preprocess a source file
 Helpers.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/Helpers.cpp.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/debug.dir/build.make CMakeFiles/debug.dir/Helpers.cpp.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cputest.dir/build.make CMakeFiles/cputest.dir/Helpers.cpp.i
 .PHONY : Helpers.cpp.i
 
 Helpers.s: Helpers.cpp.s
@@ -211,60 +223,31 @@ Helpers.s: Helpers.cpp.s
 # target to generate assembly for a file
 Helpers.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/Helpers.cpp.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/debug.dir/build.make CMakeFiles/debug.dir/Helpers.cpp.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cputest.dir/build.make CMakeFiles/cputest.dir/Helpers.cpp.s
 .PHONY : Helpers.cpp.s
 
-NES.o: NES.cpp.o
-.PHONY : NES.o
+PPU.o: PPU.cpp.o
+.PHONY : PPU.o
 
 # target to build an object file
-NES.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/NES.cpp.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/debug.dir/build.make CMakeFiles/debug.dir/NES.cpp.o
-.PHONY : NES.cpp.o
+PPU.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/PPU.cpp.o
+.PHONY : PPU.cpp.o
 
-NES.i: NES.cpp.i
-.PHONY : NES.i
-
-# target to preprocess a source file
-NES.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/NES.cpp.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/debug.dir/build.make CMakeFiles/debug.dir/NES.cpp.i
-.PHONY : NES.cpp.i
-
-NES.s: NES.cpp.s
-.PHONY : NES.s
-
-# target to generate assembly for a file
-NES.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/NES.cpp.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/debug.dir/build.make CMakeFiles/debug.dir/NES.cpp.s
-.PHONY : NES.cpp.s
-
-debug.o: debug.cpp.o
-.PHONY : debug.o
-
-# target to build an object file
-debug.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/debug.dir/build.make CMakeFiles/debug.dir/debug.cpp.o
-.PHONY : debug.cpp.o
-
-debug.i: debug.cpp.i
-.PHONY : debug.i
+PPU.i: PPU.cpp.i
+.PHONY : PPU.i
 
 # target to preprocess a source file
-debug.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/debug.dir/build.make CMakeFiles/debug.dir/debug.cpp.i
-.PHONY : debug.cpp.i
+PPU.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/PPU.cpp.i
+.PHONY : PPU.cpp.i
 
-debug.s: debug.cpp.s
-.PHONY : debug.s
+PPU.s: PPU.cpp.s
+.PHONY : PPU.s
 
 # target to generate assembly for a file
-debug.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/debug.dir/build.make CMakeFiles/debug.dir/debug.cpp.s
-.PHONY : debug.cpp.s
+PPU.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/PPU.cpp.s
+.PHONY : PPU.cpp.s
 
 main.o: main.cpp.o
 .PHONY : main.o
@@ -290,29 +273,53 @@ main.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/main.cpp.s
 .PHONY : main.cpp.s
 
-tests/cputest.o: tests/cputest.cpp.o
-.PHONY : tests/cputest.o
+mappers/Mapper.o: mappers/Mapper.cpp.o
+.PHONY : mappers/Mapper.o
 
 # target to build an object file
-tests/cputest.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cputest.dir/build.make CMakeFiles/cputest.dir/tests/cputest.cpp.o
-.PHONY : tests/cputest.cpp.o
+mappers/Mapper.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/mappers/Mapper.cpp.o
+.PHONY : mappers/Mapper.cpp.o
 
-tests/cputest.i: tests/cputest.cpp.i
-.PHONY : tests/cputest.i
+mappers/Mapper.i: mappers/Mapper.cpp.i
+.PHONY : mappers/Mapper.i
 
 # target to preprocess a source file
-tests/cputest.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cputest.dir/build.make CMakeFiles/cputest.dir/tests/cputest.cpp.i
-.PHONY : tests/cputest.cpp.i
+mappers/Mapper.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/mappers/Mapper.cpp.i
+.PHONY : mappers/Mapper.cpp.i
 
-tests/cputest.s: tests/cputest.cpp.s
-.PHONY : tests/cputest.s
+mappers/Mapper.s: mappers/Mapper.cpp.s
+.PHONY : mappers/Mapper.s
 
 # target to generate assembly for a file
-tests/cputest.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cputest.dir/build.make CMakeFiles/cputest.dir/tests/cputest.cpp.s
-.PHONY : tests/cputest.cpp.s
+mappers/Mapper.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/mappers/Mapper.cpp.s
+.PHONY : mappers/Mapper.cpp.s
+
+mappers/Mapper000.o: mappers/Mapper000.cpp.o
+.PHONY : mappers/Mapper000.o
+
+# target to build an object file
+mappers/Mapper000.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/mappers/Mapper000.cpp.o
+.PHONY : mappers/Mapper000.cpp.o
+
+mappers/Mapper000.i: mappers/Mapper000.cpp.i
+.PHONY : mappers/Mapper000.i
+
+# target to preprocess a source file
+mappers/Mapper000.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/mappers/Mapper000.cpp.i
+.PHONY : mappers/Mapper000.cpp.i
+
+mappers/Mapper000.s: mappers/Mapper000.cpp.s
+.PHONY : mappers/Mapper000.s
+
+# target to generate assembly for a file
+mappers/Mapper000.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/mappers/Mapper000.cpp.s
+.PHONY : mappers/Mapper000.cpp.s
 
 # Help Target
 help:
@@ -322,27 +329,31 @@ help:
 	@echo "... depend"
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
-	@echo "... cputest"
-	@echo "... debug"
 	@echo "... main"
+	@echo "... Bus.o"
+	@echo "... Bus.i"
+	@echo "... Bus.s"
 	@echo "... CPU.o"
 	@echo "... CPU.i"
 	@echo "... CPU.s"
+	@echo "... Cartridge.o"
+	@echo "... Cartridge.i"
+	@echo "... Cartridge.s"
 	@echo "... Helpers.o"
 	@echo "... Helpers.i"
 	@echo "... Helpers.s"
-	@echo "... NES.o"
-	@echo "... NES.i"
-	@echo "... NES.s"
-	@echo "... debug.o"
-	@echo "... debug.i"
-	@echo "... debug.s"
+	@echo "... PPU.o"
+	@echo "... PPU.i"
+	@echo "... PPU.s"
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"
-	@echo "... tests/cputest.o"
-	@echo "... tests/cputest.i"
-	@echo "... tests/cputest.s"
+	@echo "... mappers/Mapper.o"
+	@echo "... mappers/Mapper.i"
+	@echo "... mappers/Mapper.s"
+	@echo "... mappers/Mapper000.o"
+	@echo "... mappers/Mapper000.i"
+	@echo "... mappers/Mapper000.s"
 .PHONY : help
 
 

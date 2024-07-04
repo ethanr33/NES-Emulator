@@ -12,8 +12,9 @@ void PPU::write_cpu(uint16_t address, uint8_t val) {
 // Communicate with PPU bus
 
 uint8_t PPU::read_ppu(uint16_t address) {
+    uint8_t data;
 
-    if (cartridge->read_ppu(address)) {
+    if (cartridge->read_ppu(address, data)) {
         // do something
     }
 
@@ -28,3 +29,7 @@ void PPU::write_ppu(uint16_t address, uint8_t val) {
 
     return;
 }
+
+void PPU::load_cartridge(Cartridge* new_cartridge) {
+    cartridge = new_cartridge;
+} 

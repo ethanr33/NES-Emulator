@@ -3,7 +3,7 @@
 #include <vector>
 #include <string>
 
-#include "Mapper.h"
+#include "mappers/Mapper.h"
 
 enum MIRRORING_TYPE {HORIZONTAL, VERTICAL, FOUR_SCREEN};
 

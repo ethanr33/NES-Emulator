@@ -7,7 +7,7 @@
 
 #include "Cartridge.h"
 #include "Helpers.h"
-#include "Mapper000.h"
+#include "mappers/Mapper000.h"
 
 Cartridge::Cartridge(const std::string& rom_file_name) {
     std::ifstream rom_file("roms/" + rom_file_name, std::ios::binary);

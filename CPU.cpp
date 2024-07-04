@@ -2044,3 +2044,8 @@ uint8_t CPU::stack_pop() {
     stack_pointer++;
     return temp;
 }
+
+void CPU::reset() {
+    this->program_counter = PROGRAM_MEMORY_START;
+    this->stack_pointer = STACK_LOCATION_START;
+}
