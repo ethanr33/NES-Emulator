@@ -41,7 +41,7 @@ struct CPU {
 
     // Fixed size memory based on NES architecture specs
     // Store in units of kilobytes
-    uint8_t RAM[0xFFFF];
+    uint8_t RAM[0x10000];
 
     void increment_program_counter(int);
 

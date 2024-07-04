@@ -52,7 +52,6 @@ bool NES::load_program(const string& rom_file_name) {
             char cur_byte;
             for (int i = 0; i < 16; i++) {
                 rom_file.get(cur_byte);
-                std::cout << (int) cur_byte << std::endl;
                 file_header.at(i) = cur_byte;
             }
 
@@ -76,8 +75,6 @@ bool NES::load_program(const string& rom_file_name) {
             return false;
         }
     }
-
-    std::cout << "rom data size: " << rom_data.size() << std::endl;
 
     // Once we read all of the data from the rom, we can store it in memory
     cpu->load_rom_into_memory(rom_data);
