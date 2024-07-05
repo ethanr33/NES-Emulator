@@ -9,14 +9,14 @@ uint8_t Bus::read_cpu(uint16_t address) {
     }
 
     if (address >= RAM_MIRROR_START && address <= RAM_MIRROR_END) {
-        return cpu.RAM[address & 0x7FF];
+        return cpu_RAM[address & 0x7FF];
     }
 
     if (address >= PPU_REG_MIRROR_START && address <= PPU_REG_MIRROR_END) {
-        return cpu.RAM[address & 0x7];
+        return cpu_RAM[address & 0x7];
     }
 
-    return cpu.RAM[address];
+    return cpu_RAM[address];
 }
 
 void Bus::write_cpu(uint16_t address, uint8_t val) {
@@ -25,11 +25,11 @@ void Bus::write_cpu(uint16_t address, uint8_t val) {
     }
 
     if (address >= RAM_MIRROR_START && address <= RAM_MIRROR_END) {
-        cpu.RAM[address & 0x7FF] = val;
+        cpu_RAM[address & 0x7FF] = val;
     }
 
     if (address >= PPU_REG_MIRROR_START && address <= PPU_REG_MIRROR_END) {
-        cpu.RAM[PPU_REG_MIRROR_START + address & 0x7] = val;
+        cpu_RAM[PPU_REG_MIRROR_START + address & 0x7] = val;
     }
 }
 
@@ -39,5 +39,5 @@ void Bus::insert_cartridge(Cartridge* new_cartridge) {
 }
 
 void Bus::reset() {
-
+    cpu.reset();
 }

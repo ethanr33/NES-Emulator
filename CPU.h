@@ -3,6 +3,8 @@
 #include <cstdint>
 #include <vector>
 
+struct Bus;
+
 /*
     See:
     https://www.nesdev.org/obelisk-6502-guide/registers.html
@@ -38,11 +40,12 @@ struct CPU {
     // Index 5: Reserved
     // Index 6: Overflow flag
     // Index 7: Negative flag
+    bool const DEFAULT_FLAGS[8] = {0, 0, 0, 0, 0, 1, 0, 0};
     bool flags[8] = {0, 0, 0, 0, 0, 1, 0, 0};
 
-    // Fixed size memory based on NES architecture specs
-    // Store in units of kilobytes
-    uint8_t RAM[0x10000];
+    Bus* bus;
+
+    void attach_bus(Bus*);
 
     void increment_program_counter(int);
 
@@ -146,15 +149,8 @@ struct CPU {
     void TXS();
     void TYA();
 
-    // Getters
-    uint8_t get_a() const;
-    uint8_t get_x() const;
-    uint8_t get_y() const;
-    uint16_t get_program_counter() const;
-    uint8_t get_current_opcode() const;
-    bool get_flag(flag_type);
-    uint8_t get_stack_pointer() const;
 
-    // Setters
-    void set_a(uint8_t);
+    bool get_flag(flag_type);
 };
+
+#include "Bus.h"

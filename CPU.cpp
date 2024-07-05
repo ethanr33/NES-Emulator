@@ -455,18 +455,22 @@ void CPU::ASL() {
     This operation shifts all the bits of the memory contents one bit left. 
 */
 void CPU::ASL(uint16_t memory_address) {
+
+    uint8_t memory_val = bus->read_cpu(memory_address);
     
-    set_flag(CARRY, is_bit_set(7, RAM[memory_address]));
+    set_flag(CARRY, is_bit_set(7, memory_val));
 
-    RAM[memory_address] = RAM[memory_address] << 1;
+    memory_val <<= 1;
 
-    if (RAM[memory_address] == 0) {
+    bus->write_cpu(memory_address, memory_val);
+
+    if (memory_val == 0) {
         set_flag(ZERO, 1);
     } else {
         set_flag(ZERO, 0);
     }
 
-    if (is_bit_set(RAM[memory_address], 7) == 1) {
+    if (is_bit_set(memory_val, 7) == 1) {
         set_flag(NEGATIVE, 1);
     } else {
         set_flag(NEGATIVE, 0);
@@ -649,7 +653,7 @@ void CPU::CPY(uint8_t memory_val) {
     Stores the contents of the accumulator into memory.
 */
 void CPU::STA(uint16_t location) {
-    RAM[location] = A;
+    bus->write_cpu(location, A);
 }
 
 /*
@@ -657,7 +661,7 @@ void CPU::STA(uint16_t location) {
     Stores the contents of the X register into memory.
 */
 void CPU::STX(uint16_t location) {
-    RAM[location] = X;
+    bus->write_cpu(location, X);
 }
 
 void CPU::JMP(uint16_t target) {
@@ -673,7 +677,7 @@ void CPU::JMP(uint16_t target) {
     Stores the contents of the Y register into memory.
 */
 void CPU::STY(uint16_t location) {
-    RAM[location] = Y;
+    bus->write_cpu(location, Y);
 }
 
 /*
@@ -714,21 +718,25 @@ void CPU::ROL(uint16_t address) {
 
     bool old_carry = get_flag(CARRY);
 
-    set_flag(CARRY, is_bit_set(7, RAM[address]));
+    uint8_t memory_val = bus->read_cpu(address);
 
-    RAM[address] = RAM[address] << 1;
+    set_flag(CARRY, is_bit_set(7, memory_val));
+
+    memory_val <<= 1;
+
+    bus->write_cpu(address, memory_val);
 
     if (old_carry) {
-        RAM[address] = RAM[address] | 1;
+        memory_val = memory_val | 1;
     }
 
-    if (RAM[address] == 0) {
+    if (memory_val == 0) {
         set_flag(ZERO, 1);
     } else {
         set_flag(ZERO, 0);
     }
 
-    if (is_bit_set(7, RAM[address])) {
+    if (is_bit_set(7, memory_val)) {
         set_flag(NEGATIVE, 1);
     } else {
         set_flag(NEGATIVE, 0);
@@ -774,22 +782,25 @@ void CPU::ROR() {
 void CPU::ROR(uint16_t address) {
 
     bool old_carry = get_flag(CARRY);
+    uint8_t memory_val = bus->read_cpu(address);
 
-    set_flag(CARRY, is_bit_set(0, RAM[address]));
+    set_flag(CARRY, is_bit_set(0, memory_val));
 
-    RAM[address] = RAM[address] >> 1;
+    memory_val >>= 1;
+    bus->write_cpu(address, memory_val);
 
     if (old_carry) {
-        RAM[address] = RAM[address] | 0x80;
+    memory_val|= 0x80;
+    bus->write_cpu(address, memory_val);
     }
 
-    if (RAM[address] == 0) {
+    if (memory_val == 0) {
         set_flag(ZERO, 1);
     } else {
         set_flag(ZERO, 0);
     }
 
-    if (is_bit_set(7, RAM[address])) {
+    if (is_bit_set(7, memory_val)) {
         set_flag(NEGATIVE, 1);
     } else {
         set_flag(NEGATIVE, 0);
@@ -814,15 +825,17 @@ void CPU::TSX() {
 }
 
 void CPU::DEC(uint16_t memory_address) {
-    RAM[memory_address]--;
+    uint8_t memory_val = bus->read_cpu(memory_address);
+    memory_val--;
+    bus->write_cpu(memory_address, memory_val);
 
-    if (RAM[memory_address] == 0) {
+    if (memory_val == 0) {
         set_flag(ZERO, 1);
     } else {
         set_flag(ZERO, 0);
     }
 
-    if (is_bit_set(7, RAM[memory_address])) {
+    if (is_bit_set(7, memory_val)) {
         set_flag(NEGATIVE, 1);
     } else {
         set_flag(NEGATIVE, 0);
@@ -881,18 +894,21 @@ void CPU::LSR() {
 }
 
 void CPU::LSR(uint16_t address) {
-    set_flag(CARRY, RAM[address] & 0x1);
+    uint8_t val = bus->read_cpu(address);
 
-    RAM[address] = RAM[address] >> 1;
+    set_flag(CARRY, val & 0x1);
 
-    if (RAM[address] == 0) {
+    val = val >> 1;
+    bus->write_cpu(address, val);
+
+    if (val == 0) {
         set_flag(ZERO, 1);
     } else {
         set_flag(ZERO, 0);
     }
 
     // don't know why this is necessary
-    if (is_bit_set(7, RAM[address])) {
+    if (is_bit_set(7, val)) {
         set_flag(CARRY, 1);
     }
 }
@@ -903,15 +919,17 @@ void CPU::NOP() {
 }
 
 void CPU::INC(uint16_t address) {
-    RAM[address]++;
+    uint8_t val = bus->read_cpu(address);
+    val++;
+    bus->write_cpu(address, val);
 
-    if (RAM[address] == 0) {
+    if (val == 0) {
         set_flag(ZERO, 1);
     } else {
         set_flag(ZERO, 0);
     }
 
-    if (is_bit_set(7, RAM[address])) {
+    if (is_bit_set(7, val)) {
         set_flag(NEGATIVE, 1);
     } else {
         set_flag(NEGATIVE, 0);
@@ -929,7 +947,7 @@ void CPU::BRK() {
     stack_push(program_counter);
     set_flag(BREAK, 1);
     stack_push(get_byte_from_flags());
-    program_counter = form_address(RAM[0xFFFE], RAM[0xFFFF]);
+    program_counter = form_address(bus->read_cpu(0xFFFE), bus->read_cpu(0xFFFF));
 }
 
 void CPU::RTI() {
@@ -1003,24 +1021,12 @@ void CPU::toggle_flag(flag_type flag_to_toggle) {
     flags[flag_to_toggle] = !flags[flag_to_toggle];
 }
 
-uint8_t CPU::get_a() const {
-    return A;
-}
-
-void CPU::set_a(uint8_t new_a) {
-    A = new_a;
-}
-
-uint8_t CPU::get_x() const {
-    return X;
-}
-
-uint8_t CPU::get_y() const {
-    return Y;
-}
-
 bool CPU::get_flag(flag_type flag_to_get) {
     return flags[flag_to_get];
+}
+
+void CPU::attach_bus(Bus* b) {
+    bus = b;
 }
 
 // Turns the flag array into a byte
@@ -1041,19 +1047,10 @@ uint8_t CPU::get_byte_from_flags() const {
     return flag_byte;
 }
 
-uint16_t CPU::get_program_counter() const {
-    return program_counter;
-}
-
 void CPU::increment_program_counter(int increment_amount) {
     program_counter += increment_amount;
 }
 
-
-uint8_t CPU::get_current_opcode() const
-{
-    return RAM[program_counter];
-}
 /*
 
 addressing_mode mode: The way we want to address memory
@@ -1071,31 +1068,30 @@ uint8_t CPU::get_memory(addressing_mode mode, uint8_t parameter_val) {
     if (mode == IMMEDIATE || mode == RELATIVE) {
         return parameter_val;
     } else if (mode == ZERO_PAGE) {
-        return RAM[parameter_val];
+        return bus->read_cpu(parameter_val);
     } else if (mode == ZERO_PAGE_X) {
         // We always want to stay on zero page, and address may overflow here
-        return RAM[(parameter_val + X) & 0xFF];
+        return bus->read_cpu((parameter_val + X) & 0xFF);
     } else if (mode == ZERO_PAGE_Y) {
         // We always want to stay on zero page, and address may overflow here
-        return RAM[(parameter_val + Y) & 0xFF];
+        return bus->read_cpu((parameter_val + Y) & 0xFF);
     } else if (mode == INDEXED_INDIRECT) {
         // Zero page wrap around may occur here, so we mod the address by the page size.
         // Luckily we can do this by only keeping the first 8 bits of the address and discarding the higher ones
         uint8_t lsb_address = parameter_val + X;
         uint8_t msb_address = lsb_address + 1;
         
-        uint8_t least_significant_byte = RAM[lsb_address];
-        uint8_t most_significant_byte = RAM[msb_address];
-
-        return RAM[form_address(least_significant_byte, most_significant_byte)];
+        uint8_t least_significant_byte = bus->read_cpu(lsb_address);
+        uint8_t most_significant_byte = bus->read_cpu(msb_address);
+        return bus->read_cpu(form_address(least_significant_byte, most_significant_byte));
     } else if (mode == INDIRECT_INDEXED) {
-        uint8_t least_significant_byte = RAM[parameter_val];
+        uint8_t least_significant_byte = bus->read_cpu(parameter_val);
         // If parameter_val = 0xFF, adding one may overflow.
-        uint8_t most_significant_byte = RAM[(parameter_val + 1) & 0xFF];
+        uint8_t most_significant_byte = bus->read_cpu((parameter_val + 1) & 0xFF);
 
         uint16_t new_address = form_address(least_significant_byte, most_significant_byte) + Y;
 
-        return RAM[new_address];
+        return bus->read_cpu(new_address);
     } else {
         throw std::runtime_error("Memory addressing mode not implemented: " + std::to_string(mode));
     }
@@ -1107,13 +1103,13 @@ uint8_t CPU::get_memory(addressing_mode mode, uint8_t parameter_lsb, uint8_t par
     increment_program_counter(3);
 
     if (mode == ABSOLUTE) {
-        return RAM[full_address];
+        return bus->read_cpu(full_address);
     } else if (mode == ABSOLUTE_X) {
         // If address is too big, we may overflow
-        return RAM[(full_address + X) & 0xFFFF];
+        return bus->read_cpu((full_address + X) & 0xFFFF);
     } else if (mode == ABSOLUTE_Y) {
         // If address is too big, we may overflow
-        return RAM[(full_address + Y) & 0xFFFF];
+        return bus->read_cpu((full_address + Y) & 0xFFFF);
     } else {
         throw std::runtime_error("Memory addressing mode not implemented: " + std::to_string(mode));
     }
@@ -1137,12 +1133,12 @@ uint16_t CPU::make_address(addressing_mode mode, uint8_t parameter_lsb) {
         uint8_t lsb_address = parameter_lsb + X;
         uint8_t msb_address = lsb_address + 1;
 
-        uint8_t least_significant_byte = RAM[lsb_address];
-        uint8_t most_significant_byte = RAM[msb_address];
+        uint8_t least_significant_byte = bus->read_cpu(lsb_address);
+        uint8_t most_significant_byte = bus->read_cpu(msb_address);
 
         return form_address(least_significant_byte, most_significant_byte);
     } else if (mode == INDIRECT_INDEXED) {
-        return form_address(RAM[parameter_lsb], RAM[parameter_lsb + 1]) + Y;
+        return form_address(bus->read_cpu(parameter_lsb), bus->read_cpu(parameter_lsb + 1)) + Y;
     } else {
         throw std::runtime_error("Memory addressing mode not implemented: " + std::to_string(mode));
     }
@@ -1168,10 +1164,10 @@ uint16_t CPU::make_address(addressing_mode mode, uint8_t parameter_lsb, uint8_t 
         uint16_t target_address = form_address(parameter_lsb, parameter_msb);
         
         if (parameter_lsb != 0xFF) {
-            return form_address(RAM[target_address], RAM[target_address + 1]);
+            return form_address(bus->read_cpu(target_address), bus->read_cpu(target_address + 1));
         } else {
             // Buggy case
-            return form_address(RAM[target_address], RAM[target_address & 0xFF00]);
+            return form_address(bus->read_cpu(target_address), bus->read_cpu(target_address & 0xFF00));
         }
     } else {
         throw std::runtime_error("Memory addressing mode not implemented: " + std::to_string(mode));
@@ -1195,8 +1191,8 @@ bool CPU::crosses_page(addressing_mode mode, uint8_t lsb) {
             return true;
         }
 
-        uint8_t target_lsb = RAM[lsb];
-        uint8_t target_msb = RAM[lsb + 1];
+        uint8_t target_lsb = bus->read_cpu(lsb);
+        uint8_t target_msb = bus->read_cpu(lsb + 1);
 
         uint8_t target_address = form_address(target_lsb, target_msb);
 
@@ -1211,9 +1207,9 @@ bool CPU::crosses_page(addressing_mode mode, uint8_t lsb) {
 }
 
 void CPU::execute_opcode(uint16_t opcode_address) {
-    uint8_t opcode = RAM[opcode_address];
-    uint8_t lsb = RAM[opcode_address + 1];
-    uint8_t msb = RAM[opcode_address + 2];
+    uint8_t opcode = bus->read_cpu(opcode_address);
+    uint8_t lsb = bus->read_cpu(opcode_address + 1);
+    uint8_t msb = bus->read_cpu(opcode_address + 2);
 
 
     // Figure out what command the opcode corresponds to
@@ -1989,12 +1985,6 @@ void CPU::execute_opcode(uint16_t opcode_address) {
     };
 }
 
-void CPU::load_rom_into_memory(const std::vector<uint8_t>& rom_data) {
-    for (int i = 0; i < rom_data.size(); i++) {
-        RAM[PROGRAM_MEMORY_START + i] = rom_data.at(i);
-    }
-} 
-
 // Execute one cycle of CPU.
 // This will typically run one opcode
 void CPU::tick(int cycle_increment) {
@@ -2023,7 +2013,7 @@ void CPU::execute_next_opcode() {
 }
 
 void CPU::stack_push(uint8_t new_val) {
-    RAM[0x100 + stack_pointer] = new_val;
+    bus->write_cpu(0x100 + stack_pointer, new_val);
     stack_pointer--;
 }
 
@@ -2035,17 +2025,17 @@ void CPU::stack_push(uint16_t new_val) {
     stack_push(lsb);
 } 
 
-uint8_t CPU::get_stack_pointer() const
-{
-    return stack_pointer;
-}
 uint8_t CPU::stack_pop() {
-    uint16_t temp = RAM[0x100 + stack_pointer + 1];
+    uint16_t temp = bus->read_cpu(0x100 + stack_pointer + 1);
     stack_pointer++;
     return temp;
 }
 
 void CPU::reset() {
-    this->program_counter = PROGRAM_MEMORY_START;
-    this->stack_pointer = STACK_LOCATION_START;
+    program_counter = PROGRAM_MEMORY_START;
+    stack_pointer = STACK_LOCATION_START;
+    
+    for (int i = 0; i < 8; i++) {
+        flags[i] = DEFAULT_FLAGS[i];    
+    }
 }
