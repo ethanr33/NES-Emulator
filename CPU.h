@@ -81,7 +81,7 @@ struct CPU {
     void execute_next_opcode();
 
     // Tick for a specified number of cycles
-    void tick(int);
+    void tick();
 
     // Reset CPU state
     void reset();

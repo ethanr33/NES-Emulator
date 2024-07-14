@@ -33,3 +33,11 @@ void PPU::write_ppu(uint16_t address, uint8_t val) {
 void PPU::load_cartridge(Cartridge* new_cartridge) {
     cartridge = new_cartridge;
 } 
+
+void PPU::tick() {
+    return;
+}
+
+void PPU::reset() {
+    scanline = -1;
+}

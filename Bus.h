@@ -13,13 +13,15 @@ struct Bus {
 
     static const uint16_t RAM_SIZE = 0x2000;
 
+    Bus();
+
     CPU cpu;
     PPU ppu;
     Cartridge* cartridge;
 
     uint8_t cpu_RAM[RAM_SIZE];
 
-    Bus();
+    uint64_t num_ticks = 0;
 
     uint8_t read_cpu(uint16_t);
     void write_cpu(uint16_t, uint8_t); 

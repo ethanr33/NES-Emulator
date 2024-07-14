@@ -1,5 +1,4 @@
 
-#pragma once
 #include "Mapper000.h"
 
 bool Mapper000::cpu_mapper_read(uint16_t addr, uint16_t& mapped_addr) {
@@ -10,7 +9,7 @@ bool Mapper000::cpu_mapper_read(uint16_t addr, uint16_t& mapped_addr) {
 
     if (addr >= 0x8000 && addr <= 0xBFFF) {
         // First 16KB of rom, directly mapped
-        mapped_addr = addr;
+        mapped_addr = addr - 0x8000;
         return true;
     }
 
@@ -19,9 +18,9 @@ bool Mapper000::cpu_mapper_read(uint16_t addr, uint16_t& mapped_addr) {
         // If NROM-256, this will be the second 16KB section.
 
         if (num_prg_banks == 1) {
-            mapped_addr = addr & 0xBFFF;
+            mapped_addr = addr - 0xC000;
         } else {
-            mapped_addr = addr - 0x4000;
+            mapped_addr = addr - 0x8000;
         }
         return true;
     }
@@ -37,7 +36,7 @@ bool Mapper000::cpu_mapper_write(uint16_t addr, uint16_t& mapped_addr) {
 
     if (addr >= 0x8000 && addr <= 0xBFFF) {
         // First 16KB of rom, directly mapped
-        mapped_addr = addr;
+        mapped_addr = addr - 0x8000;
         return true;
     }
 
@@ -46,9 +45,9 @@ bool Mapper000::cpu_mapper_write(uint16_t addr, uint16_t& mapped_addr) {
         // If NROM-256, this will be the second 16KB section.
 
         if (num_prg_banks == 1) {
-            mapped_addr = addr & 0xBFFF;
+            mapped_addr = addr - 0xC000;
         } else {
-            mapped_addr = addr - 0x4000;
+            mapped_addr = addr - 0x8000;
         }
         return true;
     }

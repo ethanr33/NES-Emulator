@@ -1,5 +1,6 @@
 #include <string>
 #include <stdexcept>
+#include <iostream>
 
 #include "CPU.h"
 #include "Helpers.h"
@@ -1980,6 +1981,7 @@ void CPU::execute_opcode(uint16_t opcode_address) {
             increment_program_counter(1);
             break;
         default:
+            std::cout << program_counter << std::endl;
             throw std::runtime_error("Unknown opcode " + std::to_string(opcode));
             break;
     };
@@ -1987,17 +1989,16 @@ void CPU::execute_opcode(uint16_t opcode_address) {
 
 // Execute one cycle of CPU.
 // This will typically run one opcode
-void CPU::tick(int cycle_increment) {
+void CPU::tick() {
     // We may have some cycles left before we can execute the next opcode, but the PC will still be pointed to the next one
 
-    if (cycle_increment >= clock_cycles_remaining) {
-        clock_cycles_remaining = cycle_increment - clock_cycles_remaining;
+    if (clock_cycles_remaining == 0) {
         execute_opcode(program_counter);
     } else {
-        clock_cycles_remaining -= cycle_increment;
+        clock_cycles_remaining -= 1;
     }
 
-    num_clock_cycles += cycle_increment;
+    num_clock_cycles += 1;
 
     // TODO: check for special end condition for program termination
 }

@@ -3,8 +3,6 @@
 #include "Cartridge.h"
 
 struct PPU {
-    PPU();
-
     static const int VRAM_SIZE = (1 << 11);
     static const int PALETTE_TABLE_SIZE = 32;
 
@@ -12,6 +10,8 @@ struct PPU {
     uint8_t PALETTE_RAM[PALETTE_TABLE_SIZE];
 
     Cartridge* cartridge;
+
+    uint16_t scanline = -1;
 
     // Communicate with CPU bus
     uint8_t read_cpu(uint16_t);
@@ -25,4 +25,5 @@ struct PPU {
     void load_cartridge(Cartridge*);
 
     void tick();
+    void reset();
 };
