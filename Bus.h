@@ -14,9 +14,10 @@ struct Bus {
     static const uint16_t RAM_SIZE = 0x2000;
 
     Bus();
+    Bus(bool);
 
-    CPU cpu;
-    PPU ppu;
+    CPU* cpu = nullptr;
+    PPU* ppu = nullptr;
     Cartridge* cartridge;
 
     uint8_t cpu_RAM[RAM_SIZE];
@@ -29,5 +30,6 @@ struct Bus {
     void insert_cartridge(Cartridge*);
     void reset();
     void tick();
+    void halt();
 
 };

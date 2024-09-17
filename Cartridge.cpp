@@ -51,6 +51,12 @@ Cartridge::Cartridge(const std::string& rom_file_name) {
             const int CHR_ROM_SIZE = file_header.at(5) * CHR_ROM_PAGE_SIZE;
 
             bool has_trainer = is_bit_set(2, file_header.at(6));
+            
+            if (is_bit_set(7, file_header.at(6))) {
+                mirroring_type = HORIZONTAL;
+            } else {
+                mirroring_type = VERTICAL;
+            }
 
             if (has_trainer) {
                 std::cerr << "Trainers are not supported yet" << std::endl;

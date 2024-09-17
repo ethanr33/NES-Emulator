@@ -9,9 +9,12 @@ compile_commands.json
 CTestTestfile.cmake
 _deps
 main
+chr_dump
+main.exe
 cputest
 debug
 debug.log
+debug.exe
 *.cmake
 Makefile
 /.vscode

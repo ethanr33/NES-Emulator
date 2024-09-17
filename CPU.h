@@ -15,7 +15,6 @@ enum flag_type {CARRY, ZERO, INT_DISABLE, DECIMAL, BREAK, RESERVED, OVER_FLOW, N
 enum addressing_mode {IMPLICIT, ACCUMULATOR, IMMEDIATE, ZERO_PAGE, ZERO_PAGE_X, ZERO_PAGE_Y, RELATIVE, ABSOLUTE, ABSOLUTE_X, ABSOLUTE_Y, INDIRECT, INDEXED_INDIRECT, INDIRECT_INDEXED};
 
 struct CPU {
-    const uint16_t PROGRAM_MEMORY_START = 0xC000;
     const uint16_t STACK_LOCATION_START = 0x1FD;
     const uint16_t STACK_LOCATION = 0x1FF;
     const uint16_t PAGE_SIZE = 0x100;
@@ -27,7 +26,7 @@ struct CPU {
     // The stack pointer stores the low 8 bytes of the next memory location available on the stack
     // 
     uint8_t stack_pointer = STACK_LOCATION_START;
-    uint16_t program_counter = PROGRAM_MEMORY_START;
+    uint16_t program_counter;
     uint8_t A = 0; // Accumulator register A
     uint8_t X = 0; // Index register X
     uint8_t Y = 0; // Index register Y

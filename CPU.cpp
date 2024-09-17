@@ -1212,11 +1212,114 @@ void CPU::execute_opcode(uint16_t opcode_address) {
     uint8_t lsb = bus->read_cpu(opcode_address + 1);
     uint8_t msb = bus->read_cpu(opcode_address + 2);
 
-
     // Figure out what command the opcode corresponds to
     // Get the values (possibly in memory) required to execure it
     // Then execute the command
+    // Extra opcodes: http://www.ffd2.com/fridge/docs/6502-NMOS.extra.opcodes
     switch (opcode) {
+        case 0x80:
+            // SKB
+            increment_program_counter(2);
+            num_clock_cycles += 2;
+            break;
+        case 0x82:
+            // SKB
+            increment_program_counter(2);
+            num_clock_cycles += 2;
+            break;
+        case 0x89:
+            // SKB
+            increment_program_counter(2);
+            num_clock_cycles += 2;
+            break;
+        case 0xC2:
+            // SKB
+            increment_program_counter(2);
+            num_clock_cycles += 2;
+            break;
+        case 0xE2:
+            // SKB
+            increment_program_counter(2);
+            num_clock_cycles += 2;
+            break;
+        case 0x1A:
+            // NOP
+            increment_program_counter(1);
+            num_clock_cycles += 2;
+            break;
+        case 0x3A:
+            // NOP
+            increment_program_counter(1);
+            num_clock_cycles += 2;
+            break;
+        case 0x5A:
+            // NOP
+            increment_program_counter(1);
+            num_clock_cycles += 2;
+            break;
+        case 0x7A:
+            // NOP
+            increment_program_counter(1);
+            num_clock_cycles += 2;
+            break;
+        case 0xDA:
+            // NOP
+            increment_program_counter(1);
+            num_clock_cycles += 2;
+            break;
+        case 0xFA:
+            // NOP
+            increment_program_counter(1);
+            num_clock_cycles += 2;
+            break;
+        case 0x02:
+            // HLT
+            bus->halt();
+            break;
+        case 0x12:
+            // HLT
+            bus->halt();
+            break;
+        case 0x22:
+            // HLT
+            bus->halt();
+            break;
+        case 0x32:
+            // HLT
+            bus->halt();
+            break;
+        case 0x42:
+            // HLT
+            bus->halt();
+            break;
+        case 0x52:
+            // HLT
+            bus->halt();
+            break;
+        case 0x62:
+            // HLT
+            bus->halt();
+            break;
+        case 0x72:
+            // HLT
+            bus->halt();
+            break;
+        case 0x92:
+            // HLT
+            bus->halt();
+            break;
+        case 0xB2:
+            // HLT
+            bus->halt();
+            break;
+        case 0xD2:
+            // HLT
+            bus->halt();
+            break;
+        case 0xF2:
+            // HLT
+            bus->halt();
+            break;
         case 0xA1:
             // LDA, indirect x
             clock_cycles_remaining += 6;
@@ -1980,6 +2083,9 @@ void CPU::execute_opcode(uint16_t opcode_address) {
             CLC();
             increment_program_counter(1);
             break;
+        case 0x04:
+            clock_cycles_remaining += 1;
+            break;
         default:
             std::cout << program_counter << std::endl;
             throw std::runtime_error("Unknown opcode " + std::to_string(opcode));
@@ -2033,7 +2139,7 @@ uint8_t CPU::stack_pop() {
 }
 
 void CPU::reset() {
-    program_counter = PROGRAM_MEMORY_START;
+    program_counter = (bus->read_cpu(0xFFFD) << 8) | bus->read_cpu(0xFFFC);
     stack_pointer = STACK_LOCATION_START;
     
     for (int i = 0; i < 8; i++) {

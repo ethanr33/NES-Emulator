@@ -27,4 +27,6 @@ struct Cartridge {
 
     bool read_ppu(uint16_t, uint8_t&);
     bool write_ppu(uint16_t, uint8_t);
+
+    void dump_CHR();
 };
