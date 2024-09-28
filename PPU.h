@@ -6,6 +6,8 @@
 #include "UI.h"
 #include "Helpers.h"
 
+enum TILE_POSITION {TOP_LEFT, TOP_RIGHT, BOTTOM_LEFT, BOTTOM_RIGHT};
+
 struct PPUCTRL {
     bool nmi_enable;
     bool ppu_ms;
@@ -122,6 +124,7 @@ struct PPU {
     // For use with OAMDMA register
     void load_OAMDMA(uint8_t, uint8_t[]);
 
+    void render_cycle();
     void tick();
     void reset();
 

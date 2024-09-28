@@ -26,7 +26,7 @@ uint8_t PPU::read_from_cpu(uint16_t address) {
                 uint8_t res = 0x0;
                 res = ppustatus.serialize();
                 ppustatus.vblank = false;
-                break;
+                return res;
             }
             case 3:
                 throw std::runtime_error("Attempted to read from OAMADDR register");
@@ -40,7 +40,7 @@ uint8_t PPU::read_from_cpu(uint16_t address) {
                 throw std::runtime_error("Attempted to read from PPUADDR register");
                 break;
             case 7: {
-                uint8_t data = VRAM[ppuaddr];
+                uint8_t data = read_from_ppu(ppuaddr);
 
                 if (ppuctrl.increment_mode == 0) {
                     ppuaddr++;
@@ -88,7 +88,7 @@ void PPU::write_from_cpu(uint16_t address, uint8_t val) {
                 }
                 break;
             case 7:
-                VRAM[ppuaddr] = val;
+                write_from_ppu(ppuaddr, val);
 
                 if (ppuctrl.increment_mode == 0) {
                     ppuaddr++;
@@ -121,7 +121,7 @@ uint8_t PPU::read_from_ppu(uint16_t address) {
         return read_from_ppu(address & 0x2EFF);
     } else if (address >= 0x3F00 && address <= 0x3F1F) {
         // pallete table 
-        return PALETTE_RAM[address & 0x1F];
+        return PALETTE_RAM[address & 0x3F];
     } else {
         throw std::runtime_error("Edge case in read_from_ppu");
     }
@@ -171,7 +171,7 @@ void PPU::write_from_ppu(uint16_t address, uint8_t val) {
         write_from_ppu(address & 0x2EFF, val);
     } else if (address >= 0x3F00 && address <= 0x3F1F) {
         // pallete table 
-        PALETTE_RAM[address & 0x1F] = val;
+        PALETTE_RAM[address & 0x3F] = val;
     }
 
     return;
@@ -189,6 +189,72 @@ void PPU::load_OAMDMA(uint8_t high_byte, uint8_t data[]) {
     }
 }
 
+void PPU::render_cycle() {
+    uint8_t step = cur_dot % 8;
+
+    if (step == 1) {
+        switch(ppuctrl.nametable_select) {
+            case 0:
+                nametable_entry = VRAM[map_to_nametable(0x2000 + (v & 0x3FF))];
+                break;
+            case 1:
+                nametable_entry = VRAM[map_to_nametable(0x2400 + (v & 0x3FF))];
+                break;
+            case 2:
+                nametable_entry = VRAM[map_to_nametable(0x2800 + (v & 0x3FF))];
+                break;
+            case 3:
+                nametable_entry = VRAM[map_to_nametable(0x2C00 + (v & 0x3FF))];
+                break;
+            default:
+                throw std::runtime_error("Unknown nametable selected " + std::to_string(ppuctrl.nametable_select) +  " when rendering");
+                break;
+        }
+    } else if (step == 3) {
+        attribute_table_entry = VRAM[v];
+    } else if (step == 5) {
+        if (ppuctrl.background_tile_select == 0) {
+            pattern_low_byte = cartridge->CHR_ROM.at(nametable_entry);
+        } else {
+            pattern_low_byte = cartridge->CHR_ROM.at(nametable_entry + 0x1000);
+        }
+    } else if (step == 7) {
+        if (ppuctrl.background_tile_select == 0) {
+            pattern_low_byte = cartridge->CHR_ROM.at(nametable_entry + 8);
+        } else {
+            pattern_low_byte = cartridge->CHR_ROM.at(nametable_entry + 0x1000 + 8);
+        }
+    } else if (step == 0) {
+        pattern_shift_reg_low = (pattern_shift_reg_low >> 8) | (pattern_low_byte << 8);
+        pattern_shift_reg_high = (pattern_shift_reg_high >> 8) | (pattern_high_byte << 8);
+
+        if (v & 0x001F == 31) {
+            v &= 0x001F;
+            v ^= 0x0400;
+        } else {
+            v += 1;
+        }
+    }
+
+    if (cur_dot == 256) {
+        if ((v & 0x7000) != 0x7000) {
+            v += 0x1000;
+        } else {
+            v &= ~0x7000;
+            int y = (v & 0x03E0) >> 5;
+            if (y == 29) {
+                y = 0;                          
+                v ^= 0x0800;
+            } else if (y == 31) {
+                y = 0;
+            } else {
+                y += 1;
+            }
+            v = (v & ~0x03E0) | (y << 5);
+        }
+    }
+}
+
 void PPU::tick() {
     // TODO: Add scanline specific actions
 
@@ -196,95 +262,94 @@ void PPU::tick() {
         // pre render scanline
         // load first two tiles into buffer
         ppustatus.vblank = false;
-
-        if (cur_dot <= 16) {
-            uint8_t step = cur_dot % 8;
-
-            if (step == 1) {
-                nametable_entry = VRAM[0x2000 | (v & 0x0FFF)];
-            } else if (step == 3) {
-                attribute_table_entry = map_to_nametable(0x2000 | nametable_entry);
-            } else if (step == 5) {
-                pattern_low_byte = cartridge->CHR_ROM.at(attribute_table_entry);
-            } else if (step == 7) {
-                pattern_high_byte = cartridge->CHR_ROM.at(attribute_table_entry + 8);
-            } else if (step == 0) {
-                pattern_shift_reg_low |= (pattern_low_byte << 8);
-                pattern_shift_reg_high |= (pattern_high_byte << 8);
-
-                if (v & 0x001F == 31) {
-                    v &= 0x001F;
-                    v ^= 0x0400;
-                } else {
-                    v += 1;
-                }
-            }   
-        }
-
     } else if (scanline >= 0 && scanline <= 239) {
         // visible scanlines
 
         if (cur_dot == 0) {
             // idle
-        } else if (cur_dot >= 1 && cur_dot <= 256) {
-            uint8_t step = cur_dot % 8;
 
-            if (step == 1) {
-                nametable_entry = VRAM[0x2000 | (v & 0x0FFF)];
-            } else if (step == 3) {
-                attribute_table_entry = map_to_nametable(0x2000 | nametable_entry);
-            } else if (step == 5) {
-                pattern_low_byte = cartridge->CHR_ROM.at(attribute_table_entry);
-            } else if (step == 7) {
-                pattern_high_byte = cartridge->CHR_ROM.at(attribute_table_entry + 8);
-            } else if (step == 0) {
-                pattern_shift_reg_low = (pattern_shift_reg_low >> 8) | (pattern_low_byte << 8);
-                pattern_shift_reg_high = (pattern_shift_reg_high >> 8) | (pattern_high_byte << 8);
+            for (int i = 0x2000; i < 0x23C0; i++) {
+                int tile_row = (i - 0x2000) / 0x20;
+                int tile_col = i % 0x20;
 
-                if (v & 0x001F == 31) {
-                    v &= 0x001F;
-                    v ^= 0x0400;
-                } else {
-                    v += 1;
-                }
-            }
+                int attribute_table_index = (i - 0x2000) / 0xF;
+                uint8_t attribute_table_val = read_from_ppu(0x23C0 + attribute_table_index);
+                TILE_POSITION palette_area;
+                uint8_t palette_number;
 
-            if (cur_dot == 256) {
-                if ((v & 0x7000) != 0x7000) {
-                    v += 0x1000;
-                } else {
-                    v &= ~0x7000;
-                    int y = (v & 0x03E0) >> 5;
-                    if (y == 29) {
-                        y = 0;                          
-                        v ^= 0x0800;
-                    } else if (y == 31) {
-                        y = 0;
+                if (tile_row % 4 == 0 || tile_row % 4 == 1) {
+                    if (tile_col % 4 == 0 || tile_col % 4 == 1) {
+                        palette_area = TOP_LEFT;
                     } else {
-                        y += 1;
+                        palette_area = TOP_RIGHT;
                     }
-                    v = (v & ~0x03E0) | (y << 5);
+                } else {
+                    if (tile_col % 4 == 0 || tile_col % 4 == 1) {
+                        palette_area = BOTTOM_LEFT;
+                    } else {
+                        palette_area = BOTTOM_RIGHT;
+                    }
+                }
+
+                switch (palette_area) {
+                    case BOTTOM_LEFT:
+                        palette_number = (attribute_table_val >> 4) & 0x3;
+                        break;
+                    case BOTTOM_RIGHT:
+                        palette_number = (attribute_table_val >> 6) & 0x3;
+                        break;
+                    case TOP_LEFT:
+                        palette_number = attribute_table_val & 0x3;
+                        break;
+                    case TOP_RIGHT:
+                        palette_number = (attribute_table_val >> 2) & 0x3;
+                        break;
+                    default:
+                        break;
+                }
+
+                uint16_t palette_base_address = 4 * palette_number;
+
+                ui->set_palette(read_from_ppu(palette_base_address), read_from_ppu(palette_base_address + 1), read_from_ppu(palette_base_address + 2), read_from_ppu(palette_base_address + 3));
+
+                uint16_t chr_index = read_from_ppu(i) << 4;
+
+                if (ppuctrl.background_tile_select == 1) {
+                    chr_index = chr_index | 0x1000;
+                }
+
+                for (int row = 0; row < 8; row++) {
+                    uint8_t low_byte = cartridge->CHR_ROM[chr_index];
+                    uint8_t high_byte = cartridge->CHR_ROM[chr_index + 8];
+
+                    for (int col = 7; col >= 0; col--) {
+                        bool low_bit = is_bit_set(col, low_byte);
+                        bool high_bit = is_bit_set(col, high_byte);
+                        uint8_t color_index = (high_bit << 1) | low_bit;
+                        ui->set_pixel(8 * tile_row + row, 8 * tile_col + col, color_index);
+                    }
                 }
             }
-
-            uint8_t low_bit = (pattern_shift_reg_low >> (16 - step)) & 0x1;
-            uint8_t high_bit = (pattern_shift_reg_high >> (16 - step)) & 0x1;
-            uint8_t color_index = (high_bit << 1) | low_bit;
-
-            ui->set_pixel(scanline, cur_dot - 1, color_index);
+            
+        } else if (cur_dot >= 1 && cur_dot <= 256) {
+           
         } else if (cur_dot >= 257 && cur_dot <= 320) {
 
         } else if (cur_dot >= 321 && cur_dot <= 336) {
 
         } else {
 
-        }
+        } 
     } else if (scanline == 240) {
         // post render scanline
-        ui->tick();
-    } else {
+        if (cur_dot == 340) {
+            ui->tick();
+        }
+    } else if (scanline > 240) {
         // vertical blanking scanlines
         ppustatus.vblank = true;
+    } else {
+        throw std::runtime_error("Invalid scanline");
     }
 
     cur_dot++;

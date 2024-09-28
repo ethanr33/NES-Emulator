@@ -70,5 +70,5 @@ void Bus::tick() {
 }
 
 void Bus::halt() {
-    throw std::runtime_error("Execution halted");
+    throw std::runtime_error("Execution halted at " + std::to_string(cpu->program_counter));
 }

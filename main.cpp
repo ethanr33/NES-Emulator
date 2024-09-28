@@ -7,7 +7,7 @@
 int main() {
 
     Bus nes = Bus();
-    Cartridge* game = new Cartridge("nestest.nes");
+    Cartridge* game = new Cartridge("donkeykong.nes");
 
     nes.insert_cartridge(game);
     nes.reset();
@@ -28,9 +28,9 @@ int main() {
         auto curr_time = std::chrono::steady_clock::now();
         auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(curr_time - start).count();
 
-        //if (elapsed >= MICROS_PER_PPU_TICK) {
+        if (elapsed >= MICROS_PER_PPU_TICK) {
             nes.tick();
-        //}
+        }
         
     }
 

@@ -14,21 +14,21 @@ using std::endl;
 
 using std::string;
 
-void print_cpu_state(NES nes, std::ostream& out, bool has_formatting) {
+void print_cpu_state(Bus nes, std::ostream& out, bool has_formatting) {
     if (has_formatting) {
         out << "CPU State:" << endl;
         out << "-------------------------------------------------" << endl;
     }
-    out << " PC: " << std::hex << nes.get_cpu()->get_program_counter() << " ";
-    out << "Opcode: " << std::hex << static_cast<unsigned>(nes.get_cpu()->get_current_opcode())<< " ";
-    out << "A: " << std::hex << static_cast<unsigned>(nes.get_cpu()->get_a());
-    out << " X: " << std::hex << static_cast<unsigned>(nes.get_cpu()->get_x());
-    out << " Y: " << std::hex << static_cast<unsigned>(nes.get_cpu()->get_y());
-    out << " SP: " << std::hex << static_cast<unsigned>(nes.get_cpu()->get_stack_pointer())<< " ";
-    out << " Cycles: " << std::dec << nes.get_cpu()->num_clock_cycles << " ";
+    out << " PC: " << std::hex << nes.cpu->program_counter << " ";
+    out << "Opcode: " << std::hex << static_cast<unsigned>(nes.read_cpu(nes.cpu->program_counter))<< " ";
+    out << "A: " << std::hex << static_cast<unsigned>(nes.cpu->A);
+    out << " X: " << std::hex << static_cast<unsigned>(nes.cpu->X);
+    out << " Y: " << std::hex << static_cast<unsigned>(nes.cpu->Y);
+    out << " SP: " << std::hex << static_cast<unsigned>(nes.cpu->stack_pointer)<< " ";
+    out << " Cycles: " << std::dec << nes.cpu->num_clock_cycles << " ";
 
     for (int i = 0; i < 8; i++) {
-        out << nes.get_cpu()->get_flag(static_cast<flag_type>(i));
+        out << nes.cpu->get_flag(static_cast<flag_type>(i));
     }
 
     out << endl;
@@ -36,26 +36,20 @@ void print_cpu_state(NES nes, std::ostream& out, bool has_formatting) {
 
 int main() {
 
-    NES nes = NES();
+    Bus nes = Bus();
 
     cout << "Welcome to the CPU debugger" << endl;
     //cout << "First, enter the file name of the ROM to test:" << endl;
 
-    string rom_name = "nestest.nes";
+    string rom_name = "donkeykong.nes";
 
     //getline(cin, rom_name);
 
     //cout << endl;
 
-    bool load_success = nes.load_program(rom_name);
-
-    if (load_success) {
-        cout << "Loaded rom " << rom_name << endl;
-    } else {
-        return 1;
-    }
-
-    cout << endl;
+    Cartridge* cartridge = new Cartridge(rom_name);
+    nes.insert_cartridge(cartridge);
+    nes.reset();
 
     std::ofstream log_file("debug.log");
 
@@ -96,10 +90,10 @@ int main() {
             print_cpu_state(nes, cout, true);
             cout << endl;
         } else if (command == 'r') {
-            while (breakpoints.find(nes.get_cpu()->get_program_counter()) == breakpoints.end()) {
+            while (breakpoints.find(nes.cpu->program_counter) == breakpoints.end()) {
                 try {
                     print_cpu_state(nes, log_file, false);
-                    nes.get_cpu()->execute_next_opcode();
+                    nes.cpu->execute_next_opcode();
                 } catch(std::runtime_error& e) {
                     cout << e.what() << endl;
                     break;
@@ -108,7 +102,7 @@ int main() {
             }
         } else if (command == 's') {
             print_cpu_state(nes, log_file, false);
-            nes.get_cpu()->execute_next_opcode();
+            nes.cpu->execute_next_opcode();
         } else if (command == 'c') {
             std::ifstream expected_output("nestest.log");
 
@@ -130,9 +124,9 @@ int main() {
                 size_t cyc_pos = line.find("CYC:");
                 expected_cyc = stoi(line.substr(cyc_pos));
 
-                string actual_pc = get_hex_string(nes.get_cpu()->get_program_counter(), 4);
-                string actual_A = get_hex_string(nes.get_cpu()->get_a(), 2);
-                int actual_cycles = nes.get_cpu()->num_clock_cycles;
+                string actual_pc = get_hex_string(nes.cpu->program_counter, 4);
+                string actual_A = get_hex_string(nes.cpu->A, 2);
+                int actual_cycles = nes.cpu->num_clock_cycles;
 
                 bool pc_matches = (expected_pc == actual_pc);
                 bool A_matches = (expected_a == actual_A);
@@ -155,7 +149,7 @@ int main() {
                     log_file << "Cycles do not match!" << endl;
                 }
 
-                nes.get_cpu()->execute_next_opcode();
+                nes.cpu->execute_next_opcode();
             }
 
         } else if (command == 'q') {

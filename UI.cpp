@@ -18,20 +18,18 @@ void UI::set_pixel(uint8_t row, uint8_t col, uint8_t color_index) {
         throw std::runtime_error("Attempted to draw pixel out of bounds at position " + std::to_string(col) + ", " + std::to_string(row));
     }
 
-    if (color_index == 0) {
-        screen_status[row][col] = sf::Color::Black;
-        screen_status[row][col] = sf::Color::Red;
-    } else if (color_index == 1) {
-        screen_status[row][col] = sf::Color(85, 85, 85);
-        screen_status[row][col] = sf::Color::White;
-    } else if (color_index == 2) {
-        screen_status[row][col] = sf::Color(170, 170, 170);
-        screen_status[row][col] = sf::Color::White;
-    } else if (color_index == 3) {
-        screen_status[row][col] = sf::Color::White;
-    } else {
+    if (color_index < 0 || color_index > 3) {
         throw std::runtime_error("Unknown pixel index color " + std::to_string(color_index));
     }
+
+    screen_status[row][col] = sf::Color(cur_palette[color_index]);
+}
+
+void UI::set_palette(uint8_t color1, uint8_t color2, uint8_t color3, uint8_t color4) {
+    cur_palette[0] = COLORS[color1];
+    cur_palette[1] = COLORS[color2];
+    cur_palette[2] = COLORS[color3];
+    cur_palette[3] = COLORS[color4];
 }
 
 void UI::update() {
@@ -43,6 +41,7 @@ void UI::update() {
             window->draw(pixel);
         }
     }
+    
 }
 
 void UI::tick() {

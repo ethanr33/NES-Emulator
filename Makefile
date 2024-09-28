@@ -207,6 +207,19 @@ debug/fast:
 .PHONY : debug/fast
 
 #=============================================================================
+# Target rules for targets named debug_cpu
+
+# Build rule for target.
+debug_cpu: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\Makefile2 debug_cpu
+.PHONY : debug_cpu
+
+# fast build rule for target.
+debug_cpu/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\debug_cpu.dir\build.make CMakeFiles/debug_cpu.dir/build
+.PHONY : debug_cpu/fast
+
+#=============================================================================
 # Target rules for targets named sfml-system
 
 # Build rule for target.
@@ -291,6 +304,7 @@ Bus.obj: Bus.cpp.obj
 Bus.cpp.obj:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\main.dir\build.make CMakeFiles/main.dir/Bus.cpp.obj
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\debug.dir\build.make CMakeFiles/debug.dir/Bus.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\debug_cpu.dir\build.make CMakeFiles/debug_cpu.dir/Bus.cpp.obj
 .PHONY : Bus.cpp.obj
 
 Bus.i: Bus.cpp.i
@@ -300,6 +314,7 @@ Bus.i: Bus.cpp.i
 Bus.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\main.dir\build.make CMakeFiles/main.dir/Bus.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\debug.dir\build.make CMakeFiles/debug.dir/Bus.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\debug_cpu.dir\build.make CMakeFiles/debug_cpu.dir/Bus.cpp.i
 .PHONY : Bus.cpp.i
 
 Bus.s: Bus.cpp.s
@@ -309,6 +324,7 @@ Bus.s: Bus.cpp.s
 Bus.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\main.dir\build.make CMakeFiles/main.dir/Bus.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\debug.dir\build.make CMakeFiles/debug.dir/Bus.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\debug_cpu.dir\build.make CMakeFiles/debug_cpu.dir/Bus.cpp.s
 .PHONY : Bus.cpp.s
 
 CPU.obj: CPU.cpp.obj
@@ -318,6 +334,7 @@ CPU.obj: CPU.cpp.obj
 CPU.cpp.obj:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\main.dir\build.make CMakeFiles/main.dir/CPU.cpp.obj
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\debug.dir\build.make CMakeFiles/debug.dir/CPU.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\debug_cpu.dir\build.make CMakeFiles/debug_cpu.dir/CPU.cpp.obj
 .PHONY : CPU.cpp.obj
 
 CPU.i: CPU.cpp.i
@@ -327,6 +344,7 @@ CPU.i: CPU.cpp.i
 CPU.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\main.dir\build.make CMakeFiles/main.dir/CPU.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\debug.dir\build.make CMakeFiles/debug.dir/CPU.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\debug_cpu.dir\build.make CMakeFiles/debug_cpu.dir/CPU.cpp.i
 .PHONY : CPU.cpp.i
 
 CPU.s: CPU.cpp.s
@@ -336,6 +354,7 @@ CPU.s: CPU.cpp.s
 CPU.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\main.dir\build.make CMakeFiles/main.dir/CPU.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\debug.dir\build.make CMakeFiles/debug.dir/CPU.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\debug_cpu.dir\build.make CMakeFiles/debug_cpu.dir/CPU.cpp.s
 .PHONY : CPU.cpp.s
 
 Cartridge.obj: Cartridge.cpp.obj
@@ -345,6 +364,7 @@ Cartridge.obj: Cartridge.cpp.obj
 Cartridge.cpp.obj:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\main.dir\build.make CMakeFiles/main.dir/Cartridge.cpp.obj
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\debug.dir\build.make CMakeFiles/debug.dir/Cartridge.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\debug_cpu.dir\build.make CMakeFiles/debug_cpu.dir/Cartridge.cpp.obj
 .PHONY : Cartridge.cpp.obj
 
 Cartridge.i: Cartridge.cpp.i
@@ -354,6 +374,7 @@ Cartridge.i: Cartridge.cpp.i
 Cartridge.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\main.dir\build.make CMakeFiles/main.dir/Cartridge.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\debug.dir\build.make CMakeFiles/debug.dir/Cartridge.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\debug_cpu.dir\build.make CMakeFiles/debug_cpu.dir/Cartridge.cpp.i
 .PHONY : Cartridge.cpp.i
 
 Cartridge.s: Cartridge.cpp.s
@@ -363,6 +384,7 @@ Cartridge.s: Cartridge.cpp.s
 Cartridge.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\main.dir\build.make CMakeFiles/main.dir/Cartridge.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\debug.dir\build.make CMakeFiles/debug.dir/Cartridge.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\debug_cpu.dir\build.make CMakeFiles/debug_cpu.dir/Cartridge.cpp.s
 .PHONY : Cartridge.cpp.s
 
 Helpers.obj: Helpers.cpp.obj
@@ -372,6 +394,7 @@ Helpers.obj: Helpers.cpp.obj
 Helpers.cpp.obj:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\main.dir\build.make CMakeFiles/main.dir/Helpers.cpp.obj
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\debug.dir\build.make CMakeFiles/debug.dir/Helpers.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\debug_cpu.dir\build.make CMakeFiles/debug_cpu.dir/Helpers.cpp.obj
 .PHONY : Helpers.cpp.obj
 
 Helpers.i: Helpers.cpp.i
@@ -381,6 +404,7 @@ Helpers.i: Helpers.cpp.i
 Helpers.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\main.dir\build.make CMakeFiles/main.dir/Helpers.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\debug.dir\build.make CMakeFiles/debug.dir/Helpers.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\debug_cpu.dir\build.make CMakeFiles/debug_cpu.dir/Helpers.cpp.i
 .PHONY : Helpers.cpp.i
 
 Helpers.s: Helpers.cpp.s
@@ -390,6 +414,7 @@ Helpers.s: Helpers.cpp.s
 Helpers.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\main.dir\build.make CMakeFiles/main.dir/Helpers.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\debug.dir\build.make CMakeFiles/debug.dir/Helpers.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\debug_cpu.dir\build.make CMakeFiles/debug_cpu.dir/Helpers.cpp.s
 .PHONY : Helpers.cpp.s
 
 PPU.obj: PPU.cpp.obj
@@ -399,6 +424,7 @@ PPU.obj: PPU.cpp.obj
 PPU.cpp.obj:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\main.dir\build.make CMakeFiles/main.dir/PPU.cpp.obj
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\debug.dir\build.make CMakeFiles/debug.dir/PPU.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\debug_cpu.dir\build.make CMakeFiles/debug_cpu.dir/PPU.cpp.obj
 .PHONY : PPU.cpp.obj
 
 PPU.i: PPU.cpp.i
@@ -408,6 +434,7 @@ PPU.i: PPU.cpp.i
 PPU.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\main.dir\build.make CMakeFiles/main.dir/PPU.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\debug.dir\build.make CMakeFiles/debug.dir/PPU.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\debug_cpu.dir\build.make CMakeFiles/debug_cpu.dir/PPU.cpp.i
 .PHONY : PPU.cpp.i
 
 PPU.s: PPU.cpp.s
@@ -417,6 +444,7 @@ PPU.s: PPU.cpp.s
 PPU.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\main.dir\build.make CMakeFiles/main.dir/PPU.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\debug.dir\build.make CMakeFiles/debug.dir/PPU.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\debug_cpu.dir\build.make CMakeFiles/debug_cpu.dir/PPU.cpp.s
 .PHONY : PPU.cpp.s
 
 UI.obj: UI.cpp.obj
@@ -426,6 +454,7 @@ UI.obj: UI.cpp.obj
 UI.cpp.obj:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\main.dir\build.make CMakeFiles/main.dir/UI.cpp.obj
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\debug.dir\build.make CMakeFiles/debug.dir/UI.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\debug_cpu.dir\build.make CMakeFiles/debug_cpu.dir/UI.cpp.obj
 .PHONY : UI.cpp.obj
 
 UI.i: UI.cpp.i
@@ -435,6 +464,7 @@ UI.i: UI.cpp.i
 UI.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\main.dir\build.make CMakeFiles/main.dir/UI.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\debug.dir\build.make CMakeFiles/debug.dir/UI.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\debug_cpu.dir\build.make CMakeFiles/debug_cpu.dir/UI.cpp.i
 .PHONY : UI.cpp.i
 
 UI.s: UI.cpp.s
@@ -444,7 +474,32 @@ UI.s: UI.cpp.s
 UI.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\main.dir\build.make CMakeFiles/main.dir/UI.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\debug.dir\build.make CMakeFiles/debug.dir/UI.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\debug_cpu.dir\build.make CMakeFiles/debug_cpu.dir/UI.cpp.s
 .PHONY : UI.cpp.s
+
+debug.obj: debug.cpp.obj
+.PHONY : debug.obj
+
+# target to build an object file
+debug.cpp.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\debug_cpu.dir\build.make CMakeFiles/debug_cpu.dir/debug.cpp.obj
+.PHONY : debug.cpp.obj
+
+debug.i: debug.cpp.i
+.PHONY : debug.i
+
+# target to preprocess a source file
+debug.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\debug_cpu.dir\build.make CMakeFiles/debug_cpu.dir/debug.cpp.i
+.PHONY : debug.cpp.i
+
+debug.s: debug.cpp.s
+.PHONY : debug.s
+
+# target to generate assembly for a file
+debug.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\debug_cpu.dir\build.make CMakeFiles/debug_cpu.dir/debug.cpp.s
+.PHONY : debug.cpp.s
 
 main.obj: main.cpp.obj
 .PHONY : main.obj
@@ -480,6 +535,7 @@ mappers/Mapper.obj: mappers/Mapper.cpp.obj
 mappers/Mapper.cpp.obj:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\main.dir\build.make CMakeFiles/main.dir/mappers/Mapper.cpp.obj
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\debug.dir\build.make CMakeFiles/debug.dir/mappers/Mapper.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\debug_cpu.dir\build.make CMakeFiles/debug_cpu.dir/mappers/Mapper.cpp.obj
 .PHONY : mappers/Mapper.cpp.obj
 
 mappers/Mapper.i: mappers/Mapper.cpp.i
@@ -489,6 +545,7 @@ mappers/Mapper.i: mappers/Mapper.cpp.i
 mappers/Mapper.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\main.dir\build.make CMakeFiles/main.dir/mappers/Mapper.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\debug.dir\build.make CMakeFiles/debug.dir/mappers/Mapper.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\debug_cpu.dir\build.make CMakeFiles/debug_cpu.dir/mappers/Mapper.cpp.i
 .PHONY : mappers/Mapper.cpp.i
 
 mappers/Mapper.s: mappers/Mapper.cpp.s
@@ -498,6 +555,7 @@ mappers/Mapper.s: mappers/Mapper.cpp.s
 mappers/Mapper.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\main.dir\build.make CMakeFiles/main.dir/mappers/Mapper.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\debug.dir\build.make CMakeFiles/debug.dir/mappers/Mapper.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\debug_cpu.dir\build.make CMakeFiles/debug_cpu.dir/mappers/Mapper.cpp.s
 .PHONY : mappers/Mapper.cpp.s
 
 mappers/Mapper000.obj: mappers/Mapper000.cpp.obj
@@ -507,6 +565,7 @@ mappers/Mapper000.obj: mappers/Mapper000.cpp.obj
 mappers/Mapper000.cpp.obj:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\main.dir\build.make CMakeFiles/main.dir/mappers/Mapper000.cpp.obj
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\debug.dir\build.make CMakeFiles/debug.dir/mappers/Mapper000.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\debug_cpu.dir\build.make CMakeFiles/debug_cpu.dir/mappers/Mapper000.cpp.obj
 .PHONY : mappers/Mapper000.cpp.obj
 
 mappers/Mapper000.i: mappers/Mapper000.cpp.i
@@ -516,6 +575,7 @@ mappers/Mapper000.i: mappers/Mapper000.cpp.i
 mappers/Mapper000.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\main.dir\build.make CMakeFiles/main.dir/mappers/Mapper000.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\debug.dir\build.make CMakeFiles/debug.dir/mappers/Mapper000.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\debug_cpu.dir\build.make CMakeFiles/debug_cpu.dir/mappers/Mapper000.cpp.i
 .PHONY : mappers/Mapper000.cpp.i
 
 mappers/Mapper000.s: mappers/Mapper000.cpp.s
@@ -525,6 +585,7 @@ mappers/Mapper000.s: mappers/Mapper000.cpp.s
 mappers/Mapper000.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\main.dir\build.make CMakeFiles/main.dir/mappers/Mapper000.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\debug.dir\build.make CMakeFiles/debug.dir/mappers/Mapper000.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\debug_cpu.dir\build.make CMakeFiles/debug_cpu.dir/mappers/Mapper000.cpp.s
 .PHONY : mappers/Mapper000.cpp.s
 
 # Help Target
@@ -542,6 +603,7 @@ help:
 	@echo ... package_source
 	@echo ... rebuild_cache
 	@echo ... debug
+	@echo ... debug_cpu
 	@echo ... main
 	@echo ... sfml-audio
 	@echo ... sfml-graphics
@@ -567,6 +629,9 @@ help:
 	@echo ... UI.obj
 	@echo ... UI.i
 	@echo ... UI.s
+	@echo ... debug.obj
+	@echo ... debug.i
+	@echo ... debug.s
 	@echo ... main.obj
 	@echo ... main.i
 	@echo ... main.s

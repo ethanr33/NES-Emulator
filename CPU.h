@@ -15,12 +15,12 @@ enum flag_type {CARRY, ZERO, INT_DISABLE, DECIMAL, BREAK, RESERVED, OVER_FLOW, N
 enum addressing_mode {IMPLICIT, ACCUMULATOR, IMMEDIATE, ZERO_PAGE, ZERO_PAGE_X, ZERO_PAGE_Y, RELATIVE, ABSOLUTE, ABSOLUTE_X, ABSOLUTE_Y, INDIRECT, INDEXED_INDIRECT, INDIRECT_INDEXED};
 
 struct CPU {
-    const uint16_t STACK_LOCATION_START = 0x1FD;
+    const uint16_t STACK_LOCATION_START = 0x0;
     const uint16_t STACK_LOCATION = 0x1FF;
     const uint16_t PAGE_SIZE = 0x100;
 
     // On a normal NES, when we load a game we need to call the interrupt handler for RESET. This takes 7 cycles
-    int num_clock_cycles = 7;
+    int num_clock_cycles = 0;
     int clock_cycles_remaining = 0;
     
     // The stack pointer stores the low 8 bytes of the next memory location available on the stack
