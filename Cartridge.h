@@ -13,7 +13,7 @@ struct Cartridge {
     static const uint16_t CHR_ROM_PAGE_SIZE = (1 << 13);
     
     std::vector<int> PRG_ROM;
-    std::vector<int> CHR_ROM;
+    std::vector<uint8_t> CHR_ROM;
     std::vector<int> trainer;
 
     MIRRORING_TYPE mirroring_type;
