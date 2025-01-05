@@ -26,6 +26,20 @@ struct PPUCTRL {
         increment_mode = is_bit_set(2, val);
         nametable_select = val & 0x3;
     }
+
+    // Return value of register in the form of a uint8_t, where each bit can be the value of a flag
+    // Format specified here: https://www.nesdev.org/wiki/PPU_registers#PPUCTRL
+    uint8_t serialize() {
+        uint8_t res = nmi_enable << 7;
+        res |= ppu_ms << 6;
+        res |= sprite_height << 5;
+        res |= background_tile_select << 4;
+        res |= sprite_tile_select << 3;
+        res |= increment_mode << 2;
+        res |= nametable_select;
+
+        return res;
+    }
 };
 
 struct PPUMASK {
@@ -47,6 +61,21 @@ struct PPUMASK {
         sprite_left_column_enable = is_bit_set(2, val);
         background_left_column_enable = is_bit_set(1, val);
         greyscale = is_bit_set(0, val);
+    }
+
+    // Return value of register in the form of a uint8_t, where each bit can be the value of a flag
+    // Format specified here: https://www.nesdev.org/wiki/PPU_registers#PPUMASK
+    uint8_t serialize() {
+        uint8_t res = emphasize_blue << 7;
+        res |= emphasize_green << 6;
+        res |= emphasize_red << 5;
+        res |= sprite_enable << 4;
+        res |= background_enable << 3;
+        res |= sprite_left_column_enable << 2;
+        res |= background_left_column_enable << 1;
+        res |= greyscale;
+
+        return res;
     }
 };
 
@@ -97,7 +126,7 @@ struct PPU {
     uint8_t oamaddr = 0x0;
     uint8_t oamdata = 0x0;
     uint8_t ppuscroll = 0x0;
-    uint8_t ppuaddr = 0x0;
+    uint16_t ppuaddr = 0x0;
 
     uint8_t nametable_entry = 0;
     uint8_t attribute_table_entry = 0;

@@ -115,7 +115,7 @@ uint8_t PPU::read_from_ppu(uint16_t address) {
     } else if (address >= 0x2000 && address <= 0x2FFF) {
         // handle nametables and mirroring
         address = map_to_nametable(address);
-        return VRAM[address & 0x1FFF];
+        return VRAM[address];
     } else if (address >= 0x3000 && address <= 0x3EFF) {
         // mirror of 0x2000 - 0x2EFF
         return read_from_ppu(address & 0x2EFF);
@@ -165,12 +165,12 @@ void PPU::write_from_ppu(uint16_t address, uint8_t val) {
     } else if (address >= 0x2000 && address <= 0x2FFF) {
         // handle nametables and mirroring
         address = map_to_nametable(address);
-        VRAM[address & 0x1FFF] = val;
+        VRAM[address] = val;
     } else if (address >= 0x3000 && address <= 0x3EFF) {
         // mirror of 0x2000 - 0x2EFF
         write_from_ppu(address & 0x2EFF, val);
     } else if (address >= 0x3F00 && address <= 0x3F1F) {
-        // pallete table 
+        // pallette table 
         PALETTE_RAM[address & 0x3F] = val;
     }
 
@@ -189,72 +189,6 @@ void PPU::load_OAMDMA(uint8_t high_byte, uint8_t data[]) {
     }
 }
 
-void PPU::render_cycle() {
-    uint8_t step = cur_dot % 8;
-
-    if (step == 1) {
-        switch(ppuctrl.nametable_select) {
-            case 0:
-                nametable_entry = VRAM[map_to_nametable(0x2000 + (v & 0x3FF))];
-                break;
-            case 1:
-                nametable_entry = VRAM[map_to_nametable(0x2400 + (v & 0x3FF))];
-                break;
-            case 2:
-                nametable_entry = VRAM[map_to_nametable(0x2800 + (v & 0x3FF))];
-                break;
-            case 3:
-                nametable_entry = VRAM[map_to_nametable(0x2C00 + (v & 0x3FF))];
-                break;
-            default:
-                throw std::runtime_error("Unknown nametable selected " + std::to_string(ppuctrl.nametable_select) +  " when rendering");
-                break;
-        }
-    } else if (step == 3) {
-        attribute_table_entry = VRAM[v];
-    } else if (step == 5) {
-        if (ppuctrl.background_tile_select == 0) {
-            pattern_low_byte = cartridge->CHR_ROM.at(nametable_entry);
-        } else {
-            pattern_low_byte = cartridge->CHR_ROM.at(nametable_entry + 0x1000);
-        }
-    } else if (step == 7) {
-        if (ppuctrl.background_tile_select == 0) {
-            pattern_low_byte = cartridge->CHR_ROM.at(nametable_entry + 8);
-        } else {
-            pattern_low_byte = cartridge->CHR_ROM.at(nametable_entry + 0x1000 + 8);
-        }
-    } else if (step == 0) {
-        pattern_shift_reg_low = (pattern_shift_reg_low >> 8) | (pattern_low_byte << 8);
-        pattern_shift_reg_high = (pattern_shift_reg_high >> 8) | (pattern_high_byte << 8);
-
-        if (v & 0x001F == 31) {
-            v &= 0x001F;
-            v ^= 0x0400;
-        } else {
-            v += 1;
-        }
-    }
-
-    if (cur_dot == 256) {
-        if ((v & 0x7000) != 0x7000) {
-            v += 0x1000;
-        } else {
-            v &= ~0x7000;
-            int y = (v & 0x03E0) >> 5;
-            if (y == 29) {
-                y = 0;                          
-                v ^= 0x0800;
-            } else if (y == 31) {
-                y = 0;
-            } else {
-                y += 1;
-            }
-            v = (v & ~0x03E0) | (y << 5);
-        }
-    }
-}
-
 void PPU::tick() {
     // TODO: Add scanline specific actions
 
@@ -266,80 +200,77 @@ void PPU::tick() {
         // visible scanlines
 
         if (cur_dot == 0) {
-            // idle
+            // Idle cycle
+        } else if (cur_dot >= 4) {
+            // Due to rendering pipeline delays, first pixel is rendered on cycle 4
+            uint16_t pixel_x = (cur_dot - 4) % 256;
+            uint16_t pixel_y = scanline;
 
-            for (int i = 0x2000; i < 0x23C0; i++) {
-                int tile_row = (i - 0x2000) / 0x20;
-                int tile_col = i % 0x20;
+            // In the binary representation of a tile, the first pixel will be the MSB (bit 7)
+            uint8_t tile_offset_x = 7 - (pixel_x % 8);
+            uint8_t tile_offset_y = pixel_y % 8;
 
-                int attribute_table_index = (i - 0x2000) / 0xF;
-                uint8_t attribute_table_val = read_from_ppu(0x23C0 + attribute_table_index);
-                TILE_POSITION palette_area;
-                uint8_t palette_number;
+            // Fetch data from nametable
 
-                if (tile_row % 4 == 0 || tile_row % 4 == 1) {
-                    if (tile_col % 4 == 0 || tile_col % 4 == 1) {
-                        palette_area = TOP_LEFT;
-                    } else {
-                        palette_area = TOP_RIGHT;
-                    }
-                } else {
-                    if (tile_col % 4 == 0 || tile_col % 4 == 1) {
-                        palette_area = BOTTOM_LEFT;
-                    } else {
-                        palette_area = BOTTOM_RIGHT;
-                    }
-                }
+            // TODO: Add support for mirroring types
+            // Who cares if we fetch the same data 8 times in a row, right???
 
-                switch (palette_area) {
-                    case BOTTOM_LEFT:
-                        palette_number = (attribute_table_val >> 4) & 0x3;
-                        break;
-                    case BOTTOM_RIGHT:
-                        palette_number = (attribute_table_val >> 6) & 0x3;
-                        break;
-                    case TOP_LEFT:
-                        palette_number = attribute_table_val & 0x3;
-                        break;
-                    case TOP_RIGHT:
-                        palette_number = (attribute_table_val >> 2) & 0x3;
-                        break;
-                    default:
-                        break;
-                }
+            uint16_t nametable_index = 32 * (pixel_y / 8) + (pixel_x / 8);
+            uint8_t cur_nametable_entry = read_from_ppu(0x2000 + nametable_index); // FIX THIS LATER
 
-                uint16_t palette_base_address = 4 * palette_number;
-
-                ui->set_palette(read_from_ppu(palette_base_address), read_from_ppu(palette_base_address + 1), read_from_ppu(palette_base_address + 2), read_from_ppu(palette_base_address + 3));
-
-                uint16_t chr_index = read_from_ppu(i) << 4;
-
-                if (ppuctrl.background_tile_select == 1) {
-                    chr_index = chr_index | 0x1000;
-                }
-
-                for (int row = 0; row < 8; row++) {
-                    uint8_t low_byte = cartridge->CHR_ROM[chr_index];
-                    uint8_t high_byte = cartridge->CHR_ROM[chr_index + 8];
-
-                    for (int col = 7; col >= 0; col--) {
-                        bool low_bit = is_bit_set(col, low_byte);
-                        bool high_bit = is_bit_set(col, high_byte);
-                        uint8_t color_index = (high_bit << 1) | low_bit;
-                        ui->set_pixel(8 * tile_row + row, 8 * tile_col + col, color_index);
-                    }
-                }
+            if (ppuctrl.sprite_tile_select == 1) {
+                cur_nametable_entry += 0x1000;
             }
+
+            uint8_t pixel_layer_0 = cartridge->CHR_ROM.at(16 * cur_nametable_entry + tile_offset_y);
+            uint8_t pixel_layer_1 = cartridge->CHR_ROM.at(16 * cur_nametable_entry + tile_offset_y + 8);
+
+            uint16_t attribute_table_index = 8 * (pixel_y / 32) + (pixel_x / 32);
+            uint8_t attribute_table_val = read_from_ppu(0x23C0 + attribute_table_index); // Attribute table is located at the end of the nametable
+
+            bool is_left_tile = (pixel_x % 16) < 8;
+            bool is_top_tile = (pixel_y % 16) < 8;
+
+            // The value in the attribute table is constructed as follows:
+            // attribute_table_val = (bottomright << 6) | (bottomleft << 4) | (topright << 2) | (topleft << 0)
+            // Where bottomright, bottomleft, topright, and topleft are the palette numbers for each quadrant of this block in the nametable
+            uint8_t color_palette_num;
+
+            if (is_top_tile && is_left_tile) {
+                // top left
+                color_palette_num = attribute_table_val & 0x3;
+            } else if (is_top_tile && !is_left_tile) {
+                // top right
+                color_palette_num = (attribute_table_val & 0xC) >> 2;
+            } else if (!is_top_tile && is_left_tile) {
+                // bottom left
+                color_palette_num = (attribute_table_val & 0x30) >> 4;
+            } else {
+                // bottom right
+                color_palette_num = (attribute_table_val & 0xC0) >> 6;
+            }
+
+            // For background rendering only.
+            // Palette addresses for the background are from 0x3F00 - 0x3F0F.
+            uint16_t palette_index = 0x3F00 + 4 * color_palette_num;
             
-        } else if (cur_dot >= 1 && cur_dot <= 256) {
-           
-        } else if (cur_dot >= 257 && cur_dot <= 320) {
+            uint8_t color0 = read_from_ppu(palette_index);
+            uint8_t color1 = read_from_ppu(palette_index + 1);
+            uint8_t color2 = read_from_ppu(palette_index + 2);
+            uint8_t color3 = read_from_ppu(palette_index + 3);
 
-        } else if (cur_dot >= 321 && cur_dot <= 336) {
+            uint8_t pixel_color = (is_bit_set(tile_offset_x, pixel_layer_1) << 1) | is_bit_set(tile_offset_x, pixel_layer_0);
 
-        } else {
+            if (pixel_color == 3) {
+                int x = 2;
+            }
 
-        } 
+            ui->set_palette(color0, color1, color2, color3);
+
+            ui->set_pixel(pixel_y, pixel_x, pixel_color);
+
+        }
+
     } else if (scanline == 240) {
         // post render scanline
         if (cur_dot == 340) {
