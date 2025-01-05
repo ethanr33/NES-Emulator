@@ -2141,7 +2141,6 @@ uint8_t CPU::stack_pop() {
 void CPU::reset() {
     num_clock_cycles = 0;
     program_counter = (bus->read_cpu(0xFFFD) << 8) | bus->read_cpu(0xFFFC);
-    //program_counter = 0xF507;
     stack_pointer = STACK_LOCATION_START;
     
     for (int i = 0; i < 8; i++) {
