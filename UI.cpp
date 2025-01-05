@@ -25,11 +25,27 @@ void UI::set_pixel(uint8_t row, uint8_t col, uint8_t color_index) {
     screen_status[row][col] = sf::Color(cur_palette[color_index]);
 }
 
-void UI::set_palette(uint8_t color1, uint8_t color2, uint8_t color3, uint8_t color4) {
-    cur_palette[0] = COLORS[color1];
-    cur_palette[1] = COLORS[color2];
-    cur_palette[2] = COLORS[color3];
-    cur_palette[3] = COLORS[color4];
+void UI::set_palette(uint8_t color0, uint8_t color1, uint8_t color2, uint8_t color3) {
+    if (color0 >= PALETTE_SIZE) {
+        throw std::runtime_error("color0 is " + std::to_string(color0) + ", which is out of bounds of the palette size");
+    }
+
+    if (color1 >= PALETTE_SIZE) {
+        throw std::runtime_error("color1 is " + std::to_string(color1) + ", which is out of bounds of the palette size");
+    }
+
+    if (color2 >= PALETTE_SIZE) {
+        throw std::runtime_error("color2 is " + std::to_string(color2) + ", which is out of bounds of the palette size");
+    }
+
+    if (color3 >= PALETTE_SIZE) {
+        throw std::runtime_error("color3 is " + std::to_string(color3) + ", which is out of bounds of the palette size");
+    }
+
+    cur_palette[0] = COLORS[color0];
+    cur_palette[1] = COLORS[color1];
+    cur_palette[2] = COLORS[color2];
+    cur_palette[3] = COLORS[color3];
 }
 
 void UI::update() {
