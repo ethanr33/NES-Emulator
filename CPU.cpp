@@ -2096,10 +2096,24 @@ void CPU::execute_opcode(uint16_t opcode_address) {
 // Execute one cycle of CPU.
 // This will typically run one opcode
 void CPU::tick() {
-    // We may have some cycles left before we can execute the next opcode, but the PC will still be pointed to the next one
 
+    // We may have some cycles left before we can execute the next opcode, but the PC will still be pointed to the next one
     if (clock_cycles_remaining == 0) {
         execute_opcode(program_counter);
+
+        // If there is an outstanding NMI, handle it after we're done executing the current instruction
+        if (has_nmi) {
+            has_nmi = false;
+            
+            stack_push(program_counter);
+            set_flag(BREAK, 1);
+            stack_push(get_byte_from_flags());
+            uint16_t nmi_interrput_address = form_address(bus->read_cpu(0xFFFA), bus->read_cpu(0xFFFB));
+            program_counter = nmi_interrput_address;
+
+            
+            clock_cycles_remaining = 0;
+        }
     } else {
         clock_cycles_remaining -= 1;
     }
@@ -2146,4 +2160,9 @@ void CPU::reset() {
     for (int i = 0; i < 8; i++) {
         flags[i] = DEFAULT_FLAGS[i];    
     }
+}
+
+void CPU::trigger_nmi() {
+    // Next time there is a CPU cycle, we will handle the NMI
+    has_nmi = true;
 }

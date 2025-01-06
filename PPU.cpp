@@ -74,6 +74,8 @@ void PPU::write_from_cpu(uint16_t address, uint8_t val) {
                 oamaddr = val;
                 break;
             case 4:
+                OAM[oamaddr] = val;
+                oamaddr++;
                 break;
             case 5:
                 break;
@@ -201,12 +203,23 @@ void PPU::tick() {
         // pre render scanline
         // load first two tiles into buffer
         ppustatus.vblank = false;
+
+        // OAMADDR is set to 0 during ticks 257-320 of prerender scanlines
+        if (cur_dot >= 257 && cur_dot <= 320) {
+            oamaddr = 0;
+        }
     } else if (scanline >= 0 && scanline <= 239) {
         // visible scanlines
 
         if (cur_dot == 0) {
             // Idle cycle
         } else if (cur_dot >= 4) {
+
+            // OAMADDR is set to 0 during ticks 257-320 of visible scanlines
+            if (cur_dot >= 257 && cur_dot <= 320) {
+                oamaddr = 0;
+            }
+
             // Due to rendering pipeline delays, first pixel is rendered on cycle 4
             uint16_t pixel_x = (cur_dot - 4) % 256;
             uint16_t pixel_y = scanline;
@@ -283,6 +296,11 @@ void PPU::tick() {
         }
     } else if (scanline > 240) {
         // vertical blanking scanlines
+
+        if (ppuctrl.nmi_enable && scanline == 241 && cur_dot == 1) {
+            bus->trigger_nmi();
+        }
+
         ppustatus.vblank = true;
     } else {
         throw std::runtime_error("Invalid scanline");
@@ -305,4 +323,8 @@ void PPU::tick() {
 void PPU::reset() {
     scanline = 261;
     cur_dot = 0;
+}
+
+void PPU::attach_bus(Bus* b) {
+    bus = b;
 }

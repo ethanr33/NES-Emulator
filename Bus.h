@@ -4,12 +4,17 @@
 #include "PPU.h"
 #include "Cartridge.h"
 
+struct PPU;
+
 struct Bus {
     static const uint16_t RAM_MIRROR_START = 0x0000;
     static const uint16_t RAM_MIRROR_END = 0x1FFF;
 
     static const uint16_t PPU_REG_MIRROR_START = 0x2000;
     static const uint16_t PPU_REG_MIRROR_END = 0x3FFF;
+
+    static const uint16_t APU_IO_REG_START = 0x4000;
+    static const uint16_t APU_IO_REG_END = 0x4017;
 
     static const uint16_t RAM_SIZE = 0x2000;
 
@@ -31,5 +36,6 @@ struct Bus {
     void reset();
     void tick();
     void halt();
+    void trigger_nmi();
 
 };

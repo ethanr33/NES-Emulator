@@ -22,6 +22,9 @@ struct CPU {
     // On a normal NES, when we load a game we need to call the interrupt handler for RESET. This takes 7 cycles
     int num_clock_cycles = 0;
     int clock_cycles_remaining = 0;
+
+    // Flag set if there is an NMI
+    bool has_nmi = false;
     
     // The stack pointer stores the low 8 bytes of the next memory location available on the stack
     // 
@@ -78,6 +81,9 @@ struct CPU {
 
     // Execute one opcode
     void execute_next_opcode();
+
+    // NMI handler
+    void trigger_nmi();
 
     // Tick for a specified number of cycles
     void tick();

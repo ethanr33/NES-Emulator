@@ -5,12 +5,14 @@ Bus::Bus() {
     cpu = new CPU();
     ppu = new PPU();
     cpu->attach_bus(this);
+    ppu->attach_bus(this);
 }
 
 Bus::Bus(bool ui_disabled) {
     cpu = new CPU();
     ppu = new PPU(ui_disabled);
     cpu->attach_bus(this);
+    ppu->attach_bus(this);
 }
 
 uint8_t Bus::read_cpu(uint16_t address) {
@@ -26,6 +28,11 @@ uint8_t Bus::read_cpu(uint16_t address) {
 
     if (address >= PPU_REG_MIRROR_START && address <= PPU_REG_MIRROR_END) {
         return ppu->read_from_cpu(address);
+    }
+
+    if (address >= APU_IO_REG_START && address <= APU_IO_REG_END) {
+        // TODO: Implement APU / IO registers
+        return 0;
     }
 
     return cpu_RAM[address];
@@ -71,4 +78,8 @@ void Bus::tick() {
 
 void Bus::halt() {
     throw std::runtime_error("Execution halted at " + std::to_string(cpu->program_counter));
+}
+
+void Bus::trigger_nmi() {
+    cpu->trigger_nmi();
 }

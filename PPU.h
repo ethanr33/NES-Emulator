@@ -5,6 +5,7 @@
 #include "Cartridge.h"
 #include "UI.h"
 #include "Helpers.h"
+#include "Bus.h"
 
 enum TILE_POSITION {TOP_LEFT, TOP_RIGHT, BOTTOM_LEFT, BOTTOM_RIGHT};
 
@@ -110,6 +111,7 @@ struct PPU {
 
     Cartridge* cartridge;
     UI* ui = nullptr;
+    Bus* bus = nullptr;
 
     uint16_t scanline = 241;
     uint16_t cur_dot = 0;
@@ -154,6 +156,7 @@ struct PPU {
     void load_OAMDMA(uint8_t, uint8_t[]);
 
     void render_cycle();
+    void attach_bus(Bus*);
     void tick();
     void reset();
 
