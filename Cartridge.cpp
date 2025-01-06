@@ -112,11 +112,10 @@ Cartridge::Cartridge(const std::string& rom_file_name) {
         return false;
     }
 
-    bool Cartridge::read_ppu(uint16_t address, uint8_t& data) {
+    bool Cartridge::read_ppu(uint16_t address) {
         uint16_t mapped_address = address;
 
         if (mapper->ppu_mapper_read(address, mapped_address)) {
-            data = CHR_ROM[mapped_address];
             return true;
         }
 
@@ -127,7 +126,6 @@ Cartridge::Cartridge(const std::string& rom_file_name) {
         uint16_t mapped_address = address;
 
         if (mapper->ppu_mapper_write(address, mapped_address)) {
-            CHR_ROM[mapped_address] = data;
             return true;
         }
 

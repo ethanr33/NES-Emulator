@@ -108,10 +108,14 @@ void PPU::write_from_cpu(uint16_t address, uint8_t val) {
 uint8_t PPU::read_from_ppu(uint16_t address) {
     uint8_t data;
 
-    if (cartridge->read_ppu(address, data)) {
-        // do something
+    if (cartridge->read_ppu(address)) {
         // should handle the pattern table cases (addresses 0x0000 - 0x1FFF)
-        return data;
+
+        if (cartridge->CHR_ROM.size() == 0) {
+            return VRAM[address];
+        }
+
+        return cartridge->CHR_ROM.at(address);
     } else if (address >= 0x2000 && address <= 0x2FFF) {
         // handle nametables and mirroring
         address = map_to_nametable(address);
@@ -161,7 +165,8 @@ uint16_t PPU::map_to_nametable(uint16_t address) {
 void PPU::write_from_ppu(uint16_t address, uint8_t val) {
 
     if (cartridge->write_ppu(address, val)) {
-        // cannot write to CHR-ROM
+        // In this case, we only write if we're working with CHR-RAM instead of CHR-ROM, because CHR-ROM is unwriteable
+        VRAM[address] = val;
     } else if (address >= 0x2000 && address <= 0x2FFF) {
         // handle nametables and mirroring
         address = map_to_nametable(address);
@@ -222,8 +227,8 @@ void PPU::tick() {
                 cur_nametable_entry += 0x1000;
             }
 
-            uint8_t pixel_layer_0 = cartridge->CHR_ROM.at(16 * cur_nametable_entry + tile_offset_y);
-            uint8_t pixel_layer_1 = cartridge->CHR_ROM.at(16 * cur_nametable_entry + tile_offset_y + 8);
+            uint8_t pixel_layer_0 = read_from_ppu(16 * cur_nametable_entry + tile_offset_y);
+            uint8_t pixel_layer_1 = read_from_ppu(16 * cur_nametable_entry + tile_offset_y + 8);
 
             uint16_t attribute_table_index = 8 * (pixel_y / 32) + (pixel_x / 32);
             uint8_t attribute_table_val = read_from_ppu(0x23C0 + attribute_table_index); // Attribute table is located at the end of the nametable

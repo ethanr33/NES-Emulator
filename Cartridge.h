@@ -25,7 +25,7 @@ struct Cartridge {
     bool read_cpu(uint16_t, uint8_t&);
     bool write_cpu(uint16_t, uint8_t);
 
-    bool read_ppu(uint16_t, uint8_t&);
+    bool read_ppu(uint16_t);
     bool write_ppu(uint16_t, uint8_t);
 
     void dump_CHR();
