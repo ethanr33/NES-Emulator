@@ -19,7 +19,7 @@ add_executable(main main.cpp Bus.cpp CPU.cpp PPU.cpp Cartridge.cpp Helpers.cpp U
 add_executable(debug main.cpp Bus.cpp CPU.cpp PPU.cpp Cartridge.cpp Helpers.cpp UI.cpp mappers/Mapper.cpp mappers/Mapper000.cpp)
 
 # Add debug executable
-#add_executable(chr_dump chr_dump.cpp Bus.cpp CPU.cpp PPU.cpp Cartridge.cpp Helpers.cpp UI.cpp mappers/Mapper.cpp mappers/Mapper000.cpp)
+add_executable(chr_dump chr_dump.cpp Bus.cpp CPU.cpp PPU.cpp Cartridge.cpp Helpers.cpp UI.cpp mappers/Mapper.cpp mappers/Mapper000.cpp)
 
 # Add debugger executable
 add_executable(debugger debug.cpp Bus.cpp CPU.cpp PPU.cpp Cartridge.cpp Helpers.cpp UI.cpp mappers/Mapper.cpp mappers/Mapper000.cpp)
@@ -30,14 +30,19 @@ target_compile_features(main PRIVATE cxx_std_17)
 target_link_libraries(debug PRIVATE sfml-system sfml-window sfml-graphics)
 target_compile_features(debug PRIVATE cxx_std_17)
 
-#target_link_libraries(chr_dump PRIVATE sfml-system sfml-window sfml-graphics)
-#target_compile_features(chr_dump PRIVATE cxx_std_17)
+target_link_libraries(chr_dump PRIVATE sfml-system sfml-window sfml-graphics)
+target_compile_features(chr_dump PRIVATE cxx_std_17)
 
 target_link_libraries(debugger PRIVATE sfml-system sfml-window sfml-graphics)
 target_compile_features(debugger PRIVATE cxx_std_17)
 
 # Ensure that debug symbols are included
 set_target_properties(debug PROPERTIES
+   COMPILE_FLAGS "-g"
+   LINK_FLAGS "-g"
+)
+
+set_target_properties(chr_dump PROPERTIES
    COMPILE_FLAGS "-g"
    LINK_FLAGS "-g"
 )
