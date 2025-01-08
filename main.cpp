@@ -4,15 +4,21 @@
 #include "Bus.h"
 #include "Helpers.h"
 
-int main() {
+int main(int argc, char** argv) {
+
+    if (argc != 2) {
+        std::cout << "Invalid usage: ./main <rom file name>" << std::endl;
+        return 1;
+    }
 
     Bus nes = Bus();
-    Cartridge* game = new Cartridge("donkeykong.nes");
+    Cartridge* game = new Cartridge(argv[1]);
 
     nes.insert_cartridge(game);
     nes.reset();
 
-    const int MICROS_PER_PPU_TICK = 86;
+    const int MICROS_PER_PPU_TICK = 60;
+    int num_ticks = 0;
 
     auto start = std::chrono::steady_clock::now();
 
