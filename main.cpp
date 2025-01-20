@@ -17,10 +17,7 @@ int main(int argc, char** argv) {
     nes.insert_cartridge(game);
     nes.reset();
 
-    const int MICROS_PER_PPU_TICK = 60;
     int num_ticks = 0;
-
-    auto start = std::chrono::steady_clock::now();
 
     while (nes.ppu->ui->window->isOpen()) {
 
@@ -31,12 +28,7 @@ int main(int argc, char** argv) {
                 nes.ppu->ui->window->close();
         }
 
-        auto curr_time = std::chrono::steady_clock::now();
-        auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(curr_time - start).count();
-
-        if (elapsed >= MICROS_PER_PPU_TICK) {
-            nes.tick();
-        }
+        nes.tick();
         
     }
 
