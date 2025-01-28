@@ -21,6 +21,7 @@ sf::RenderWindow cpu_window;
 sf::Sprite step_button;
 sf::Sprite step_scanline_button;
 sf::Sprite step_frame_button;
+sf::Sprite step_nmi_button;
 
 int elapsed_cpu_cycles = 0;
 
@@ -88,12 +89,14 @@ void draw_cpu_state(CPU* cpu, PPU* ppu) {
     sf::Texture step_arrow;
     sf::Texture step_scanline;
     sf::Texture step_frame;
+    sf::Texture step_nmi;
     sf::Font font;
 
     // Load resources
     step_arrow.loadFromFile("assets/icons/stepinto.png");
     step_scanline.loadFromFile("assets/icons/nextscanline.png");
     step_frame.loadFromFile("assets/icons/nextframe.png");
+    step_nmi.loadFromFile("assets/icons/stepnmi.png");
     font.loadFromFile("assets/fonts/spacemono.ttf");
 
     // Draw buttons
@@ -109,10 +112,15 @@ void draw_cpu_state(CPU* cpu, PPU* ppu) {
     step_frame_button.setScale(sf::Vector2f(2, 2));
     step_frame_button.setPosition(sf::Vector2f(100, 10));
 
+    step_nmi_button.setTexture(step_nmi);
+    step_nmi_button.setScale(sf::Vector2f(2, 2));
+    step_nmi_button.setPosition(sf::Vector2f(140, 10));
+
 
     cpu_window.draw(step_button);
     cpu_window.draw(step_scanline_button);
     cpu_window.draw(step_frame_button);
+    cpu_window.draw(step_nmi_button);
 
     // Display CPU trace log
     for (int i = 0; i < recent_instructions.size(); i++) {
@@ -309,7 +317,7 @@ int main() {
 
     Bus nes = Bus(true);
 
-    string rom_name = "nestest.nes";
+    string rom_name = "colortest.nes";
 
     Cartridge* cartridge = new Cartridge(rom_name);
     nes.insert_cartridge(cartridge);
@@ -345,6 +353,10 @@ int main() {
                     }
 
                     while (nes.ppu->scanline != cur_scanline) {
+                        step_forward(nes);
+                    }
+                } else if (step_nmi_button.getGlobalBounds().contains((sf::Vector2f) mouse_pos)) {
+                    while (!nes.cpu->has_nmi) {
                         step_forward(nes);
                     }
                 }

@@ -1,8 +1,49 @@
 
 #include "UI.h"
 
+void PixelMap::draw(sf::RenderTarget& target, sf::RenderStates states) const
+{
+    // apply the entity's transform -- combine it with the one that was passed by the caller
+    states.transform *= getTransform(); // getTransform() is defined by sf::Transformable
+
+    // you may also override states.shader or states.blendMode if you want
+
+    // draw the vertex array
+    target.draw(vertices, states);
+}
+
+void PixelMap::load(const vector<vector<sf::Color>>& screen_status, const int scale_factor) {
+    vertices.setPrimitiveType(sf::Triangles);
+    vertices.resize(SCREEN_WIDTH * SCREEN_HEIGHT * 6);
+
+    for (int i = 0; i < SCREEN_HEIGHT; i++) {
+        for (int j = 0; j < SCREEN_WIDTH; j++) {
+            sf::Color pixel_color = screen_status.at(i).at(j);
+
+            // 2 triangles per pixel, so we skip 6 vertices
+            sf::Vertex* triangles = &vertices[(i * SCREEN_WIDTH + j) * 6];
+
+            triangles[0].position = sf::Vector2f(j * scale_factor, i * scale_factor);
+            triangles[1].position = sf::Vector2f((j + 1) * scale_factor, i * scale_factor);
+            triangles[2].position = sf::Vector2f(j * scale_factor, (i + 1) * scale_factor);
+            triangles[3].position = sf::Vector2f((j + 1) * scale_factor, i * scale_factor);
+            triangles[4].position = sf::Vector2f(j * scale_factor, (i + 1) * scale_factor);
+            triangles[5].position = sf::Vector2f((j + 1) * scale_factor, (i + 1) * scale_factor);
+
+            triangles[0].color = pixel_color;
+            triangles[1].color = pixel_color;
+            triangles[2].color = pixel_color;
+            triangles[3].color = pixel_color;
+            triangles[4].color = pixel_color;
+            triangles[5].color = pixel_color;
+
+        }
+    }
+}
+
 UI::UI() {
     window = new sf::RenderWindow(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "NES Emulator");
+    screen_status = vector<vector<sf::Color>>(SCREEN_HEIGHT, vector<sf::Color>(SCREEN_WIDTH));
 } 
     
 UI::UI(bool disable_ui) {
@@ -11,6 +52,8 @@ UI::UI(bool disable_ui) {
     } else {
         window = nullptr;
     }
+
+    screen_status = vector<vector<sf::Color>>(SCREEN_HEIGHT, vector<sf::Color>(SCREEN_WIDTH));
 }
 
 void UI::set_pixel(uint8_t row, uint8_t col, uint8_t color_index) {
@@ -22,7 +65,7 @@ void UI::set_pixel(uint8_t row, uint8_t col, uint8_t color_index) {
         throw std::runtime_error("Unknown pixel index color " + std::to_string(color_index));
     }
 
-    screen_status[row][col] = sf::Color(cur_palette[color_index]);
+    screen_status.at(row).at(col) = sf::Color(cur_palette[color_index]);
 }
 
 void UI::set_palette(uint8_t color0, uint8_t color1, uint8_t color2, uint8_t color3) {
@@ -49,15 +92,9 @@ void UI::set_palette(uint8_t color0, uint8_t color1, uint8_t color2, uint8_t col
 }
 
 void UI::update() {
-    for (int i = 0; i < SCREEN_HEIGHT; i++) {
-        for (int j = 0; j < SCREEN_WIDTH; j++) {
-            sf::RectangleShape pixel(sf::Vector2f(SCALE_FACTOR, SCALE_FACTOR));
-            pixel.setFillColor(screen_status[i][j]);
-            pixel.setPosition(j * SCALE_FACTOR, i * SCALE_FACTOR);
-            window->draw(pixel);
-        }
-    }
-    
+    PixelMap pixels;
+    pixels.load(screen_status, SCALE_FACTOR); 
+    window->draw(pixels);
 }
 
 void UI::tick() {

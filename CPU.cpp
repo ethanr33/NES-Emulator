@@ -725,11 +725,11 @@ void CPU::ROL(uint16_t address) {
 
     memory_val <<= 1;
 
-    bus->write_cpu(address, memory_val);
-
     if (old_carry) {
         memory_val = memory_val | 1;
     }
+
+    bus->write_cpu(address, memory_val);
 
     if (memory_val == 0) {
         set_flag(ZERO, 1);

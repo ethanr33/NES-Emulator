@@ -4,6 +4,7 @@
 Bus::Bus() {
     cpu = new CPU();
     ppu = new PPU();
+    io = new IO();
     cpu->attach_bus(this);
     ppu->attach_bus(this);
 }
@@ -11,6 +12,7 @@ Bus::Bus() {
 Bus::Bus(bool ui_disabled) {
     cpu = new CPU();
     ppu = new PPU(ui_disabled);
+    io = new IO();
     cpu->attach_bus(this);
     ppu->attach_bus(this);
 }
@@ -32,7 +34,15 @@ uint8_t Bus::read_cpu(uint16_t address) {
 
     if (address >= APU_IO_REG_START && address <= APU_IO_REG_END) {
         // TODO: Implement APU / IO registers
-        return 0;
+
+        if (address == 0x4016 || address == 0x4017) {
+            // Reroute to IO
+
+            uint8_t status = io->read_from_cpu(address);
+
+            return status;
+        }
+
     }
 
     return cpu_RAM[address];
@@ -55,6 +65,11 @@ void Bus::write_cpu(uint16_t address, uint8_t val) {
     if (address == 0x4014) {
         ppu->load_OAMDMA(val, cpu_RAM);
     }
+
+    if (address == 0x4016) {
+        // Reroute to IO
+        io->write_from_cpu(address, val);
+    }
 }
 
 void Bus::insert_cartridge(Cartridge* new_cartridge) {
@@ -74,6 +89,8 @@ void Bus::tick() {
     }
 
     ppu->tick();
+
+    num_ticks++;
 }
 
 void Bus::halt() {

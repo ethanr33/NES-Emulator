@@ -9,6 +9,8 @@
 #include "Helpers.h"
 #include "mappers/Mapper000.h"
 
+using std::vector;
+
 Cartridge::Cartridge(const std::string& rom_file_name) {
     std::ifstream rom_file("roms/" + rom_file_name, std::ios::binary);
 

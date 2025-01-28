@@ -124,7 +124,8 @@ uint8_t PPU::read_from_ppu(uint16_t address) {
         return VRAM[address];
     } else if (address >= 0x3000 && address <= 0x3EFF) {
         // mirror of 0x2000 - 0x2EFF
-        return read_from_ppu(address & 0x2EFF);
+        address = map_to_nametable(address - 0x1000);
+        return VRAM[address];
     } else if (address >= 0x3F00 && address <= 0x3F1F) {
         // pallete table 
         return PALETTE_RAM[address & 0x3F];
@@ -203,6 +204,8 @@ void PPU::tick() {
         // pre render scanline
         // load first two tiles into buffer
         ppustatus.vblank = false;
+        ppustatus.sprite_hit = false;
+        ppustatus.sprite_overflow = false;
 
         // OAMADDR is set to 0 during ticks 257-320 of prerender scanlines
         if (cur_dot >= 257 && cur_dot <= 320) {
@@ -293,6 +296,7 @@ void PPU::tick() {
         // post render scanline
         if (cur_dot == 340) {
             ui->tick();
+            frames_elapsed++;
         }
     } else if (scanline > 240) {
         // vertical blanking scanlines

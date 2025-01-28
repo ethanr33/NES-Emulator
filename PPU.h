@@ -135,6 +135,8 @@ struct PPU {
     uint8_t pattern_low_byte = 0;
     uint8_t pattern_high_byte = 0;
 
+    uint16_t frames_elapsed = 0;
+
 
     uint16_t pattern_shift_reg_low = 0x0000;
     uint16_t pattern_shift_reg_high = 0x0000;

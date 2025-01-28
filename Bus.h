@@ -3,6 +3,7 @@
 #include "CPU.h"
 #include "PPU.h"
 #include "Cartridge.h"
+#include "IO.h"
 
 struct PPU;
 
@@ -24,6 +25,7 @@ struct Bus {
     CPU* cpu = nullptr;
     PPU* ppu = nullptr;
     Cartridge* cartridge;
+    IO* io = nullptr;
 
     uint8_t cpu_RAM[RAM_SIZE];
 

@@ -1,6 +1,20 @@
 
 #include <cstdint>
+#include <vector>
 #include <SFML/Graphics.hpp>
+
+using std::vector;
+
+struct PixelMap : public sf::Drawable, public sf::Transformable {
+
+    static const int SCREEN_WIDTH = 256;
+    static const int SCREEN_HEIGHT = 240;
+
+    sf::VertexArray vertices;
+
+    void load(const vector<vector<sf::Color>>&, const int);
+    virtual void draw(sf::RenderTarget&, sf::RenderStates) const;
+};
 
 struct UI {
 
@@ -12,7 +26,7 @@ struct UI {
     static const int WINDOW_WIDTH = SCREEN_WIDTH * SCALE_FACTOR;
     static const int WINDOW_HEIGHT = SCREEN_HEIGHT * SCALE_FACTOR;
 
-    sf::Color screen_status[SCREEN_HEIGHT][SCREEN_WIDTH];
+    vector<vector<sf::Color>> screen_status;
 
     sf::RenderWindow* window = nullptr;
 

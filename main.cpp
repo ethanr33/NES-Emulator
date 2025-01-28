@@ -1,6 +1,7 @@
 
 #include <iostream>
 #include <chrono>
+#include <optional>
 #include "Bus.h"
 #include "Helpers.h"
 
@@ -17,20 +18,32 @@ int main(int argc, char** argv) {
     nes.insert_cartridge(game);
     nes.reset();
 
-    int num_ticks = 0;
+    auto start = std::chrono::high_resolution_clock::now();
+    int cur_cycles = 0;
 
-    while (nes.ppu->ui->window->isOpen()) {
+    int num_iterations = 0;
+    
+
+    while (true) {
 
         sf::Event event;
-        while (nes.ppu->ui->window->pollEvent(event))
-        {
-            if (event.type == sf::Event::Closed)
+        while (nes.ppu->ui->window->pollEvent(event)) {
+            if (event.type == sf::Event::Closed) {
                 nes.ppu->ui->window->close();
+            }
         }
 
         nes.tick();
-        
+        cur_cycles++;
     }
+
+    auto current = std::chrono::high_resolution_clock::now();
+
+    // Calculate the elapsed time
+    std::chrono::duration<double> elapsed = current - start;
+
+    std::cout << "Ran " << cur_cycles << " cycles in " << elapsed.count() << std::endl;
+    std::cout << "FPS: " << nes.ppu->frames_elapsed / elapsed.count() << std::endl;
 
     return 0;
 }
