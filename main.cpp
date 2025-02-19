@@ -26,12 +26,12 @@ int main(int argc, char** argv) {
 
     while (true) {
 
-        sf::Event event;
-        while (nes.ppu->ui->window->pollEvent(event)) {
-            if (event.type == sf::Event::Closed) {
-                nes.ppu->ui->window->close();
-            }
-        }
+        // sf::Event event;
+        // while (nes.ppu->ui->window->pollEvent(event)) {
+        //     if (event.type == sf::Event::Closed) {
+        //         nes.ppu->ui->window->close();
+        //     }
+        // }
 
         nes.tick();
         cur_cycles++;

@@ -210,7 +210,7 @@ Pushes a copy of the status flags on to the stack.
 */
 void CPU::PHP() {
     // Break flag is always set to 1 on the pushed flags
-    uint8_t new_flags = get_byte_from_flags() | (1 << BREAK);
+    uint8_t new_flags = get_byte_from_flags() | (1 << 5); // Break flag is in the 6th position
     stack_push(new_flags);
 }
 
@@ -788,12 +788,12 @@ void CPU::ROR(uint16_t address) {
     set_flag(CARRY, is_bit_set(0, memory_val));
 
     memory_val >>= 1;
-    bus->write_cpu(address, memory_val);
 
     if (old_carry) {
-    memory_val|= 0x80;
-    bus->write_cpu(address, memory_val);
+        memory_val |= 0x80;
     }
+
+    bus->write_cpu(address, memory_val);
 
     if (memory_val == 0) {
         set_flag(ZERO, 1);
@@ -1212,33 +1212,136 @@ void CPU::execute_opcode(uint16_t opcode_address) {
     uint8_t lsb = bus->read_cpu(opcode_address + 1);
     uint8_t msb = bus->read_cpu(opcode_address + 2);
 
+    if (opcode_address >= 0xC6BC && opcode_address <= 0xC70A) {
+        std::cout << opcode_address << std::hex << std::endl;
+    }
+
     // Figure out what command the opcode corresponds to
     // Get the values (possibly in memory) required to execure it
     // Then execute the command
     // Extra opcodes: http://www.ffd2.com/fridge/docs/6502-NMOS.extra.opcodes
     switch (opcode) {
+        case 0xF4:
+            increment_program_counter(2);
+            num_clock_cycles += 4;
+            break;
+        case 0xD4:
+            increment_program_counter(2);
+            num_clock_cycles += 4;
+            break;
+        case 0x74:
+            increment_program_counter(2);
+            num_clock_cycles += 4;
+            break;
+        case 0x54:
+            increment_program_counter(2);
+            num_clock_cycles += 4;
+            break;
+        case 0x34:
+            increment_program_counter(2);
+            num_clock_cycles += 4;
+            break;
+        case 0x14:
+            increment_program_counter(2);
+            num_clock_cycles += 4;
+            break;
+        case 0x64:
+            // NOP
+            increment_program_counter(2);
+            num_clock_cycles += 3;
+            break;
+        case 0x44:
+            // NOP
+            increment_program_counter(2);
+            num_clock_cycles += 3;
+            break;
+        case 0xFC:
+            // NOP
+            increment_program_counter(3);
+            num_clock_cycles += 4;
+
+            if (crosses_page(ABSOLUTE_X, lsb, msb)) {
+                num_clock_cycles++;
+            }
+
+            break;
+        case 0xDC:
+            // NOP
+            increment_program_counter(3);
+            num_clock_cycles += 4;
+
+            if (crosses_page(ABSOLUTE_X, lsb, msb)) {
+                num_clock_cycles++;
+            }
+
+            break;
+        case 0x7C:
+            // NOP
+            increment_program_counter(3);
+            num_clock_cycles += 4;
+
+            if (crosses_page(ABSOLUTE_X, lsb, msb)) {
+                num_clock_cycles++;
+            }
+
+            break;
+        case 0x5C:
+            // NOP
+            increment_program_counter(3);
+            num_clock_cycles += 4;
+
+            if (crosses_page(ABSOLUTE_X, lsb, msb)) {
+                num_clock_cycles++;
+            }
+
+            break;
+        case 0x3C:
+            // NOP
+            increment_program_counter(3);
+            num_clock_cycles += 4;
+
+            if (crosses_page(ABSOLUTE_X, lsb, msb)) {
+                num_clock_cycles++;
+            }
+
+            break;
+        case 0x0C:
+            // NOP
+            increment_program_counter(3);
+            num_clock_cycles += 4;
+            break;
+        case 0x1C:
+            // NOP
+            increment_program_counter(3);
+            num_clock_cycles += 4;
+
+            if (crosses_page(ABSOLUTE_X, lsb, msb)) {
+                num_clock_cycles++;
+            }
+
+            break;
         case 0x80:
-            // SKB
+            // NOP
             increment_program_counter(2);
             num_clock_cycles += 2;
             break;
         case 0x82:
-            // SKB
+            // NOP
             increment_program_counter(2);
             num_clock_cycles += 2;
             break;
         case 0x89:
-            // SKB
+            // NOP
             increment_program_counter(2);
             num_clock_cycles += 2;
             break;
         case 0xC2:
-            // SKB
+            // NOP
             increment_program_counter(2);
             num_clock_cycles += 2;
             break;
         case 0xE2:
-            // SKB
+            // NOP
             increment_program_counter(2);
             num_clock_cycles += 2;
             break;
@@ -1387,7 +1490,6 @@ void CPU::execute_opcode(uint16_t opcode_address) {
         case 0xEA:
             //NOP
             clock_cycles_remaining += 2;
-            NOP();
             increment_program_counter(1);
             break;
         case 0x48:
@@ -2085,6 +2187,7 @@ void CPU::execute_opcode(uint16_t opcode_address) {
             break;
         case 0x04:
             clock_cycles_remaining += 1;
+            increment_program_counter(2);
             break;
         default:
             std::cout << program_counter << std::endl;
