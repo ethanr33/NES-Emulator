@@ -8,6 +8,7 @@
 #include "Cartridge.h"
 #include "Helpers.h"
 #include "mappers/Mapper000.h"
+#include "mappers/Mapper001.h"
 
 using std::vector;
 
@@ -74,11 +75,14 @@ Cartridge::Cartridge(const std::string& rom_file_name) {
                 }
             }
 
-            uint8_t mapper_number = (file_header.at(6) & 0xF0) | ((file_header.at(5) & 0xF0) >> 4);
+            uint8_t mapper_number = (file_header.at(5) & 0xF0) | ((file_header.at(6) & 0xF0) >> 4);
 
             switch (mapper_number) {
                 case 0:
                     this->mapper = new Mapper000(NUM_PRG_BANKS, NUM_CHR_BANKS);
+                    break;
+                case 1:
+                    this->mapper = new Mapper001(NUM_PRG_BANKS, NUM_CHR_BANKS);
                     break;
                 default:
                     throw std::runtime_error("Mapper not supported: " + std::to_string(mapper_number));
@@ -93,7 +97,7 @@ Cartridge::Cartridge(const std::string& rom_file_name) {
 
 
     bool Cartridge::read_cpu(uint16_t address, uint8_t& data) {
-        uint16_t mapped_address = address;
+        uint32_t mapped_address = address;
 
         if (mapper->cpu_mapper_read(address, mapped_address)) {
             data = PRG_ROM[mapped_address];
@@ -104,9 +108,9 @@ Cartridge::Cartridge(const std::string& rom_file_name) {
     }
 
     bool Cartridge::write_cpu(uint16_t address, uint8_t data) {
-        uint16_t mapped_address = address;
+        uint32_t mapped_address = address;
 
-        if (mapper->cpu_mapper_write(address, mapped_address)) {
+        if (mapper->cpu_mapper_write(address, mapped_address, data)) {
             PRG_ROM[mapped_address] = data;
             return true;
         }
@@ -115,7 +119,7 @@ Cartridge::Cartridge(const std::string& rom_file_name) {
     }
 
     bool Cartridge::read_ppu(uint16_t address) {
-        uint16_t mapped_address = address;
+        uint32_t mapped_address = address;
 
         if (mapper->ppu_mapper_read(address, mapped_address)) {
             return true;
@@ -125,9 +129,9 @@ Cartridge::Cartridge(const std::string& rom_file_name) {
     }
 
     bool Cartridge::write_ppu(uint16_t address, uint8_t data) {
-        uint16_t mapped_address = address;
+        uint32_t mapped_address = address;
 
-        if (mapper->ppu_mapper_write(address, mapped_address)) {
+        if (mapper->ppu_mapper_write(address, mapped_address, data)) {
             return true;
         }
 

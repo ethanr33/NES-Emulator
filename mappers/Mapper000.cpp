@@ -1,7 +1,7 @@
 
 #include "Mapper000.h"
 
-bool Mapper000::cpu_mapper_read(uint16_t addr, uint16_t& mapped_addr) {
+bool Mapper000::cpu_mapper_read(uint16_t addr, uint32_t& mapped_addr) {
 
     if (addr >= 0x6000 && addr <= 0x7FFF) {
         // Family switch, do something
@@ -28,7 +28,7 @@ bool Mapper000::cpu_mapper_read(uint16_t addr, uint16_t& mapped_addr) {
     return false;
 }
 
-bool Mapper000::cpu_mapper_write(uint16_t addr, uint16_t& mapped_addr) {
+bool Mapper000::cpu_mapper_write(uint16_t addr, uint32_t& mapped_addr, uint8_t data) {
 
     if (addr >= 0x6000 && addr <= 0x7FFF) {
         // Family switch, do something
@@ -57,7 +57,7 @@ bool Mapper000::cpu_mapper_write(uint16_t addr, uint16_t& mapped_addr) {
 
 // The mapper does not affect PPU addresses
 
-bool Mapper000::ppu_mapper_read(uint16_t addr, uint16_t& mapped_addr) {
+bool Mapper000::ppu_mapper_read(uint16_t addr, uint32_t& mapped_addr) {
     if (addr >= 0x0000 && addr <= 0x1FFF) {
         mapped_addr = addr;
         return true;
@@ -65,7 +65,7 @@ bool Mapper000::ppu_mapper_read(uint16_t addr, uint16_t& mapped_addr) {
     return false;
 }
 
-bool Mapper000::ppu_mapper_write(uint16_t addr, uint16_t& mapped_addr) {
+bool Mapper000::ppu_mapper_write(uint16_t addr, uint32_t& mapped_addr, uint8_t data) {
 
     // If there are no CHR-ROM banks then we are using CHR-RAM. So we need to write directly to memory
     if (num_chr_banks == 0) {
@@ -73,4 +73,8 @@ bool Mapper000::ppu_mapper_write(uint16_t addr, uint16_t& mapped_addr) {
     }
 
     return false;    
+}
+
+void Mapper000::reset() {
+    
 }
