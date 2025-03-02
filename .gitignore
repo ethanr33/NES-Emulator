@@ -20,3 +20,5 @@ debugger
 Makefile
 /.vscode
 build/
+roms/
+Makefile

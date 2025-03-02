@@ -16,7 +16,7 @@ using std::endl;
 using std::string;
 using std::to_string;
 
-sf::RenderWindow cpu_window;
+sf::RenderWindow* cpu_window;
 
 sf::Sprite step_button;
 sf::Sprite step_scanline_button;
@@ -117,10 +117,10 @@ void draw_cpu_state(CPU* cpu, PPU* ppu) {
     step_nmi_button.setPosition(sf::Vector2f(140, 10));
 
 
-    cpu_window.draw(step_button);
-    cpu_window.draw(step_scanline_button);
-    cpu_window.draw(step_frame_button);
-    cpu_window.draw(step_nmi_button);
+    cpu_window->draw(step_button);
+    cpu_window->draw(step_scanline_button);
+    cpu_window->draw(step_frame_button);
+    cpu_window->draw(step_nmi_button);
 
     // Display CPU trace log
     for (int i = 0; i < recent_instructions.size(); i++) {
@@ -134,7 +134,7 @@ void draw_cpu_state(CPU* cpu, PPU* ppu) {
         instruction.setFillColor(sf::Color::Black);
         instruction.setCharacterSize(20);
 
-        cpu_window.draw(instruction);
+        cpu_window->draw(instruction);
     }
 
     // Draw PPUCTRL flags
@@ -156,7 +156,7 @@ void draw_cpu_state(CPU* cpu, PPU* ppu) {
     ppu_ctrl_header.setFillColor(sf::Color::Black);
     ppu_ctrl_header.setCharacterSize(25);
 
-    cpu_window.draw(ppu_ctrl_header);
+    cpu_window->draw(ppu_ctrl_header);
 
     nmi_enable_text.setString("NMI Enable: " + to_string(ppu->ppuctrl.nmi_enable));
     nmi_enable_text.setFont(font);
@@ -201,13 +201,13 @@ void draw_cpu_state(CPU* cpu, PPU* ppu) {
     nametable_select_text.setCharacterSize(20);
 
 
-    cpu_window.draw(nmi_enable_text);
-    cpu_window.draw(ppu_ms_text);
-    cpu_window.draw(sprite_height_text);
-    cpu_window.draw(background_tile_select_text);
-    cpu_window.draw(sprite_tile_select_text);
-    cpu_window.draw(increment_mode_text);
-    cpu_window.draw(nametable_select_text);
+    cpu_window->draw(nmi_enable_text);
+    cpu_window->draw(ppu_ms_text);
+    cpu_window->draw(sprite_height_text);
+    cpu_window->draw(background_tile_select_text);
+    cpu_window->draw(sprite_tile_select_text);
+    cpu_window->draw(increment_mode_text);
+    cpu_window->draw(nametable_select_text);
 
     // Draw PPUSTATUS flags
 
@@ -224,7 +224,7 @@ void draw_cpu_state(CPU* cpu, PPU* ppu) {
     ppu_status_header.setFillColor(sf::Color::Black);
     ppu_status_header.setCharacterSize(25);
 
-    cpu_window.draw(ppu_status_header);
+    cpu_window->draw(ppu_status_header);
 
     vblank_text.setString("VBlank: " + to_string(ppu->ppustatus.vblank));
     vblank_text.setFont(font);
@@ -244,9 +244,9 @@ void draw_cpu_state(CPU* cpu, PPU* ppu) {
     sprite_overflow_text.setFillColor(sf::Color::Black);
     sprite_overflow_text.setCharacterSize(20);
 
-    cpu_window.draw(vblank_text);
-    cpu_window.draw(sprite0_hit_text);
-    cpu_window.draw(sprite_overflow_text);
+    cpu_window->draw(vblank_text);
+    cpu_window->draw(sprite0_hit_text);
+    cpu_window->draw(sprite_overflow_text);
 
     // Draw nametable
 
@@ -259,20 +259,20 @@ void draw_cpu_state(CPU* cpu, PPU* ppu) {
     nametable_header.setFillColor(sf::Color::Black);
     nametable_header.setCharacterSize(30);
 
-    cpu_window.draw(nametable_header);
+    cpu_window->draw(nametable_header);
 
     for (int i = 0; i < 30; i++) {
         for (int j = 0; j < 32; j++) {
             sf::Text nametable_cell_text;
 
 
-            nametable_cell_text.setString(to_string(ppu->VRAM[0x2000 + 32 * i + j]));
+            nametable_cell_text.setString(to_string(ppu->read_from_ppu(0x2000 + 32 * i + j)));
             nametable_cell_text.setFont(font);
             nametable_cell_text.setPosition(sf::Vector2f(20 + 20 * j, 550 + 20 * i));
             nametable_cell_text.setFillColor(sf::Color::Black);
             nametable_cell_text.setCharacterSize(10);
 
-            cpu_window.draw(nametable_cell_text);
+            cpu_window->draw(nametable_cell_text);
         }
     }
 
@@ -302,7 +302,7 @@ void step_forward(Bus nes) {
 
     // Simulate ticking the PPU forward when we step the CPU forward
     // 3 PPU cycles = 1 CPU cycle
-    std::cout << nes.cpu->num_clock_cycles << " " << elapsed_cpu_cycles << std::endl;
+    //std::cout << nes.cpu->num_clock_cycles << " " << elapsed_cpu_cycles << std::endl;
     for (int i = 0; i < 3 * (nes.cpu->num_clock_cycles - elapsed_cpu_cycles); i++) {
         nes.ppu->tick();
     }
@@ -317,30 +317,36 @@ int main() {
 
     Bus nes = Bus(true);
 
-    string rom_name = "colortest.nes";
+    string rom_name = "official_only.nes";
 
     Cartridge* cartridge = new Cartridge(rom_name);
     nes.insert_cartridge(cartridge);
     nes.reset();
 
-    cpu_window.create(sf::VideoMode(1600, 1600), "Tracer");
+    cpu_window = new sf::RenderWindow(sf::VideoMode(1600, 1600), "Tracer");
 
-    while (cpu_window.isOpen()) {
+    while (cpu_window->isOpen()) {
         sf::Event event;
 
-        while (cpu_window.pollEvent(event))
+        while (cpu_window->pollEvent(event))
         {
             // "close requested" event: we close the window
             if (event.type == sf::Event::Closed)
-                cpu_window.close();
+                cpu_window->close();
 
             // Check if the left mouse button is pressed
             if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left) {
-                sf::Vector2i mouse_pos = sf::Mouse::getPosition(cpu_window);
+                sf::Vector2i mouse_pos = sf::Mouse::getPosition(*cpu_window);
 
                 if (step_button.getGlobalBounds().contains((sf::Vector2f) mouse_pos)) {
                     // Step forward button was pressed
-                    step_forward(nes);
+                    while (true) {
+                        try {
+                            step_forward(nes);
+                        } catch (std::runtime_error &e) {
+                            break;
+                        }
+                    }
                 } else if (step_scanline_button.getGlobalBounds().contains((sf::Vector2f) mouse_pos)) {
                     int cur_scanline = nes.ppu->scanline;
                     while (nes.ppu->scanline == cur_scanline) {
@@ -348,13 +354,14 @@ int main() {
                     }
                 } else if (step_frame_button.getGlobalBounds().contains((sf::Vector2f) mouse_pos)) {
                     int cur_scanline = nes.ppu->scanline;
-                    while (nes.ppu->scanline == cur_scanline) {
+                    int num_frames = nes.ppu->frames_elapsed;
+
+                    while (nes.ppu->frames_elapsed == num_frames) {
                         step_forward(nes);
                     }
 
-                    while (nes.ppu->scanline != cur_scanline) {
-                        step_forward(nes);
-                    }
+                    std::cout << "Num frames: " << nes.ppu->frames_elapsed << std::endl;
+
                 } else if (step_nmi_button.getGlobalBounds().contains((sf::Vector2f) mouse_pos)) {
                     while (!nes.cpu->has_nmi) {
                         step_forward(nes);
@@ -363,9 +370,9 @@ int main() {
             }   
         }
 
-        cpu_window.clear(sf::Color::White);
+        cpu_window->clear(sf::Color::White);
         draw_cpu_state(nes.cpu, nes.ppu);
-        cpu_window.display();
+        cpu_window->display();
     }
 
 }

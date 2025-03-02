@@ -41,6 +41,9 @@ uint8_t Bus::read_cpu(uint16_t address) {
             uint8_t status = io->read_from_cpu(address);
 
             return status;
+        } else {
+            // Audio stuff, not implemented
+            return 0; 
         }
 
     }
@@ -55,20 +58,24 @@ void Bus::write_cpu(uint16_t address, uint8_t val) {
 
     if (address >= RAM_MIRROR_START && address <= RAM_MIRROR_END) {
         cpu_RAM[address & 0x7FF] = val;
+        return;
     }
 
     if (address >= PPU_REG_MIRROR_START && address <= PPU_REG_MIRROR_END) {
         ppu->write_from_cpu(address, val);
+        return;
     }
 
     // OAM DMA register
     if (address == 0x4014) {
         ppu->load_OAMDMA(val, cpu_RAM);
+        return;
     }
 
     if (address == 0x4016) {
         // Reroute to IO
         io->write_from_cpu(address, val);
+        return;
     }
 }
 

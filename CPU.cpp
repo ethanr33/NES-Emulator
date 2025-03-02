@@ -1,6 +1,7 @@
 #include <string>
 #include <stdexcept>
 #include <iostream>
+#include <iomanip>
 
 #include "CPU.h"
 #include "Helpers.h"
@@ -149,15 +150,8 @@ void CPU::ADC(uint8_t memory_val) {
 
     uint8_t sum = x + y + carry;
 
-    // Check if overflow from bit 7
-    /*
-        This happens if:
-        Bit 7 of x = 1, Bit 7 of y = 1, carry = 0/1
-        Either x or y has bit 7 set, carry is 1
-    */
-    if (is_bit_set(7, x) && is_bit_set(7, y)) {
-        set_flag(CARRY, 1);
-    } else if (carry == 1 && ((is_bit_set(7, x) && y == 0x7F) || (is_bit_set(7, y) && x == 0x7F))) {
+    // Check for overflow, set carry flag accordingly    
+    if (x + y + carry > 0xFF) {
         set_flag(CARRY, 1);
     } else {
         set_flag(CARRY, 0);
@@ -170,22 +164,28 @@ void CPU::ADC(uint8_t memory_val) {
         set_flag(ZERO, 0);
     }
 
-    if ((y == 0x6F || y == 0x7F) && carry == 1) {
+    if ((sum ^ x) & (sum ^ y) & 0x80) {
         set_flag(OVER_FLOW, 1);
     } else {
-        y = y + carry;
-
-        bool same_signs = (x > 0 && y > 0) || (x < 0 && y < 0);
-        bool opposite_result = (x > 0 && sum < 0) || (x < 0 && sum >= 0);
-
-        // Overflow occurs when we are adding two numbers with the same sign, and their sum doesn't
-        // match the signs of the input
-        if (same_signs && opposite_result) {
-            set_flag(OVER_FLOW, 1);
-        } else {
-            set_flag(OVER_FLOW, 0);
-        }
+        set_flag(OVER_FLOW, 0);
     }
+
+    // if ((y == 0x6F || y == 0x7F) && carry == 1) {
+    //     set_flag(OVER_FLOW, 1);
+    // } else {
+    //     y = y + carry;
+
+    //     bool same_signs = (x > 0 && y > 0) || (x < 0 && y < 0);
+    //     bool opposite_result = (x > 0 && sum < 0) || (x < 0 && sum >= 0);
+
+    //     // Overflow occurs when we are adding two numbers with the same sign, and their sum doesn't
+    //     // match the signs of the input
+    //     if (same_signs && opposite_result) {
+    //         set_flag(OVER_FLOW, 1);
+    //     } else {
+    //         set_flag(OVER_FLOW, 0);
+    //     }
+    // }
 
     if (is_bit_set(7, sum)) {
         set_flag(NEGATIVE, 1);
@@ -210,7 +210,7 @@ Pushes a copy of the status flags on to the stack.
 */
 void CPU::PHP() {
     // Break flag is always set to 1 on the pushed flags
-    uint8_t new_flags = get_byte_from_flags() | (1 << 5); // Break flag is in the 6th position
+    uint8_t new_flags = get_byte_from_flags() | (1 << 5) | (1 << 4); // Break flag is in the 6th position
     stack_push(new_flags);
 }
 
@@ -241,15 +241,13 @@ Pulls an 8 bit value from the stack and into the processor flags. The flags will
 void CPU::PLP() {
     uint8_t flag_byte = stack_pop();
 
-    for (int i = 7; i >= 0; i--) {
-        // Break flag is always ignored when retrieving flags using PLP
-        if (i != BREAK) {
-            set_flag(static_cast<flag_type>(i), flag_byte & 1);
-            flag_byte = flag_byte >> 1;
-        }
-    }
+    set_flag(NEGATIVE, flag_byte & 0x80);
+    set_flag(OVER_FLOW, flag_byte & 0x40);
+    set_flag(DECIMAL, flag_byte & 0x08);
+    set_flag(INT_DISABLE, flag_byte & 0x04);
+    set_flag(ZERO, flag_byte & 0x02);
+    set_flag(CARRY, flag_byte & 0x01);
 
-    //set_flag(BREAK, 0);
 }
 
 
@@ -458,9 +456,9 @@ void CPU::ASL() {
 void CPU::ASL(uint16_t memory_address) {
 
     uint8_t memory_val = bus->read_cpu(memory_address);
-    
-    set_flag(CARRY, is_bit_set(7, memory_val));
 
+    set_flag(CARRY, is_bit_set(7, memory_val));
+    
     memory_val <<= 1;
 
     bus->write_cpu(memory_address, memory_val);
@@ -471,7 +469,7 @@ void CPU::ASL(uint16_t memory_address) {
         set_flag(ZERO, 0);
     }
 
-    if (is_bit_set(memory_val, 7) == 1) {
+    if (is_bit_set(7, memory_val) == 1) {
         set_flag(NEGATIVE, 1);
     } else {
         set_flag(NEGATIVE, 0);
@@ -886,7 +884,6 @@ void CPU::LSR() {
         set_flag(ZERO, 0);
     }
 
-    // don't know why this is necessary
     if (is_bit_set(7, A)) {
         set_flag(NEGATIVE, 1);
     } else {
@@ -908,9 +905,10 @@ void CPU::LSR(uint16_t address) {
         set_flag(ZERO, 0);
     }
 
-    // don't know why this is necessary
     if (is_bit_set(7, val)) {
-        set_flag(CARRY, 1);
+        set_flag(NEGATIVE, 1);
+    } else {
+        set_flag(NEGATIVE, 0);
     }
 }
 
@@ -958,60 +956,40 @@ void CPU::RTI() {
 
     program_counter = form_address(pc_lsb, pc_msb) - 1;
 
-    for (int i = 0; i < 8; i++) {
-        flags[i] = is_bit_set(i, new_flags);
-    }
-
-    // Break flag is always set to 0 when getting flags from RTI
-    flags[BREAK] = 0;
+    set_flag(NEGATIVE, new_flags & 0x80);
+    set_flag(OVER_FLOW, new_flags & 0x40);
+    set_flag(DECIMAL, new_flags & 0x08);
+    set_flag(INT_DISABLE, new_flags & 0x04);
+    set_flag(ZERO, new_flags & 0x02);
+    set_flag(CARRY, new_flags & 0x01);
 }
 
 void CPU::SBC(uint8_t mem_val) {
-    uint8_t x = A;
-    uint8_t y = ~mem_val;
-    uint8_t carry = static_cast<uint8_t>(get_flag(CARRY));
+    ADC(~mem_val);
+}
 
-    uint8_t diff = x + y + carry;
+void CPU::AXS(uint8_t value) {
+    X = (A & X) - value;
 
-    // Check if overflow from bit 7
-    /*
-        This happens if:
-        Bit 7 of x = 1, Bit 7 of y = 1, carry = 0/1
-        Either x or y has bit 7 set, carry is 1
-    */
-
-    // By default, when subtracting the carry flag should be set to 1
-    // And only set to 0 if the result is less than 0
-    // If it is less than 0, this means that we "borrowed" a bit to do the subtraction
-    set_flag(CARRY, 1);
-
-    if (!is_positive(diff)) {
-        set_flag(CARRY, 0);
-    }
-    
-    // Zero flag is set if the difference is 0
-    if (diff == 0) {
-        set_flag(ZERO, 1);
-    } else {
-        set_flag(ZERO, 0);
-    }
-
-    // See table for overflow cases: http://www.righto.com/2012/12/the-6502-overflow-flag-explained.html
-    if (!is_bit_set(7, x) && is_bit_set(7, mem_val) && is_bit_set(7, diff) == 0) {
-        set_flag(OVER_FLOW, 1);
-    } else if (is_bit_set(7, x) && !is_bit_set(7, mem_val) && !is_bit_set(7, diff)) {
-        set_flag(OVER_FLOW, 1);
-    } else {
-        set_flag(OVER_FLOW, 0);
-    }
-
-    if (is_bit_set(7, diff)) {
+    if (X & 0x80) {
         set_flag(NEGATIVE, 1);
     } else {
         set_flag(NEGATIVE, 0);
     }
 
-    A = diff;
+    if (X == 0) {
+        set_flag(ZERO, 1);
+    } else {
+        set_flag(ZERO, 0);
+    }
+
+    if (A & X >= value) {
+        set_flag(CARRY, 1);
+    } else {
+        set_flag(CARRY, 0);
+    }
+
+
 }
 
 void CPU::set_flag(flag_type flag_to_set, bool new_flag_val) {
@@ -1212,9 +1190,7 @@ void CPU::execute_opcode(uint16_t opcode_address) {
     uint8_t lsb = bus->read_cpu(opcode_address + 1);
     uint8_t msb = bus->read_cpu(opcode_address + 2);
 
-    if (opcode_address >= 0xC6BC && opcode_address <= 0xC70A) {
-        std::cout << opcode_address << std::hex << std::endl;
-    }
+    // std::cout << std::uppercase << std::hex << std::setfill('0') << std::setw(4) << program_counter << std::endl;
 
     // Figure out what command the opcode corresponds to
     // Get the values (possibly in memory) required to execure it
@@ -2186,9 +2162,14 @@ void CPU::execute_opcode(uint16_t opcode_address) {
             increment_program_counter(1);
             break;
         case 0x04:
-            clock_cycles_remaining += 1;
+            clock_cycles_remaining += 3;
             increment_program_counter(2);
             break;
+        // case 0xCB:
+        //     clock_cycles_remaining += 2;
+        //     increment_program_counter(2);
+        //     AXS(lsb);
+        //     break;
         default:
             std::cout << program_counter << std::endl;
             throw std::runtime_error("Unknown opcode " + std::to_string(opcode));
@@ -2203,6 +2184,8 @@ void CPU::tick() {
     // We may have some cycles left before we can execute the next opcode, but the PC will still be pointed to the next one
     if (clock_cycles_remaining == 0) {
         execute_opcode(program_counter);
+
+
 
         // If there is an outstanding NMI, handle it after we're done executing the current instruction
         if (has_nmi) {

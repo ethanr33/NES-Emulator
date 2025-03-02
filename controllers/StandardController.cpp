@@ -44,10 +44,6 @@ bool StandardController::read_input() {
             // Requesting to read Down
             controller_state++;
             key_pressed = sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Down);
-
-            if (key_pressed) {
-                std::cout << "Down is pressed" << std::endl;
-            }
             break;
         case 6:
             // Requesting to read Left

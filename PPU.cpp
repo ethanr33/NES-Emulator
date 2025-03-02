@@ -237,17 +237,19 @@ void PPU::tick() {
             // Who cares if we fetch the same data 8 times in a row, right???
 
             uint16_t nametable_index = 32 * (pixel_y / 8) + (pixel_x / 8);
-            uint8_t cur_nametable_entry = read_from_ppu(0x2000 + nametable_index); // FIX THIS LATER
+            uint8_t cur_nametable_entry = read_from_ppu(0x2000 + 0x400 * ppuctrl.nametable_select + nametable_index); // FIX THIS LATER
 
-            if (ppuctrl.sprite_tile_select == 1) {
-                cur_nametable_entry += 0x1000;
+            uint16_t pattern_table_offset = 0;
+
+            if (ppuctrl.background_tile_select == 1) {
+                pattern_table_offset = 0x1000;
             }
 
-            uint8_t pixel_layer_0 = read_from_ppu(16 * cur_nametable_entry + tile_offset_y);
-            uint8_t pixel_layer_1 = read_from_ppu(16 * cur_nametable_entry + tile_offset_y + 8);
+            uint8_t pixel_layer_0 = read_from_ppu(16 * cur_nametable_entry + tile_offset_y + pattern_table_offset);
+            uint8_t pixel_layer_1 = read_from_ppu(16 * cur_nametable_entry + tile_offset_y + pattern_table_offset + 8);
 
             uint16_t attribute_table_index = 8 * (pixel_y / 32) + (pixel_x / 32);
-            uint8_t attribute_table_val = read_from_ppu(0x23C0 + attribute_table_index); // Attribute table is located at the end of the nametable
+            uint8_t attribute_table_val = read_from_ppu(0x23C0 + 0x400 * ppuctrl.nametable_select + attribute_table_index); // Attribute table is located at the end of the nametable
 
             bool is_left_tile = (pixel_x % 16) < 8;
             bool is_top_tile = (pixel_y % 16) < 8;
@@ -294,10 +296,6 @@ void PPU::tick() {
 
     } else if (scanline == 240) {
         // post render scanline
-        if (cur_dot == 340) {
-            ui->tick();
-            frames_elapsed++;
-        }
     } else if (scanline > 240) {
         // vertical blanking scanlines
 
@@ -306,6 +304,20 @@ void PPU::tick() {
         }
 
         ppustatus.vblank = true;
+
+        if (scanline == 241 && cur_dot == 340) {
+            ui->tick();
+
+            // for (int i = 0; i < 30; i++) {
+            //     for (int j = 0; j < 32; j++) {
+            //         std::cout << std::hex << (int) read_from_ppu(0x2000 + 32 * i + j) << " ";
+            //     }
+            //     std::cout << std::endl;
+            // }
+
+
+            frames_elapsed++;
+        }
     } else {
         throw std::runtime_error("Invalid scanline");
     }
