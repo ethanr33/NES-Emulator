@@ -1130,9 +1130,9 @@ uint16_t CPU::make_address(addressing_mode mode, uint8_t parameter_lsb, uint8_t 
     if (mode == ABSOLUTE) {
         return form_address(parameter_lsb, parameter_msb);
     } else if (mode == ABSOLUTE_X) {
-        return form_address(parameter_lsb, parameter_msb) + X;
+        return (form_address(parameter_lsb, parameter_msb) + X) & 0xFFFF;
     } else if (mode == ABSOLUTE_Y) {
-        return form_address(parameter_lsb, parameter_msb) + Y;
+        return (form_address(parameter_lsb, parameter_msb) + Y) & 0xFFFF;
     } else if (mode == INDIRECT) {
         /*
             An original 6502 has does not correctly fetch the target address if the indirect vector falls on a page boundary (e.g. $xxFF where xx is any value from $00 to $FF).
@@ -1190,7 +1190,7 @@ void CPU::execute_opcode(uint16_t opcode_address) {
     uint8_t lsb = bus->read_cpu(opcode_address + 1);
     uint8_t msb = bus->read_cpu(opcode_address + 2);
 
-    // std::cout << std::uppercase << std::hex << std::setfill('0') << std::setw(4) << program_counter << std::endl;
+    //std::cout << std::uppercase << std::hex << std::setfill('0') << std::setw(4) << program_counter << std::endl;
 
     // Figure out what command the opcode corresponds to
     // Get the values (possibly in memory) required to execure it
@@ -1444,7 +1444,7 @@ void CPU::execute_opcode(uint16_t opcode_address) {
             break;
         case 0xB9:
             // LDA, absolute y
-            if (crosses_page(ABSOLUTE_X, lsb, msb)) {
+            if (crosses_page(ABSOLUTE_Y, lsb, msb)) {
                 clock_cycles_remaining += 5;
             } else {
                 clock_cycles_remaining += 4;

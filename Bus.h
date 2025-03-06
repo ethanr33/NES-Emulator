@@ -5,6 +5,10 @@
 #include "Cartridge.h"
 #include "IO.h"
 
+#include <vector>
+
+using std::vector;
+
 struct PPU;
 
 struct Bus {
@@ -27,7 +31,7 @@ struct Bus {
     Cartridge* cartridge;
     IO* io = nullptr;
 
-    uint8_t cpu_RAM[RAM_SIZE];
+    std::vector<uint8_t> cpu_RAM = vector<uint8_t>(RAM_SIZE);
 
     uint64_t num_ticks = 0;
 

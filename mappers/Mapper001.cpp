@@ -2,10 +2,16 @@
 #include <stdexcept>
 #include "Mapper001.h"
 
-bool Mapper001::cpu_mapper_read(uint16_t addr, uint32_t& mapped_addr) {
+bool Mapper001::cpu_mapper_read(uint16_t addr, uint32_t& mapped_addr, uint8_t& data) {
 
-    if (addr >= 0x6000 && addr <= 0x7FFF) {
+    if (mapped_to_prg_ram(addr)) {
         // 8 KB PRG-RAM bank, (optional)
+        data = PRG_RAM.at(addr - 0x6000);
+        return false; // Not reading from cartridge, so return true
+    }
+
+    if ((prg_rom_bank_mode == 0 || prg_rom_bank_mode == 1) && addr >= 0x8000 && addr <= 0xFFFF) {
+        mapped_addr = (addr - 0x8000) + prg_bank_32k * 0x8000;
         return true;
     }
 
@@ -26,9 +32,14 @@ bool Mapper001::cpu_mapper_read(uint16_t addr, uint32_t& mapped_addr) {
 
 bool Mapper001::cpu_mapper_write(uint16_t addr, uint32_t& mapped_addr, uint8_t data) {
 
-    if (addr <= 0x7FFF) {
+    if (addr < 0x6000) {
         // Not handled by mapper
         return false;
+    }
+
+    if (mapped_to_prg_ram(addr)) {
+        PRG_RAM.at(addr - 0x6000) = data;
+        return true; // We write to cartridge, so return true
     }
 
     if (data >= 0x8000) {
@@ -49,6 +60,7 @@ bool Mapper001::cpu_mapper_write(uint16_t addr, uint32_t& mapped_addr, uint8_t d
                 switch_banks_chr(control_reg, 1);
             } else if (addr >= 0xE000 && addr <= 0xFFFF) {
                 switch_banks_prg(control_reg & 0xF);
+                //prg_ram_enabled = (control_reg & 0x10) == 0;
             }
             
             control_reg_write_bit = 0;
@@ -94,23 +106,27 @@ void Mapper001::reset() {
     control_reg = 0x10;
     control_reg_write_bit = 0;
 
-    prg_bank_high = num_prg_banks - 1;
+    prg_bank_high = num_prg_rom_banks - 1;
     prg_rom_bank_mode = 3;
 }
 
+bool Mapper001::mapped_to_prg_ram(uint16_t addr) {
+    return addr >= 0x6000 && addr <= 0x7FFF && prg_ram_enabled;
+}
+
 void Mapper001::switch_banks_prg(uint8_t bank_num) {
+    // NOTE: I have no idea why, but for some reason when setting the bank numbers to bank_num, bank_num needs to be divided by 2 first.
     if (prg_rom_bank_mode == 0 || prg_rom_bank_mode == 1) {
         // 0, 1: switch 32 KB at $8000, ignoring low bit of bank number
-        prg_bank_low = (bank_num & 0xE) >> 1;
-        prg_bank_high = ((bank_num + 1) & 0xE) >> 1;
+        prg_bank_32k = bank_num >> 2;
     } else if (prg_rom_bank_mode == 2) {
         // 2: fix first bank at $8000 and switch 16 KB bank at $C000
         prg_bank_low = 0;
-        prg_bank_high = bank_num;
+        prg_bank_high = bank_num >> 1;
     } else if (prg_rom_bank_mode == 3) {
         // 3: fix last bank at $C000 and switch 16 KB bank at $8000
-        prg_bank_low = bank_num;
-        prg_bank_high = num_prg_banks - 1;
+        prg_bank_low = bank_num >> 1;
+        prg_bank_high = num_prg_rom_banks - 1;
     } else {
         throw std::runtime_error("Mapper001: Unknown PRG rom bank mode");
     }
@@ -136,3 +152,6 @@ void Mapper001::switch_banks_chr(uint8_t new_bank_num, uint8_t which_bank) {
     }
 }
 
+vector<uint8_t> Mapper001::get_prg_ram() {
+    return PRG_RAM;
+}

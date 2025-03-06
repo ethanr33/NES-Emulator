@@ -155,7 +155,7 @@ struct PPU {
     void load_cartridge(Cartridge*);
 
     // For use with OAMDMA register
-    void load_OAMDMA(uint8_t, uint8_t[]);
+    void load_OAMDMA(uint8_t, const std::vector<uint8_t>&);
 
     void render_cycle();
     void attach_bus(Bus*);

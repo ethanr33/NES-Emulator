@@ -50,6 +50,10 @@ Cartridge::Cartridge(const std::string& rom_file_name) {
             const int NUM_PRG_BANKS = file_header.at(4);
             const int NUM_CHR_BANKS = file_header.at(5);
 
+            // The PRG RAM size is rarely set in iNES files.
+            // So if the PRG RAM size is 0, by default set it to 1 bank instead (even if the mapper doesn't support PRG RAM)
+            const int NUM_PRG_RAM_BANKS = file_header.at(8) > 0 ? file_header.at(8) : 1;
+
             const int PRG_ROM_SIZE = file_header.at(4) * PRG_ROM_PAGE_SIZE;
             const int CHR_ROM_SIZE = file_header.at(5) * CHR_ROM_PAGE_SIZE;
 
@@ -79,10 +83,10 @@ Cartridge::Cartridge(const std::string& rom_file_name) {
 
             switch (mapper_number) {
                 case 0:
-                    this->mapper = new Mapper000(NUM_PRG_BANKS, NUM_CHR_BANKS);
+                    this->mapper = new Mapper000(NUM_PRG_BANKS, NUM_PRG_RAM_BANKS, NUM_CHR_BANKS);
                     break;
                 case 1:
-                    this->mapper = new Mapper001(NUM_PRG_BANKS, NUM_CHR_BANKS);
+                    this->mapper = new Mapper001(NUM_PRG_BANKS, NUM_PRG_RAM_BANKS, NUM_CHR_BANKS);
                     break;
                 default:
                     throw std::runtime_error("Mapper not supported: " + std::to_string(mapper_number));
@@ -99,7 +103,14 @@ Cartridge::Cartridge(const std::string& rom_file_name) {
     bool Cartridge::read_cpu(uint16_t address, uint8_t& data) {
         uint32_t mapped_address = address;
 
-        if (mapper->cpu_mapper_read(address, mapped_address)) {
+        // Return true if we access PRG RAM data
+        if (mapper->mapped_to_prg_ram(address)) {
+            mapper->cpu_mapper_read(address, mapped_address, data);
+            return true;
+        }
+
+        // Return true if we access PRG ROM data
+        if (mapper->cpu_mapper_read(address, mapped_address, data)) {
             data = PRG_ROM[mapped_address];
             return true;
         }
@@ -110,6 +121,13 @@ Cartridge::Cartridge(const std::string& rom_file_name) {
     bool Cartridge::write_cpu(uint16_t address, uint8_t data) {
         uint32_t mapped_address = address;
 
+        // Return true if we access PRG RAM data
+        if (mapper->mapped_to_prg_ram(address)) {
+            mapper->cpu_mapper_write(address, mapped_address, data);
+            return true;
+        }
+
+        // Return true if we write to PRG ROM data (excluding PRG RAM)
         if (mapper->cpu_mapper_write(address, mapped_address, data)) {
             PRG_ROM[mapped_address] = data;
             return true;

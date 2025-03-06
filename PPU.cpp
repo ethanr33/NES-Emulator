@@ -189,11 +189,11 @@ void PPU::load_cartridge(Cartridge* new_cartridge) {
     cartridge = new_cartridge;
 } 
 
-void PPU::load_OAMDMA(uint8_t high_byte, uint8_t data[]) {
+void PPU::load_OAMDMA(uint8_t high_byte, const std::vector<uint8_t>& data) {
     // Copy over a page of data starting at address
 
     for (int i = 0; i < 256; i++) {
-        OAM[i] = data[(high_byte << 8) + i];
+        OAM[i] = data.at((high_byte << 8) + i);
     }
 }
 
