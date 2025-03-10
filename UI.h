@@ -41,15 +41,17 @@ struct UI {
         0XFFFFFFFF, 0XBFE0FFFF, 0XD1D3FFFF, 0XE6C9FFFF, 0XF7C3FFFF, 0XFFC4EEFF, 0XFFCBC9FF, 0XF7D7A9FF, 0XE6E397FF, 0XD1EE97FF, 0XBFF3A9FF, 0XB5F2C9FF, 0xB5EBEEFF, 0xB8B8B8FF, 0x000000FF, 0x000000FF 
     };
 
-    uint32_t cur_palette[4];
+    uint32_t cur_background_palette[4];
+    uint32_t cur_sprite_palette[4];
 
     UI();
     UI(bool);
 
     sf::Color hex_to_sfcpo;
 
-    void set_pixel(uint8_t, uint8_t, uint8_t);
-    void set_palette(uint8_t, uint8_t, uint8_t, uint8_t);
+    void set_pixel(uint8_t, uint8_t, uint8_t, bool);
+    void set_background_palette(uint8_t, uint8_t, uint8_t, uint8_t);
+    void set_sprite_palette(uint8_t, uint8_t, uint8_t, uint8_t);
 
     void update();
     void tick();

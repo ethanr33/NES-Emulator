@@ -12,6 +12,14 @@ PPU::PPU(bool ui_disabled) {
     ui = new UI(ui_disabled);
 }
 
+uint8_t PPU::get_sprite_height() {
+    if (ppuctrl.sprite_height) {
+        return 16;
+    } else {
+        return 8;
+    }
+}
+
 uint8_t PPU::read_from_cpu(uint16_t address) {
     if (address >= 0x2000 && address <= 0x3FFF) {
         int register_num = address & 0x7;
@@ -74,7 +82,23 @@ void PPU::write_from_cpu(uint16_t address, uint8_t val) {
                 oamaddr = val;
                 break;
             case 4:
-                OAM[oamaddr] = val;
+                switch (oamaddr % 4) {
+                    case 0:
+                        OAM_sprite_list.at(oamaddr / 4).y_position = val;
+                        break;
+                    case 1:
+                        OAM_sprite_list.at(oamaddr / 4).tile_index_number = val;
+                        break;
+                    case 2:
+                        OAM_sprite_list.at(oamaddr / 4).attributes = val;
+                        break;
+                    case 3:
+                        OAM_sprite_list.at(oamaddr / 4).x_position = val;
+                        break;
+                    default:
+                        break;
+                }
+
                 oamaddr++;
                 break;
             case 5:
@@ -189,12 +213,58 @@ void PPU::load_cartridge(Cartridge* new_cartridge) {
     cartridge = new_cartridge;
 } 
 
+void PPU::filter_renderable_sprites() {
+
+    // Clear list to get rid of previously rendered sprites
+    OAM_renderable_sprites.clear();
+
+    // Maps a scanline number to how many sprites we've seen so far that will be rendered on that scanline number
+    // Only worry about visible scanlines here. If it's out of range then it won't be rendered anyways
+    vector<uint8_t> num_sprites_on_scanline(VISIBLE_SCANLINES_PER_CYCLE);
+    uint8_t sprite_height = ppuctrl.sprite_height ? 16 : 8;
+
+    for (int i = 0; i < MAX_SPRITES; i++) {
+        Sprite cur_sprite = OAM_sprite_list.at(i);
+        uint8_t cur_sprite_scanline = cur_sprite.y_position;
+
+        // If this sprite is out of range of drawing on the screen, then don't render the sprite
+        if (cur_sprite_scanline >= VISIBLE_SCANLINES_PER_CYCLE) {
+            continue;
+        }
+
+        // Check how many sprites are being rendered on this scanline.
+        // If there are eight or more, then don't render the sprite.
+        // Continue evaluation onto the next sprite.
+        if (num_sprites_on_scanline.at(cur_sprite_scanline) >= 8) {
+            continue;
+        }
+
+        // The sprite must be rendered from scanline i to i + sprite_height - 1.
+        // Update map accordingly.
+        for (int j = 0; j < sprite_height; j++) {
+            num_sprites_on_scanline.at(cur_sprite_scanline + j)++;
+            OAM_renderable_sprites.push_back(cur_sprite);
+        }
+
+    }
+}
+
 void PPU::load_OAMDMA(uint8_t high_byte, const std::vector<uint8_t>& data) {
     // Copy over a page of data starting at address
 
-    for (int i = 0; i < 256; i++) {
-        OAM[i] = data.at((high_byte << 8) + i);
+    for (int i = 0; i < 256; i += 4) {
+        uint8_t cur_sprite_num = i / 4;
+
+        uint8_t cur_sprite_y_pos = data.at((high_byte << 8) + i);
+        uint8_t cur_sprite_tile_index_number = data.at((high_byte << 8) + i + 1);
+        uint8_t cur_sprite_attributes = data.at((high_byte << 8) + i + 2);
+        uint8_t cur_sprite_x_pos = data.at((high_byte << 8) + i + 3);
+
+        OAM_sprite_list.at(cur_sprite_num) = Sprite(cur_sprite_y_pos, cur_sprite_tile_index_number, cur_sprite_attributes, cur_sprite_x_pos);
+
     }
+
+    filter_renderable_sprites();
 }
 
 void PPU::tick() {
@@ -236,8 +306,8 @@ void PPU::tick() {
             // TODO: Add support for mirroring types
             // Who cares if we fetch the same data 8 times in a row, right???
 
-            uint16_t nametable_index = 32 * (pixel_y / 8) + (pixel_x / 8);
-            uint8_t cur_nametable_entry = read_from_ppu(0x2000 + 0x400 * ppuctrl.nametable_select + nametable_index); // FIX THIS LATER
+            uint16_t background_nametable_index = 32 * (pixel_y / 8) + (pixel_x / 8);
+            uint8_t cur_nametable_entry = read_from_ppu(0x2000 + 0x400 * ppuctrl.nametable_select + background_nametable_index); // FIX THIS LATER
 
             uint16_t pattern_table_offset = 0;
 
@@ -245,8 +315,8 @@ void PPU::tick() {
                 pattern_table_offset = 0x1000;
             }
 
-            uint8_t pixel_layer_0 = read_from_ppu(16 * cur_nametable_entry + tile_offset_y + pattern_table_offset);
-            uint8_t pixel_layer_1 = read_from_ppu(16 * cur_nametable_entry + tile_offset_y + pattern_table_offset + 8);
+            uint8_t background_pixel_layer_0 = read_from_ppu(16 * cur_nametable_entry + tile_offset_y + pattern_table_offset);
+            uint8_t background_pixel_layer_1 = read_from_ppu(16 * cur_nametable_entry + tile_offset_y + pattern_table_offset + 8);
 
             uint16_t attribute_table_index = 8 * (pixel_y / 32) + (pixel_x / 32);
             uint8_t attribute_table_val = read_from_ppu(0x23C0 + 0x400 * ppuctrl.nametable_select + attribute_table_index); // Attribute table is located at the end of the nametable
@@ -257,40 +327,107 @@ void PPU::tick() {
             // The value in the attribute table is constructed as follows:
             // attribute_table_val = (bottomright << 6) | (bottomleft << 4) | (topright << 2) | (topleft << 0)
             // Where bottomright, bottomleft, topright, and topleft are the palette numbers for each quadrant of this block in the nametable
-            uint8_t color_palette_num;
+            uint8_t background_color_palette_num;
 
             if (is_top_tile && is_left_tile) {
                 // top left
-                color_palette_num = attribute_table_val & 0x3;
+                background_color_palette_num = attribute_table_val & 0x3;
             } else if (is_top_tile && !is_left_tile) {
                 // top right
-                color_palette_num = (attribute_table_val & 0xC) >> 2;
+                background_color_palette_num = (attribute_table_val & 0xC) >> 2;
             } else if (!is_top_tile && is_left_tile) {
                 // bottom left
-                color_palette_num = (attribute_table_val & 0x30) >> 4;
+                background_color_palette_num = (attribute_table_val & 0x30) >> 4;
             } else {
                 // bottom right
-                color_palette_num = (attribute_table_val & 0xC0) >> 6;
+                background_color_palette_num = (attribute_table_val & 0xC0) >> 6;
             }
 
             // For background rendering only.
             // Palette addresses for the background are from 0x3F00 - 0x3F0F.
-            uint16_t palette_index = 0x3F00 + 4 * color_palette_num;
+            uint16_t background_palette_index = 0x3F00 + 4 * background_color_palette_num;
             
-            uint8_t color0 = read_from_ppu(palette_index);
-            uint8_t color1 = read_from_ppu(palette_index + 1);
-            uint8_t color2 = read_from_ppu(palette_index + 2);
-            uint8_t color3 = read_from_ppu(palette_index + 3);
+            uint8_t background_color0 = read_from_ppu(background_palette_index);
+            uint8_t background_color1 = read_from_ppu(background_palette_index + 1);
+            uint8_t background_color2 = read_from_ppu(background_palette_index + 2);
+            uint8_t background_color3 = read_from_ppu(background_palette_index + 3);
 
-            uint8_t pixel_color = (is_bit_set(tile_offset_x, pixel_layer_1) << 1) | is_bit_set(tile_offset_x, pixel_layer_0);
+            uint8_t background_pixel_color = (is_bit_set(tile_offset_x, background_pixel_layer_1) << 1) | is_bit_set(tile_offset_x, background_pixel_layer_0);
 
-            if (pixel_color == 3) {
-                int x = 2;
+            ui->set_background_palette(background_color0, background_color1, background_color2, background_color3);
+
+            // Check if a sprite is rendered here
+
+            bool is_sprite_rendered = false;
+            Sprite sprite_to_render;
+
+            for (int i = 0; i < OAM_renderable_sprites.size(); i++) {
+                Sprite cur_sprite = OAM_renderable_sprites.at(i);
+                
+                // Check if the pixel is within the x bounds of the sprite
+                if (cur_sprite.x_position <= pixel_x && cur_sprite.x_position + SPRITE_WIDTH > pixel_x) {
+                    // Check if the pixel is within the y bounds of the sprite
+                    if (cur_sprite.y_position <= pixel_y && cur_sprite.y_position + get_sprite_height() > pixel_y) {
+                        is_sprite_rendered = true;
+                        sprite_to_render = cur_sprite;
+                        break; // Only one sprite to render at a time
+                        // TODO: Implement sprite priority
+                    }
+                }
             }
 
-            ui->set_palette(color0, color1, color2, color3);
+            if (is_sprite_rendered) {
+                // Get pixel offset from top, left of sprite
+                uint8_t sprite_offset_x = pixel_x - sprite_to_render.x_position;
+                uint8_t sprite_offset_y = pixel_y - sprite_to_render.y_position;
 
-            ui->set_pixel(pixel_y, pixel_x, pixel_color);
+                // Check if flip sprite vertically flag is set
+                if (is_bit_set(7, sprite_to_render.attributes)) {
+                    sprite_offset_y = get_sprite_height() - sprite_offset_y - 1;
+                }
+
+                // Check if flip sprite horizontally flag is set
+                if (is_bit_set(6, sprite_to_render.attributes)) {
+                    sprite_offset_x = SPRITE_WIDTH - sprite_offset_x - 1;
+                }
+
+                // Check if the sprite is rendered in front of or behind the background
+                bool is_sprite_behind_background = is_bit_set(6, sprite_to_render.attributes);
+
+                // Fetch sprite palette
+                uint8_t sprite_palette_num = sprite_to_render.attributes & 0x03;
+                uint16_t sprite_palette_index = 0x3F10 + 4 * sprite_palette_num;
+
+                uint8_t sprite_color0 = read_from_ppu(sprite_palette_index);
+                uint8_t sprite_color1 = read_from_ppu(sprite_palette_index + 1);
+                uint8_t sprite_color2 = read_from_ppu(sprite_palette_index + 2);
+                uint8_t sprite_color3 = read_from_ppu(sprite_palette_index + 3);
+
+                ui->set_sprite_palette(sprite_color0, sprite_color1, sprite_color2, sprite_color3);
+
+                if (get_sprite_height() == 16) {
+                    throw std::runtime_error("Rendering for 8x16 sprites has not been implemented yet");
+                }
+
+                uint8_t sprite_pattern_table_address = ppuctrl.sprite_tile_select ? 0x1000 : 0;
+
+                uint8_t sprite_pixel_layer0 = read_from_ppu(sprite_offset_y + 16 * sprite_to_render.tile_index_number + sprite_pattern_table_address);
+                uint8_t sprite_pixel_layer1 = read_from_ppu(8 + sprite_offset_y + 16 * sprite_to_render.tile_index_number + sprite_pattern_table_address);
+
+                uint8_t sprite_pixel_offset = 7 - (sprite_offset_x % 8);
+                uint8_t sprite_pixel_color = is_bit_set(sprite_pixel_offset, sprite_pixel_layer0) | (is_bit_set(sprite_pixel_offset, sprite_pixel_layer1) << 1);
+
+                // If the sprite's color is transparent, do not render it
+                if (sprite_pixel_color == 0) {
+                    ui->set_pixel(pixel_y, pixel_x, background_pixel_color, true);    
+                } else {
+                    ui->set_pixel(pixel_y, pixel_x, sprite_pixel_color, false);    
+                }
+
+            } else {
+                // If there is no sprite here, render background as normal
+                ui->set_pixel(pixel_y, pixel_x, background_pixel_color, true);    
+            }
 
         }
 

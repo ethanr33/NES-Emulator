@@ -9,10 +9,32 @@
 
 enum TILE_POSITION {TOP_LEFT, TOP_RIGHT, BOTTOM_LEFT, BOTTOM_RIGHT};
 
+struct Sprite {
+    uint8_t y_position; // Y position of top of sprite
+    uint8_t tile_index_number;
+    uint8_t attributes;
+    uint8_t x_position; // X position of left of sprite
+
+    Sprite() {
+        y_position = 0;
+        tile_index_number = 0;
+        attributes = 0;
+        x_position = 0;
+    }
+
+    Sprite(uint8_t y_pos, uint8_t tile_index, uint8_t attr, uint8_t x_pos) {
+        y_position = y_pos;
+        tile_index_number = tile_index;
+        attributes = attr;
+        x_position = x_pos;
+    }
+};
+
+// See https://www.nesdev.org/wiki/PPU_registers#PPUCTRL_-_Miscellaneous_settings_($2000_write)
 struct PPUCTRL {
     bool nmi_enable;
     bool ppu_ms;
-    bool sprite_height;
+    bool sprite_height; // If false: 8 pixels high. If true: 16 pixels high.
     bool background_tile_select;
     bool sprite_tile_select;
     bool increment_mode;
@@ -103,11 +125,15 @@ struct PPUSTATUS {
 struct PPU {
     static const int VRAM_SIZE = 0x4000;
     static const int PALETTE_TABLE_SIZE = 32;
-    static const int OAM_SIZE = 256;
+    static const int MAX_SPRITES = 64;
+    static const int VISIBLE_SCANLINES_PER_CYCLE = 240;
+    static const int SPRITE_WIDTH = 8;
 
     uint8_t VRAM[VRAM_SIZE];
     uint8_t PALETTE_RAM[PALETTE_TABLE_SIZE];
-    uint8_t OAM[OAM_SIZE];
+
+    vector<Sprite> OAM_sprite_list = vector<Sprite>(MAX_SPRITES, Sprite());
+    vector<Sprite> OAM_renderable_sprites; // List of all sprites that are actually rendered to the screen
 
     Cartridge* cartridge;
     UI* ui = nullptr;
@@ -156,6 +182,12 @@ struct PPU {
 
     // For use with OAMDMA register
     void load_OAMDMA(uint8_t, const std::vector<uint8_t>&);
+    
+    // Go through OAM_sprite_list and put only the sprites that will be rendered in OAM_renderable_sprites
+    void filter_renderable_sprites();
+
+    // Get current sprite height from PPUCTRL
+    uint8_t get_sprite_height();
 
     void render_cycle();
     void attach_bus(Bus*);
