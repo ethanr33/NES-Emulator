@@ -44,6 +44,8 @@ The following NES controller inputs are mapped to these keys on a standard keybo
 # Test ROMs passed:
 
 - nestest.nes (Standard opcodes only)
+- official_only.nes (Standard opcodes only)
+- palette_ram.nes
 
 # Future work:
 
