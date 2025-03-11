@@ -321,8 +321,8 @@ void PPU::tick() {
             uint16_t attribute_table_index = 8 * (pixel_y / 32) + (pixel_x / 32);
             uint8_t attribute_table_val = read_from_ppu(0x23C0 + 0x400 * ppuctrl.nametable_select + attribute_table_index); // Attribute table is located at the end of the nametable
 
-            bool is_left_tile = (pixel_x % 16) < 8;
-            bool is_top_tile = (pixel_y % 16) < 8;
+            bool is_left_tile = (pixel_x % 32) < 16;
+            bool is_top_tile = (pixel_y % 32) < 16;
 
             // The value in the attribute table is constructed as follows:
             // attribute_table_val = (bottomright << 6) | (bottomleft << 4) | (topright << 2) | (topleft << 0)
