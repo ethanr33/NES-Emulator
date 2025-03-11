@@ -67,6 +67,11 @@ bool Mapper000::ppu_mapper_read(uint16_t addr, uint32_t& mapped_addr) {
 
 bool Mapper000::ppu_mapper_write(uint16_t addr, uint32_t& mapped_addr, uint8_t data) {
 
+    // Check if within the range of CHR RAM data
+    if (addr >= 0x2000) {
+        return false;
+    }
+
     // If there are no CHR-ROM banks then we are using CHR-RAM. So we need to write directly to memory
     if (num_chr_banks == 0) {
         return true;
