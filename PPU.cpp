@@ -151,8 +151,9 @@ uint8_t PPU::read_from_ppu(uint16_t address) {
         address = map_to_nametable(address - 0x1000);
         return VRAM[address];
     } else if (address >= 0x3F00 && address <= 0x3F1F) {
-        // pallete table 
-        return PALETTE_RAM[address & 0x3F];
+        // palette table
+        // 0x3F00 - 0x3F1F is mirrored in the range 0x3F20 - 0x3FFF
+        return PALETTE_RAM[address & 0x1F];
     } else {
         throw std::runtime_error("Edge case in read_from_ppu");
     }
@@ -201,9 +202,18 @@ void PPU::write_from_ppu(uint16_t address, uint8_t val) {
     } else if (address >= 0x3000 && address <= 0x3EFF) {
         // mirror of 0x2000 - 0x2EFF
         write_from_ppu(address & 0x2EFF, val);
-    } else if (address >= 0x3F00 && address <= 0x3F1F) {
-        // pallette table 
-        PALETTE_RAM[address & 0x3F] = val;
+    } else if (address >= 0x3F00 && address <= 0x3FFF) {
+        // palette table
+        // 0x3F00 - 0x3F1F is mirrored in the range 0x3F20 - 0x3FFF
+        if ((address & 0x3) == 0) {
+            // Entry 0 of each palette is shared between the background and sprite palettes.
+            // So if we write to entry 0 of any palette we need to make sure we also write to the 
+            // other corresponding background or sprite palette.
+            PALETTE_RAM[(address & 0x1F) | 0x10] = val;
+            PALETTE_RAM[(address & 0x1F) & 0xEF] = val;
+        } else {
+            PALETTE_RAM[address & 0x1F] = val;
+        }
     }
 
     return;
