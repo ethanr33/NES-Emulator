@@ -40,6 +40,19 @@ uint8_t PPU::read_from_cpu(uint16_t address) {
                 throw std::runtime_error("Attempted to read from OAMADDR register");
                 break;
             case 4:
+                switch (oamaddr % 4) {
+                    case 0:
+                        return OAM_sprite_list.at(oamaddr / 4).y_position;
+                    case 1:
+                        return OAM_sprite_list.at(oamaddr / 4).tile_index_number;
+                    case 2:
+                        return OAM_sprite_list.at(oamaddr / 4).attributes;
+                    case 3:
+                        return OAM_sprite_list.at(oamaddr / 4).x_position;
+                    default:
+                        break;
+                }
+
                 break;
             case 5:
                 throw std::runtime_error("Attempted to read from PPUSCROLL register");
