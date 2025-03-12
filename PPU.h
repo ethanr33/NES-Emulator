@@ -156,6 +156,8 @@ struct PPU {
     uint8_t ppuscroll = 0x0;
     uint16_t ppuaddr = 0x0;
 
+    uint8_t ppudata_read_buffer;
+
     uint8_t nametable_entry = 0;
     uint8_t attribute_table_entry = 0;
     uint8_t pattern_low_byte = 0;

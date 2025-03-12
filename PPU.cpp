@@ -61,7 +61,9 @@ uint8_t PPU::read_from_cpu(uint16_t address) {
                 throw std::runtime_error("Attempted to read from PPUADDR register");
                 break;
             case 7: {
-                uint8_t data = read_from_ppu(ppuaddr);
+                uint8_t temp_buffer = ppudata_read_buffer;
+
+                ppudata_read_buffer = read_from_ppu(ppuaddr);
 
                 if (ppuctrl.increment_mode == 0) {
                     ppuaddr++;
@@ -69,7 +71,7 @@ uint8_t PPU::read_from_cpu(uint16_t address) {
                     ppuaddr += 32;
                 }
 
-                return data;
+                return temp_buffer;
             }
             default:
                 break;
