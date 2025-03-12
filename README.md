@@ -46,6 +46,7 @@ The following NES controller inputs are mapped to these keys on a standard keybo
 - nestest.nes (Standard opcodes only)
 - official_only.nes (Standard opcodes only)
 - palette_ram.nes
+- sprite_ram.nes
 
 # Future work:
 
