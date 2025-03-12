@@ -61,6 +61,17 @@ uint8_t PPU::read_from_cpu(uint16_t address) {
                 throw std::runtime_error("Attempted to read from PPUADDR register");
                 break;
             case 7: {
+
+                // See https://www.nesdev.org/wiki/PPU_registers#The_PPUDATA_read_buffer
+                // for detailed operation
+
+                // When reading palette RAM data, return data immediately
+                // Fill read buffer with mirrored nametable data
+                if (ppuaddr >= 0x3F00 && ppuaddr <= 0x3FFF) {
+                    ppudata_read_buffer = read_from_ppu(ppuaddr - 0x1000);
+                    return read_from_ppu(ppuaddr);
+                }
+
                 uint8_t temp_buffer = ppudata_read_buffer;
 
                 ppudata_read_buffer = read_from_ppu(ppuaddr);
