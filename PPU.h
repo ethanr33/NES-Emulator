@@ -181,7 +181,7 @@ struct PPU {
     void load_cartridge(Cartridge*);
 
     // For use with OAMDMA register
-    void load_OAMDMA(uint8_t, const std::vector<uint8_t>&);
+    void load_OAMDMA(uint8_t);
     
     // Go through OAM_sprite_list and put only the sprites that will be rendered in OAM_renderable_sprites
     void filter_renderable_sprites();

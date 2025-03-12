@@ -68,7 +68,7 @@ void Bus::write_cpu(uint16_t address, uint8_t val) {
 
     // OAM DMA register
     if (address == 0x4014) {
-        ppu->load_OAMDMA(val, cpu_RAM);
+        ppu->load_OAMDMA(val);
         return;
     }
 

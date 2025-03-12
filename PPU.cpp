@@ -272,19 +272,33 @@ void PPU::filter_renderable_sprites() {
     }
 }
 
-void PPU::load_OAMDMA(uint8_t high_byte, const std::vector<uint8_t>& data) {
-    // Copy over a page of data starting at address
+void PPU::load_OAMDMA(uint8_t high_byte) {
+    // Copy over a page of data at address 0xXX00, where XX is the data written to this register
+    // Copy over page of data to OAMDMA starting at oamaddr, wrapping around in case the address is greater than 255
 
-    for (int i = 0; i < 256; i += 4) {
-        uint8_t cur_sprite_num = i / 4;
+    uint16_t starting_address = (high_byte) << 8;
 
-        uint8_t cur_sprite_y_pos = data.at((high_byte << 8) + i);
-        uint8_t cur_sprite_tile_index_number = data.at((high_byte << 8) + i + 1);
-        uint8_t cur_sprite_attributes = data.at((high_byte << 8) + i + 2);
-        uint8_t cur_sprite_x_pos = data.at((high_byte << 8) + i + 3);
+    for (int i = 0; i < 256; i++) {
+        uint8_t destination_address = oamaddr + i;
+        uint16_t source_address = starting_address | i;
+        uint8_t cur_sprite_index = destination_address / 4;
 
-        OAM_sprite_list.at(cur_sprite_num) = Sprite(cur_sprite_y_pos, cur_sprite_tile_index_number, cur_sprite_attributes, cur_sprite_x_pos);
-
+        switch (destination_address % 4) {
+            case 0:
+                OAM_sprite_list.at(cur_sprite_index).y_position = bus->read_cpu(source_address);
+                break;
+            case 1:
+                OAM_sprite_list.at(cur_sprite_index).tile_index_number = bus->read_cpu(source_address);
+                break;
+            case 2:
+                OAM_sprite_list.at(cur_sprite_index).attributes = bus->read_cpu(source_address);
+                break;
+            case 3:
+                OAM_sprite_list.at(cur_sprite_index).x_position = bus->read_cpu(source_address);
+                break;
+            default:
+                break;
+        }
     }
 
     filter_renderable_sprites();
