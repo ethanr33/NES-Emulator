@@ -66,15 +66,17 @@ uint8_t PPU::read_from_cpu(uint16_t address) {
                 // for detailed operation
 
                 // When reading palette RAM data, return data immediately
-                // Fill read buffer with mirrored nametable data
+                // Fill read buffer with mirrored nametable data\
+
+                uint8_t read_data;
+
                 if (ppuaddr >= 0x3F00 && ppuaddr <= 0x3FFF) {
                     ppudata_read_buffer = read_from_ppu(ppuaddr - 0x1000);
-                    return read_from_ppu(ppuaddr);
+                    read_data = read_from_ppu(ppuaddr);
+                } else {
+                    read_data = ppudata_read_buffer;
+                    ppudata_read_buffer = read_from_ppu(ppuaddr);
                 }
-
-                uint8_t temp_buffer = ppudata_read_buffer;
-
-                ppudata_read_buffer = read_from_ppu(ppuaddr);
 
                 if (ppuctrl.increment_mode == 0) {
                     ppuaddr++;
@@ -82,7 +84,7 @@ uint8_t PPU::read_from_cpu(uint16_t address) {
                     ppuaddr += 32;
                 }
 
-                return temp_buffer;
+                return read_data;
             }
             default:
                 break;
