@@ -48,6 +48,7 @@ The following NES controller inputs are mapped to these keys on a standard keybo
 - palette_ram.nes
 - sprite_ram.nes
 - vram_access.nes
+- vbl_basics.nes
 
 # Future work:
 
