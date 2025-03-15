@@ -57,6 +57,7 @@ The following NES controller inputs are mapped to these keys on a standard keybo
 ## PPU VBL/NMI tests:
 
 - vbl_basics.nes
+- vbl_set_time.nes
 
 # Future work:
 

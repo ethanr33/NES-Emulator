@@ -155,6 +155,11 @@ struct PPU {
     uint8_t oamdata = 0x0;
     uint8_t ppuscroll = 0x0;
     uint16_t ppuaddr = 0x0;
+    
+    // If PPUSTATUS is read the same time VBlank is set, PPUSTATUS will not show that VBlank has started
+    // The VBlank flag in PPUSTATUS will not be set on the next frame either.
+    // This variable is true if PPUSTATUS was read the dot when VBlank was going to be set.
+    bool ppustatus_vblank_read_race_condition = false;
 
     uint8_t ppudata_read_buffer;
 

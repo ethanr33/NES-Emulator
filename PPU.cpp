@@ -31,10 +31,19 @@ uint8_t PPU::read_from_cpu(uint16_t address) {
                 throw std::runtime_error("Attempted to read from PPUMASK register");
                 break;
             case 2: {
-                uint8_t res = 0x0;
-                res = ppustatus.serialize();
-                ppustatus.vblank = false;
-                return res;
+                if (scanline == 241 && cur_dot == 1) {
+                    // Race condition case
+                    ppustatus_vblank_read_race_condition = true;
+                    ppustatus.vblank = false;
+                    return false;
+                } else {
+                    // Normal case
+                    uint8_t res = 0x0;
+                    res = ppustatus.serialize();
+                    ppustatus.vblank = false;
+                    return res;
+                }
+                break;
             }
             case 3:
                 throw std::runtime_error("Attempted to read from OAMADDR register");
@@ -324,10 +333,15 @@ void PPU::tick() {
 
     if (scanline == 261) {
         // pre render scanline
-        // load first two tiles into buffer
-        ppustatus.vblank = false;
-        ppustatus.sprite_hit = false;
-        ppustatus.sprite_overflow = false;
+
+        // VBlank and other flags are always cleared on dot 1
+        if (cur_dot == 1) {
+            // Doesn't really matter where we clear the race condition, as long as it's cleared before it can happen again
+            ppustatus_vblank_read_race_condition = false;
+            ppustatus.vblank = false;
+            ppustatus.sprite_hit = false;
+            ppustatus.sprite_overflow = false;
+        }
 
         // OAMADDR is set to 0 during ticks 257-320 of prerender scanlines
         if (cur_dot >= 257 && cur_dot <= 320) {
@@ -488,7 +502,7 @@ void PPU::tick() {
     } else if (scanline > 240) {
         // vertical blanking scanlines
 
-        if (scanline == 241 && cur_dot == 1) {
+        if (!ppustatus_vblank_read_race_condition && scanline == 241 && cur_dot == 1) {
             ppustatus.vblank = true;
 
             if (ppuctrl.nmi_enable) {
