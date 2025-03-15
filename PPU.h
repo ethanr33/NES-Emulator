@@ -161,6 +161,10 @@ struct PPU {
     // This variable is true if PPUSTATUS was read the dot when VBlank was going to be set.
     bool ppustatus_vblank_read_race_condition = false;
 
+    // True if an NMI has been triggered since the VBlank NMI flag was set to true
+    // False if VBlank NMI flag is false, or if NMI hasn't been triggered yet
+    bool has_nmi_triggered = false;
+
     uint8_t ppudata_read_buffer;
 
     uint8_t nametable_entry = 0;
