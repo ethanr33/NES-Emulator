@@ -43,11 +43,19 @@ The following NES controller inputs are mapped to these keys on a standard keybo
 
 # Test ROMs passed:
 
+## CPU tests:
+
 - nestest.nes (Standard opcodes only)
 - official_only.nes (Standard opcodes only)
+
+## Blargg's PPU Tests
+
 - palette_ram.nes
 - sprite_ram.nes
 - vram_access.nes
+
+## PPU VBL/NMI tests:
+
 - vbl_basics.nes
 
 # Future work:
