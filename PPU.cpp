@@ -488,13 +488,16 @@ void PPU::tick() {
     } else if (scanline > 240) {
         // vertical blanking scanlines
 
-        if (ppuctrl.nmi_enable && scanline == 241 && cur_dot == 1) {
-            bus->trigger_nmi();
+        if (scanline == 241 && cur_dot == 1) {
+            ppustatus.vblank = true;
+
+            if (ppuctrl.nmi_enable) {
+                bus->trigger_nmi();
+            }
         }
 
-        ppustatus.vblank = true;
 
-        if (scanline == 241 && cur_dot == 340) {
+        if (scanline == 260 && cur_dot == 340) {
             ui->tick();
 
             // for (int i = 0; i < 30; i++) {
