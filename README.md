@@ -48,16 +48,22 @@ The following NES controller inputs are mapped to these keys on a standard keybo
 - nestest.nes (Standard opcodes only)
 - official_only.nes (Standard opcodes only)
 
-## Blargg's PPU Tests
+## [Blargg's PPU Tests](https://github.com/christopherpow/nes-test-roms/tree/master/blargg_ppu_tests_2005.09.15b)
 
 - palette_ram.nes
 - sprite_ram.nes
 - vram_access.nes
 
-## PPU VBL/NMI tests:
+## [PPU VBL/NMI tests](https://github.com/christopherpow/nes-test-roms/tree/master/ppu_vbl_nmi):
 
 - vbl_basics.nes
 - vbl_set_time.nes
+- vbl_clear_time.nes
+- nmi_control.nes
+
+## [PPU VBL/NMI timing](https://github.com/christopherpow/nes-test-roms/tree/master/vbl_nmi_timing)
+
+- frame_basics.nes
 
 # Future work:
 
