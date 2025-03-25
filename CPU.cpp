@@ -13,6 +13,9 @@ If the carry flag is clear then add the relative displacement to the program cou
 void CPU::BCC(uint8_t displacement) {
     if (!get_flag(CARRY)) {
         clock_cycles_remaining += 1;
+        if (crosses_page(RELATIVE, displacement)) {
+            clock_cycles_remaining += 1;
+        }
         program_counter += (int8_t) displacement;
     }
 }
@@ -483,6 +486,9 @@ void CPU::ASL(uint16_t memory_address) {
 void CPU::BCS(uint8_t displacement) {
     if (get_flag(CARRY) == 1) {
         clock_cycles_remaining += 1;
+        if (crosses_page(RELATIVE, displacement)) {
+            clock_cycles_remaining += 1;
+        }
         program_counter += (int8_t) displacement;
     }
 }
@@ -494,6 +500,9 @@ void CPU::BCS(uint8_t displacement) {
 void CPU::BEQ(uint8_t displacement) {
     if (get_flag(ZERO) == 1) {
         clock_cycles_remaining += 1;
+        if (crosses_page(RELATIVE, displacement)) {
+            clock_cycles_remaining += 1;
+        }
         program_counter += (int8_t) displacement;
     }
 }
@@ -521,6 +530,9 @@ void CPU::BIT(uint8_t memory_val) {
 void CPU::BMI(uint8_t displacement) {
     if (get_flag(NEGATIVE) == 1) {
         clock_cycles_remaining += 1;
+        if (crosses_page(RELATIVE, displacement)) {
+            clock_cycles_remaining += 1;
+        }
         program_counter += (int8_t) displacement;
     }
 }
@@ -546,6 +558,9 @@ void CPU::BNE(uint8_t displacement) {
 void CPU::BPL(uint8_t displacement) {
     if (get_flag(NEGATIVE) == 0) {
         clock_cycles_remaining += 1;
+        if (crosses_page(RELATIVE, displacement)) {
+            clock_cycles_remaining += 1;
+        }
         program_counter += (int8_t) displacement;
     }
 }
@@ -557,6 +572,9 @@ void CPU::BPL(uint8_t displacement) {
 void CPU::BVC(uint8_t displacement) {
     if (get_flag(OVER_FLOW) == 0) {
         clock_cycles_remaining += 1;
+        if (crosses_page(RELATIVE, displacement)) {
+            clock_cycles_remaining += 1;
+        }
         program_counter += (int8_t) displacement;
     }
 }
@@ -1159,9 +1177,9 @@ uint16_t CPU::make_address(addressing_mode mode, uint8_t parameter_lsb, uint8_t 
 bool CPU::crosses_page(addressing_mode mode, uint8_t lsb, uint8_t msb) {
     uint16_t address = form_address(lsb, msb);
     if (mode == ABSOLUTE_X) {
-        return (address + X) & 0xFF < address & 0xFF;
+        return ((address + X) & 0xFF00) != (address & 0xFF00);
     } else if (mode == ABSOLUTE_Y) {
-        return (address + Y) & 0xFF < address & 0xFF; 
+        return ((address + Y) & 0xFF00) != (address & 0xFF00); 
     } else {
         throw std::runtime_error("Tried to check crossing page with addressing mode " + std::to_string(mode));
     }
@@ -2089,30 +2107,18 @@ void CPU::execute_opcode(uint16_t opcode_address) {
             break;
         case 0x90:
             clock_cycles_remaining += 2;
-            if (crosses_page(RELATIVE, lsb)) {
-                clock_cycles_remaining += 1;
-            }
             BCC(get_memory(RELATIVE, lsb));
             break;
         case 0xB0:
             clock_cycles_remaining += 2;
-            if (crosses_page(RELATIVE, lsb)) {
-                clock_cycles_remaining += 1;
-            }
             BCS(get_memory(RELATIVE, lsb));
             break;
         case 0xF0:
             clock_cycles_remaining += 2;
-            if (crosses_page(RELATIVE, lsb)) {
-                clock_cycles_remaining += 1;
-            }
             BEQ(get_memory(RELATIVE, lsb));
             break;
         case 0x30:
             clock_cycles_remaining += 2;
-            if (crosses_page(RELATIVE, lsb)) {
-                clock_cycles_remaining += 1;
-            }
             BMI(get_memory(RELATIVE, lsb));
             break;
         case 0xD0:
@@ -2121,16 +2127,10 @@ void CPU::execute_opcode(uint16_t opcode_address) {
             break;
         case 0x10:
             clock_cycles_remaining += 2;
-            if (crosses_page(RELATIVE, lsb)) {
-                clock_cycles_remaining += 1;
-            }
             BPL(get_memory(RELATIVE, lsb));
             break;
         case 0x50:
             clock_cycles_remaining += 2;
-            if (crosses_page(RELATIVE, lsb)) {
-                clock_cycles_remaining += 1;
-            }
             BVC(get_memory(RELATIVE, lsb));
             break;
         case 0x70:
@@ -2183,29 +2183,29 @@ void CPU::tick() {
 
     // We may have some cycles left before we can execute the next opcode, but the PC will still be pointed to the next one
     if (clock_cycles_remaining == 0) {
-        //std::cout << std::uppercase << std::hex << std::setfill('0') << std::setw(4) << program_counter << "  ";
-        //std::cout << std::dec << num_clock_cycles << std::endl;
-
-        execute_opcode(program_counter);
-
-
+        // std::cout << std::uppercase << std::hex << std::setfill('0') << std::setw(4) << program_counter << "  ";
+        // std::cout << std::setfill(' ') << std::dec << std::left << std::setw(3) << num_clock_cycles << " " << std::setw(3) << bus->ppu->cur_dot << " " << std::setw(3) << bus->ppu->scanline << std::endl;
 
         // If there is an outstanding NMI, handle it after we're done executing the current instruction
         if (has_nmi) {
+            std::cout << "NMI" << std::endl;
             has_nmi = false;
-            
+            clock_cycles_remaining += 8;
+                        
             stack_push(program_counter);
-            set_flag(BREAK, 1);
+            set_flag(INT_DISABLE, 1);
+            set_flag(BREAK, 0);
             stack_push(get_byte_from_flags());
             uint16_t nmi_interrput_address = form_address(bus->read_cpu(0xFFFA), bus->read_cpu(0xFFFB));
             program_counter = nmi_interrput_address;
+        } else {
+            execute_opcode(program_counter);
         }
     }
 
     clock_cycles_remaining -= 1;
     num_clock_cycles += 1;
 
-    // TODO: check for special end condition for program termination
 }
 
 void CPU::execute_next_opcode() {
@@ -2238,7 +2238,8 @@ uint8_t CPU::stack_pop() {
 }
 
 void CPU::reset() {
-    num_clock_cycles = 8;
+    clock_cycles_remaining = 8;
+    num_clock_cycles = 0;
     program_counter = (bus->read_cpu(0xFFFD) << 8) | bus->read_cpu(0xFFFC);
     stack_pointer = STACK_LOCATION_START;
     

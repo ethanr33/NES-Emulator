@@ -93,11 +93,11 @@ void Bus::reset() {
 
 void Bus::tick() {
 
+    ppu->tick();
+
     if (num_ticks % 3 == 0) {
         cpu->tick();
     }
-
-    ppu->tick();
 
     num_ticks++;
 }

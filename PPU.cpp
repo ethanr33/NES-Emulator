@@ -35,12 +35,13 @@ uint8_t PPU::read_from_cpu(uint16_t address) {
                     // Race condition case
                     ppustatus_vblank_read_race_condition = true;
                     ppustatus.vblank = false;
-                    return false;
+                    return ppustatus.serialize();
                 } else {
                     // Normal case
                     uint8_t res = 0x0;
                     res = ppustatus.serialize();
                     ppustatus.vblank = false;
+
                     return res;
                 }
                 break;
@@ -341,6 +342,11 @@ void PPU::tick() {
     if (scanline == 261) {
         // pre render scanline
 
+        // First dot skipped if the frame number is odd and rendering is enabled
+        if (cur_dot == 0 && (frames_elapsed % 2 == 1) && (ppumask.background_enable || ppumask.sprite_enable)) {
+            cur_dot++;
+        }
+
         // VBlank and other flags are always cleared on dot 1
         if (cur_dot == 1) {
             // Doesn't really matter where we clear the race condition, as long as it's cleared before it can happen again
@@ -355,6 +361,7 @@ void PPU::tick() {
         if (cur_dot >= 257 && cur_dot <= 320) {
             oamaddr = 0;
         }
+        
     } else if (scanline >= 0 && scanline <= 239) {
         // visible scanlines
 
@@ -552,8 +559,8 @@ void PPU::tick() {
 }
 
 void PPU::reset() {
-    scanline = 261;
-    cur_dot = 0;
+    scanline = 0;
+    cur_dot = 2;
 }
 
 void PPU::attach_bus(Bus* b) {
