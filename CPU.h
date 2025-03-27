@@ -24,11 +24,17 @@ struct CPU {
     int clock_cycles_remaining = 0;
 
     // Flag set if there is an NMI
-    bool has_nmi = false;
+    bool nmi_latch_set = false;
+    bool nmi_edge_detected_last_cycle = false;
+    bool nmi_flag = false;
+    bool nmi_next = false;
+
+    bool is_nmi_line_low = false;
+    bool nmi_edge_detected = false;
     
     // The stack pointer stores the low 8 bytes of the next memory location available on the stack
     // 
-    uint8_t stack_pointer = STACK_LOCATION_START;
+    uint16_t stack_pointer = STACK_LOCATION_START & 0xFF;
     uint16_t program_counter;
     uint8_t A = 0; // Accumulator register A
     uint8_t X = 0; // Index register X
@@ -83,7 +89,7 @@ struct CPU {
     void execute_next_opcode();
 
     // NMI handler
-    void trigger_nmi();
+    void check_nmi_edge();
 
     // Tick for a specified number of cycles
     void tick();

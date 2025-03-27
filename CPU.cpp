@@ -2181,15 +2181,20 @@ void CPU::execute_opcode(uint16_t opcode_address) {
 // This will typically run one opcode
 void CPU::tick() {
 
+    if (nmi_edge_detected) {
+        nmi_latch_set = true;
+    }
+
     // We may have some cycles left before we can execute the next opcode, but the PC will still be pointed to the next one
     if (clock_cycles_remaining == 0) {
-        // std::cout << std::uppercase << std::hex << std::setfill('0') << std::setw(4) << program_counter << "  ";
-        // std::cout << std::setfill(' ') << std::dec << std::left << std::setw(3) << num_clock_cycles << " " << std::setw(3) << bus->ppu->cur_dot << " " << std::setw(3) << bus->ppu->scanline << std::endl;
+        //std::cout << std::uppercase << std::hex << std::setfill('0') << std::setw(4) << program_counter << "  " << std::endl;
+        //std::cout << std::setfill(' ') << std::dec << std::left << std::setw(3) << num_clock_cycles << " " << std::setw(3) << bus->ppu->cur_dot << " " << std::setw(3) << bus->ppu->scanline << std::endl;
 
-        // If there is an outstanding NMI, handle it after we're done executing the current instruction
-        if (has_nmi) {
-            std::cout << "NMI" << std::endl;
-            has_nmi = false;
+        execute_opcode(program_counter);
+
+        if (nmi_flag) {
+
+            nmi_flag = false;
             clock_cycles_remaining += 8;
                         
             stack_push(program_counter);
@@ -2197,14 +2202,24 @@ void CPU::tick() {
             set_flag(BREAK, 0);
             stack_push(get_byte_from_flags());
             uint16_t nmi_interrput_address = form_address(bus->read_cpu(0xFFFA), bus->read_cpu(0xFFFB));
+
+            nmi_latch_set = false;
+
             program_counter = nmi_interrput_address;
+        }
+    } else if (clock_cycles_remaining == 1) {
+        // Check for pending NMI interrupt
+        if (nmi_latch_set) {
+            nmi_flag = true;
         } else {
-            execute_opcode(program_counter);
+            nmi_flag = false;
         }
     }
 
     clock_cycles_remaining -= 1;
     num_clock_cycles += 1;
+
+    check_nmi_edge();
 
 }
 
@@ -2219,6 +2234,11 @@ void CPU::execute_next_opcode() {
 }
 
 void CPU::stack_push(uint8_t new_val) {
+
+    if (stack_pointer == 0xFFFF) {
+        throw std::runtime_error("Stack overflow occured");
+    }
+
     bus->write_cpu(0x100 + stack_pointer, new_val);
     stack_pointer--;
 }
@@ -2232,6 +2252,11 @@ void CPU::stack_push(uint16_t new_val) {
 } 
 
 uint8_t CPU::stack_pop() {
+
+    if (stack_pointer == 0xFF) {
+        throw std::runtime_error("Stack underflow occured");
+    }
+
     uint16_t temp = bus->read_cpu(0x100 + stack_pointer + 1);
     stack_pointer++;
     return temp;
@@ -2248,7 +2273,18 @@ void CPU::reset() {
     }
 }
 
-void CPU::trigger_nmi() {
-    // Next time there is a CPU cycle, we will handle the NMI
-    has_nmi = true;
+void CPU::check_nmi_edge() {
+    // NMI input is connected to a edge detector
+    // Polled on the second half of every CPU cycle
+    // If the line goes from being high to low, then an internal signal is set
+
+    bool cur_nmi_line_status = bus->get_nmi_line_status();
+
+    if (cur_nmi_line_status && !is_nmi_line_low) {
+        nmi_edge_detected = true;
+    } else {
+        nmi_edge_detected = false;
+    }
+
+    is_nmi_line_low = cur_nmi_line_status;
 }

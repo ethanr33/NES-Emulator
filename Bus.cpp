@@ -106,6 +106,10 @@ void Bus::halt() {
     throw std::runtime_error("Execution halted at " + std::to_string(cpu->program_counter));
 }
 
-void Bus::trigger_nmi() {
-    cpu->trigger_nmi();
+void Bus::set_nmi_line(bool is_line_low) {
+    is_nmi_line_low = is_line_low;
+}
+
+bool Bus::get_nmi_line_status() const {
+    return is_nmi_line_low;
 }

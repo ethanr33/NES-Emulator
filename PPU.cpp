@@ -109,15 +109,8 @@ void PPU::write_from_cpu(uint16_t address, uint8_t val) {
         int register_num = address & 0x7;
         switch (register_num) {
             case 0:
-                {
-                bool nmi_enabled_previously = ppuctrl.nmi_enable;
                 ppuctrl = PPUCTRL(val);
-
-                if (ppuctrl.nmi_enable && !nmi_enabled_previously) {
-                    has_nmi_triggered = false;
-                }
                 break;
-                }
             case 1:
                 ppumask = PPUMASK(val);
                 break;
@@ -350,8 +343,8 @@ void PPU::tick() {
         // VBlank and other flags are always cleared on dot 1
         if (cur_dot == 1) {
             // Doesn't really matter where we clear the race condition, as long as it's cleared before it can happen again
+            bus->set_nmi_line(false);
             ppustatus_vblank_read_race_condition = false;
-            has_nmi_triggered = false;
             ppustatus.vblank = false;
             ppustatus.sprite_hit = false;
             ppustatus.sprite_overflow = false;
@@ -521,9 +514,11 @@ void PPU::tick() {
             ppustatus.vblank = true;
         }
 
-        if (!has_nmi_triggered && ppustatus.vblank && ppuctrl.nmi_enable) {
-            bus->trigger_nmi();
-            has_nmi_triggered = true;
+        // The PPU pulls /NMI low if and only if both vblank and nmi_enable are true
+        if (ppustatus.vblank && ppuctrl.nmi_enable) {
+            bus->set_nmi_line(true);
+        } else {
+            bus->set_nmi_line(false);
         }
 
 
