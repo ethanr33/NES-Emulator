@@ -24,14 +24,14 @@ int main(int argc, char** argv) {
     int num_iterations = 0;
     
 
-    while (true) {
+    while (nes.ppu->ui->window->isOpen()) {
 
-        // sf::Event event;
-        // while (nes.ppu->ui->window->pollEvent(event)) {
-        //     if (event.type == sf::Event::Closed) {
-        //         nes.ppu->ui->window->close();
-        //     }
-        // }
+        sf::Event event;
+        while (cur_cycles % 100000 == 0 && nes.ppu->ui->window->pollEvent(event)) {
+            if (event.type == sf::Event::Closed) {
+                nes.ppu->ui->window->close();
+            }
+        }
 
         nes.tick();
         cur_cycles++;
