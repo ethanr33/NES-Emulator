@@ -31,11 +31,17 @@ uint8_t PPU::read_from_cpu(uint16_t address) {
                 throw std::runtime_error("Attempted to read from PPUMASK register");
                 break;
             case 2: {
-                if (scanline == 241 && cur_dot == 1) {
+                // Reading one PPU clock before reads it as clear and never sets the flag or generates NMI for that frame
+                if (scanline == 241 && cur_dot == 0) {
+                    ppustatus.vblank = false;
+                    has_nmi_triggered = true;
+                    return ppustatus.serialize();
+                } else if (scanline == 241 && (cur_dot == 1 || cur_dot == 2)) {
                     // Race condition case
+                    uint8_t res = ppustatus.serialize();
                     ppustatus_vblank_read_race_condition = true;
                     ppustatus.vblank = false;
-                    return ppustatus.serialize();
+                    return res;
                 } else {
                     // Normal case
                     uint8_t res = 0x0;

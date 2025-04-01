@@ -64,6 +64,9 @@ The following NES controller inputs are mapped to these keys on a standard keybo
 ## [PPU VBL/NMI timing](https://github.com/christopherpow/nes-test-roms/tree/master/vbl_nmi_timing)
 
 - frame_basics.nes
+- vbl_timing.nes
+- even_odd_frames.nes
+- vbl_clear_timing.nes
 
 # Future work:
 
