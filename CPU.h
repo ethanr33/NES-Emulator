@@ -160,6 +160,7 @@ struct CPU {
     void TXA();
     void TXS();
     void TYA();
+    void LAX(uint8_t);
 
 
     bool get_flag(flag_type);

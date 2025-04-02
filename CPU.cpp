@@ -338,6 +338,13 @@ void CPU::LDX(uint8_t new_x_val) {
     }
 }
 
+void CPU::LAX(uint8_t mem_val)
+{
+    LDX(mem_val);
+
+    LDA(mem_val);
+}
+
 /*
 Transfer X to Stack Pointer
 Copies the current contents of the X register into the stack register.
@@ -1720,6 +1727,46 @@ void CPU::execute_opcode(uint16_t opcode_address) {
             clock_cycles_remaining += 2;
             TXA();
             increment_program_counter(1);
+            break;
+        case 0xA3:
+            clock_cycles_remaining +=6;
+            LAX(get_memory(INDEXED_INDIRECT, lsb));
+            break;
+        case 0xA7:
+            clock_cycles_remaining +=3;
+            LAX(get_memory(ZERO_PAGE,  lsb));
+            break;
+        case 0xAF:
+            clock_cycles_remaining +=4;
+            LAX(get_memory(ABSOLUTE, lsb, msb));
+            break;
+        case 0xB3:
+            if(crosses_page(INDIRECT_INDEXED, lsb))
+            {
+                clock_cycles_remaining +=6;
+            }
+            else
+            {
+                clock_cycles_remaining +=5;
+            }
+
+            LAX(get_memory(INDIRECT_INDEXED, lsb));
+            break;
+        case 0xB7:
+            clock_cycles_remaining +=4;
+            LAX(get_memory(ZERO_PAGE_Y, lsb));
+            break;
+        
+        case 0xBF:
+            if(crosses_page(ABSOLUTE_Y, lsb, msb))
+            {
+                clock_cycles_remaining +=4;
+            }
+            else
+            {
+                clock_cycles_remaining +=5;
+            }
+            LAX(get_memory(ABSOLUTE_Y, lsb, msb));
             break;
         case 0x9A:
             clock_cycles_remaining += 2;
