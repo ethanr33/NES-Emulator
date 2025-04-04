@@ -39,13 +39,13 @@ uint8_t PPU::read_from_cpu(uint16_t address) {
                 } else if (scanline == 241 && (cur_dot == 1 || cur_dot == 2)) {
                     // Race condition case
                     uint8_t res = ppustatus.serialize();
+                    bus->set_nmi_suppression_status(true);
                     ppustatus_vblank_read_race_condition = true;
                     ppustatus.vblank = false;
                     return res;
                 } else {
                     // Normal case
-                    uint8_t res = 0x0;
-                    res = ppustatus.serialize();
+                    uint8_t res = ppustatus.serialize();
                     ppustatus.vblank = false;
 
                     return res;
@@ -350,6 +350,7 @@ void PPU::tick() {
         if (cur_dot == 1) {
             // Doesn't really matter where we clear the race condition, as long as it's cleared before it can happen again
             bus->set_nmi_line(false);
+            bus->set_nmi_suppression_status(false);
             ppustatus_vblank_read_race_condition = false;
             ppustatus.vblank = false;
             ppustatus.sprite_hit = false;
