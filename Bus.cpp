@@ -93,11 +93,11 @@ void Bus::reset() {
 
 void Bus::tick() {
 
-    ppu->tick();
-
     if (num_ticks % 3 == 0) {
         cpu->tick();
     }
+
+    ppu->tick();
 
     num_ticks++;
 }
@@ -107,9 +107,20 @@ void Bus::halt() {
 }
 
 void Bus::set_nmi_line(bool is_line_low) {
-    is_nmi_line_low = is_line_low;
+    if (!is_nmi_suppressed) {
+        is_nmi_line_low = is_line_low;
+    } else {
+        is_nmi_line_low = false;
+    }
 }
 
 bool Bus::get_nmi_line_status() const {
+    if (is_nmi_suppressed) {
+        return false;
+    }
     return is_nmi_line_low;
+}
+
+void Bus::set_nmi_suppression_status(bool new_status) {
+    is_nmi_suppressed = new_status;
 }

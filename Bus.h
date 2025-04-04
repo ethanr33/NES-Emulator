@@ -36,6 +36,7 @@ struct Bus {
     uint64_t num_ticks = 0;
 
     bool is_nmi_line_low = false;
+    bool is_nmi_suppressed = false;
 
     uint8_t read_cpu(uint16_t);
     void write_cpu(uint16_t, uint8_t); 
@@ -45,6 +46,7 @@ struct Bus {
     void tick();
     void halt();
     void set_nmi_line(bool);
+    void set_nmi_suppression_status(bool);
     bool get_nmi_line_status() const;
     
 
