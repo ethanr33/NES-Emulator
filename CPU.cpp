@@ -2313,7 +2313,7 @@ void CPU::reset() {
     clock_cycles_remaining = 8;
     num_clock_cycles = 0;
     program_counter = (bus->read_cpu(0xFFFD) << 8) | bus->read_cpu(0xFFFC);
-    stack_pointer = STACK_LOCATION_START;
+    stack_pointer = STACK_LOCATION_START & 0xFF;
     
     for (int i = 0; i < 8; i++) {
         flags[i] = DEFAULT_FLAGS[i];    
