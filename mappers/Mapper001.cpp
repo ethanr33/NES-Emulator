@@ -1,5 +1,6 @@
 
 #include <stdexcept>
+#include <iostream>
 #include "Mapper001.h"
 
 bool Mapper001::cpu_mapper_read(uint16_t addr, uint32_t& mapped_addr, uint8_t& data) {
@@ -42,13 +43,12 @@ bool Mapper001::cpu_mapper_write(uint16_t addr, uint32_t& mapped_addr, uint8_t d
         return true; // We write to cartridge, so return true
     }
 
-    if (data >= 0x8000) {
+    if (data & 0x80) {
         // Reset
         reset();
     } else {
         control_reg = (control_reg >> 1) | ((data & 0x1) << 4);
-        control_reg_write_bit++;
-        
+        control_reg_write_bit++;        
 
         if (control_reg_write_bit == 5) {
             if (addr >= 0x8000 && addr <= 0x9FFF) {
@@ -108,8 +108,8 @@ void Mapper001::reset() {
     // A write with bit set will reset shift register and write Control with (Control OR $0C), 
     // locking PRG-ROM at $C000-$FFFF to the last bank.
 
-    control_reg = 0x10;
     control_reg_write_bit = 0;
+    control_reg = 0;
 
     prg_bank_high = num_prg_rom_banks - 1;
     prg_rom_bank_mode = 3;
@@ -120,17 +120,16 @@ bool Mapper001::mapped_to_prg_ram(uint16_t addr) {
 }
 
 void Mapper001::switch_banks_prg(uint8_t bank_num) {
-    // NOTE: I have no idea why, but for some reason when setting the bank numbers to bank_num, bank_num needs to be divided by 2 first.
     if (prg_rom_bank_mode == 0 || prg_rom_bank_mode == 1) {
         // 0, 1: switch 32 KB at $8000, ignoring low bit of bank number
-        prg_bank_32k = bank_num >> 2;
+        prg_bank_32k = bank_num >> 1;
     } else if (prg_rom_bank_mode == 2) {
         // 2: fix first bank at $8000 and switch 16 KB bank at $C000
         prg_bank_low = 0;
-        prg_bank_high = bank_num >> 1;
+        prg_bank_high = bank_num;
     } else if (prg_rom_bank_mode == 3) {
         // 3: fix last bank at $C000 and switch 16 KB bank at $8000
-        prg_bank_low = bank_num >> 1;
+        prg_bank_low = bank_num;
         prg_bank_high = num_prg_rom_banks - 1;
     } else {
         throw std::runtime_error("Mapper001: Unknown PRG rom bank mode");
