@@ -22,6 +22,7 @@ struct CPU {
     // On a normal NES, when we load a game we need to call the interrupt handler for RESET. This takes 7 cycles
     int num_clock_cycles = 0;
     int clock_cycles_remaining = 0;
+    uint64_t num_opcodes_executed = 0;
 
     // Flag set if there is an NMI
     bool nmi_latch_set = false;
@@ -34,7 +35,7 @@ struct CPU {
     
     // The stack pointer stores the low 8 bytes of the next memory location available on the stack
     // 
-    uint16_t stack_pointer = STACK_LOCATION_START & 0xFF;
+    uint8_t stack_pointer = STACK_LOCATION_START & 0xFF;
     uint16_t program_counter;
     uint8_t A = 0; // Accumulator register A
     uint8_t X = 0; // Index register X
