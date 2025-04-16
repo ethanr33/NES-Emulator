@@ -1145,7 +1145,7 @@ uint16_t CPU::make_address(addressing_mode mode, uint8_t parameter_lsb) {
 
         return form_address(least_significant_byte, most_significant_byte);
     } else if (mode == INDIRECT_INDEXED) {
-        return form_address(bus->read_cpu(parameter_lsb), bus->read_cpu(parameter_lsb + 1)) + Y;
+        return form_address(bus->read_cpu(parameter_lsb), bus->read_cpu((parameter_lsb + 1) & 0xFF)) + Y;
     } else {
         throw std::runtime_error("Memory addressing mode not implemented: " + std::to_string(mode));
     }
@@ -1756,7 +1756,6 @@ void CPU::execute_opcode(uint16_t opcode_address) {
             clock_cycles_remaining +=4;
             LAX(get_memory(ZERO_PAGE_Y, lsb));
             break;
-        
         case 0xBF:
             if(crosses_page(ABSOLUTE_Y, lsb, msb))
             {
@@ -2212,11 +2211,6 @@ void CPU::execute_opcode(uint16_t opcode_address) {
             clock_cycles_remaining += 3;
             increment_program_counter(2);
             break;
-        // case 0xCB:
-        //     clock_cycles_remaining += 2;
-        //     increment_program_counter(2);
-        //     AXS(lsb);
-        //     break;
         default:
             std::cout << program_counter << std::endl;
             throw std::runtime_error("Unknown opcode " + std::to_string(opcode));
@@ -2234,9 +2228,12 @@ void CPU::tick() {
 
     // We may have some cycles left before we can execute the next opcode, but the PC will still be pointed to the next one
     if (clock_cycles_remaining == 0) {
-        //std::cout << std::uppercase << std::hex << std::setfill('0') << std::setw(4) << program_counter << "  " << std::endl;
+        //std::cout << std::uppercase << std::hex << program_counter << "  ";
         //std::cout << std::setfill(' ') << std::dec << std::left << std::setw(3) << num_clock_cycles << " " << std::setw(3) << bus->ppu->cur_dot << " " << std::setw(3) << bus->ppu->scanline << std::endl;
+        //std::cout << std::setfill(' ') << std::hex << std::left << std::setw(2) << (int) bus->read_cpu(program_counter) << "  ";
+        //std::cout << std::setfill(' ') << std::dec << std::left << std::setw(8) << num_opcodes_executed << std::endl;
 
+        num_opcodes_executed++;
         execute_opcode(program_counter);
 
         if (nmi_flag) {
