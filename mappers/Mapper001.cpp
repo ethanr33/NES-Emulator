@@ -41,6 +41,8 @@ bool Mapper001::cpu_mapper_write(uint16_t addr, uint32_t& mapped_addr, uint8_t d
     if (mapped_to_prg_ram(addr)) {
         PRG_RAM.at(addr - 0x6000) = data;
         return true; // We write to cartridge, so return true
+    } else if (addr >= 0x6000 && addr <= 0x7FFF) {
+        return false;
     }
 
     if (data & 0x80) {
@@ -60,7 +62,7 @@ bool Mapper001::cpu_mapper_write(uint16_t addr, uint32_t& mapped_addr, uint8_t d
                 switch_banks_chr(control_reg, 1);
             } else if (addr >= 0xE000 && addr <= 0xFFFF) {
                 switch_banks_prg(control_reg & 0xF);
-                //prg_ram_enabled = (control_reg & 0x10) == 0;
+                prg_ram_enabled = (control_reg & 0x10) == 0;
             }
             
             control_reg_write_bit = 0;
