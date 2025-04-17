@@ -273,8 +273,7 @@ void PPU::filter_renderable_sprites() {
     OAM_renderable_sprites.clear();
 
     // Maps a scanline number to how many sprites we've seen so far that will be rendered on that scanline number
-    // Only worry about visible scanlines here. If it's out of range then it won't be rendered anyways
-    vector<uint8_t> num_sprites_on_scanline(VISIBLE_SCANLINES_PER_CYCLE);
+    vector<uint8_t> num_sprites_on_scanline(256);
     uint8_t sprite_height = ppuctrl.sprite_height ? 16 : 8;
 
     for (int i = 0; i < MAX_SPRITES; i++) {
