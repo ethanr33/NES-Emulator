@@ -972,10 +972,14 @@ void CPU::JSR(uint16_t address) {
 void CPU::BRK() {
     // for this we push in the order of program_counter (little endian) then processor status (flags)
     stack_push((uint16_t) (program_counter + 2));
+
+    // Break and reserve flags are set only for the flags that are pushed onto the stack
     uint8_t pushed_flags = get_byte_from_flags() | (1 << BREAK) | (1 << RESERVED);
+    
     set_flag(INT_DISABLE, 1);
     stack_push(pushed_flags);
-    program_counter = form_address(bus->read_cpu(0xFFFE), bus->read_cpu(0xFFFF)) - 1;
+
+    program_counter = form_address(bus->read_cpu(0xFFFE), bus->read_cpu(0xFFFF));
 }
 
 void CPU::RTI() {
@@ -1811,7 +1815,6 @@ void CPU::execute_opcode(uint16_t opcode_address) {
         case 0x00:
             clock_cycles_remaining += 7;
             BRK();
-            increment_program_counter(1);
             break;
         case 0x40:
             clock_cycles_remaining += 6;
