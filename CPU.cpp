@@ -2278,12 +2278,7 @@ void CPU::execute_next_opcode() {
 }
 
 void CPU::stack_push(uint8_t new_val) {
-
-    if (stack_pointer == 0xFFFF) {
-        throw std::runtime_error("Stack overflow occured");
-    }
-
-    bus->write_cpu(0x100 + stack_pointer, new_val);
+    bus->write_cpu(0x100 | stack_pointer, new_val);
     stack_pointer--;
 }
 
@@ -2296,13 +2291,8 @@ void CPU::stack_push(uint16_t new_val) {
 } 
 
 uint8_t CPU::stack_pop() {
-
-    if (stack_pointer == 0xFF) {
-        throw std::runtime_error("Stack underflow occured");
-    }
-
-    uint16_t temp = bus->read_cpu(0x100 + stack_pointer + 1);
     stack_pointer++;
+    uint8_t temp = bus->read_cpu(0x100 | stack_pointer);
     return temp;
 }
 
