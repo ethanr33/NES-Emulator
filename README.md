@@ -49,6 +49,8 @@ The following NES controller inputs are mapped to these keys on a standard keybo
 - official_only.nes (Standard opcodes only)
 - cpu_timing_test.nes
 
+## [Branch Timing Tests](https://github.com/christopherpow/nes-test-roms/tree/master/branch_timing_tests)
+
 ## [Blargg's PPU Tests](https://github.com/christopherpow/nes-test-roms/tree/master/blargg_ppu_tests_2005.09.15b)
 
 - palette_ram.nes
