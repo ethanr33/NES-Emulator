@@ -47,6 +47,7 @@ The following NES controller inputs are mapped to these keys on a standard keybo
 
 - nestest.nes (Standard opcodes only)
 - official_only.nes (Standard opcodes only)
+- cpu_timing_test.nes
 
 ## [Blargg's PPU Tests](https://github.com/christopherpow/nes-test-roms/tree/master/blargg_ppu_tests_2005.09.15b)
 
