@@ -971,10 +971,11 @@ void CPU::JSR(uint16_t address) {
 
 void CPU::BRK() {
     // for this we push in the order of program_counter (little endian) then processor status (flags)
-    stack_push(program_counter);
-    set_flag(BREAK, 1);
-    stack_push(get_byte_from_flags());
-    program_counter = form_address(bus->read_cpu(0xFFFE), bus->read_cpu(0xFFFF));
+    stack_push((uint16_t) (program_counter + 2));
+    uint8_t pushed_flags = get_byte_from_flags() | (1 << BREAK) | (1 << RESERVED);
+    set_flag(INT_DISABLE, 1);
+    stack_push(pushed_flags);
+    program_counter = form_address(bus->read_cpu(0xFFFE), bus->read_cpu(0xFFFF)) - 1;
 }
 
 void CPU::RTI() {
@@ -2231,6 +2232,7 @@ void CPU::tick() {
         //std::cout << std::uppercase << std::hex << program_counter << "  ";
         //std::cout << std::setfill(' ') << std::dec << std::left << std::setw(3) << num_clock_cycles << " " << std::setw(3) << bus->ppu->cur_dot << " " << std::setw(3) << bus->ppu->scanline << std::endl;
         //std::cout << std::setfill(' ') << std::hex << std::left << std::setw(2) << (int) bus->read_cpu(program_counter) << "  ";
+        //std::cout << std::setfill(' ') << std::hex << std::left << std::setw(2) << (int) stack_pointer << "  ";
         //std::cout << std::setfill(' ') << std::dec << std::left << std::setw(8) << num_opcodes_executed << std::endl;
 
         num_opcodes_executed++;
