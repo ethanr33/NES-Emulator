@@ -125,6 +125,8 @@ struct PPUSTATUS {
 struct PPU {
     static const int VRAM_SIZE = 0x4000;
     static const int PALETTE_TABLE_SIZE = 32;
+    static const int PRIMARY_OAM_SIZE = 0x100;
+    static const int SECONDARY_OAM_SIZE = 0x20;
     static const int MAX_SPRITES = 64;
     static const int VISIBLE_SCANLINES_PER_CYCLE = 240;
     static const int SPRITE_WIDTH = 8;
@@ -132,8 +134,10 @@ struct PPU {
     uint8_t VRAM[VRAM_SIZE];
     uint8_t PALETTE_RAM[PALETTE_TABLE_SIZE];
 
-    vector<Sprite> OAM_sprite_list = vector<Sprite>(MAX_SPRITES, Sprite());
-    vector<Sprite> OAM_renderable_sprites; // List of all sprites that are actually rendered to the screen
+    vector<uint8_t> primary_OAM = vector<uint8_t>(PRIMARY_OAM_SIZE);
+
+    // Secondary OAM is a buffer for sprites being rendered on this scanline
+    vector<uint8_t> secondary_OAM = vector<uint8_t>(SECONDARY_OAM_SIZE);
 
     Cartridge* cartridge;
     UI* ui = nullptr;
@@ -200,9 +204,35 @@ struct PPU {
     // Get current sprite height from PPUCTRL
     uint8_t get_sprite_height();
 
-    void render_cycle();
+    // Run sprite evaluation for this scanline and dot
+    bool run_sprite_evaluation();
+
+    enum SPRITE_EVALUATION_STAGE {STAGE_1, STAGE_2_1, STAGE_2_1a, STAGE_2_2, STAGE_2_3, STAGE_2_3a, STAGE_2_3b, STAGE_2_4, STAGE_3, STAGE_4, IDLE};
+
+    // The initial state of the PPU is scanline = 0 and cur_dot = 0
+    // So we need to make sure we start on STAGE_1 and not IDLE
+    uint8_t cur_sprite_evaluation_stage = STAGE_1;
+
+    // This refers to the byte at offset 4*n + m within OAM.
+    uint8_t n = 0;
+    uint8_t m = 0;
+    uint8_t num_sprites_found = 0;
+    uint8_t start_m;
+
+    bool secondary_oam_write_enabled = true;
+
+    // In stage 2, reads from primary OAM only occur on odd cycles
+    // Use this variable to store the value of that read so it can be used on the next cycle
+    uint8_t primary_oam_buffer = 0;
+
     void attach_bus(Bus*);
+
+    enum PPU_RENDERING_STAGE {PRE_RENDER, VISIBLE, POST_RENDER, VBLANK};
+    uint8_t cur_ppu_rendering_stage = PRE_RENDER;
+
     void tick();
+
+
     void reset();
 
     PPU();
