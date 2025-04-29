@@ -139,6 +139,10 @@ struct PPU {
     // Secondary OAM is a buffer for sprites being rendered on this scanline
     vector<uint8_t> secondary_OAM = vector<uint8_t>(SECONDARY_OAM_SIZE);
 
+    // Secondary OAM is cleared before those sprites are rendered on the screen.
+    // This is the place to store sprites after secondary OAM is filled
+    vector<uint8_t> OAM_buffer = vector<uint8_t>(SECONDARY_OAM_SIZE);
+
     Cartridge* cartridge;
     UI* ui = nullptr;
     Bus* bus = nullptr;
@@ -205,25 +209,16 @@ struct PPU {
     uint8_t get_sprite_height();
 
     // Run sprite evaluation for this scanline and dot
-    bool run_sprite_evaluation();
+    void run_sprite_evaluation();
 
-    enum SPRITE_EVALUATION_STAGE {STAGE_1, STAGE_2_1, STAGE_2_1a, STAGE_2_2, STAGE_2_3, STAGE_2_3a, STAGE_2_3b, STAGE_2_4, STAGE_3, STAGE_4, IDLE};
+    enum SPRITE_EVALUATION_STAGE {STAGE_1, STAGE_2, STAGE_3, STAGE_4, IDLE};
 
     // The initial state of the PPU is scanline = 0 and cur_dot = 0
     // So we need to make sure we start on STAGE_1 and not IDLE
-    uint8_t cur_sprite_evaluation_stage = STAGE_1;
+    uint8_t cur_sprite_evaluation_stage;
 
     // This refers to the byte at offset 4*n + m within OAM.
-    uint8_t n = 0;
-    uint8_t m = 0;
     uint8_t num_sprites_found = 0;
-    uint8_t start_m;
-
-    bool secondary_oam_write_enabled = true;
-
-    // In stage 2, reads from primary OAM only occur on odd cycles
-    // Use this variable to store the value of that read so it can be used on the next cycle
-    uint8_t primary_oam_buffer = 0;
 
     void attach_bus(Bus*);
 

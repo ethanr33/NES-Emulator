@@ -291,196 +291,161 @@ void PPU::load_OAMDMA(uint8_t high_byte) {
 // We represent the process for sprite evaluation as a state machine.
 // For more details, see https://www.nesdev.org/wiki/PPU_sprite_evaluation
 
-bool PPU::run_sprite_evaluation() {
-    // // Sprite evaluation only occurs on visible scanlines
-    // switch (cur_sprite_evaluation_stage) {
-    //     case IDLE:
-    //         if (scanline == 261 && cur_dot == 340) {
-    //             cur_sprite_evaluation_stage = STAGE_1;
-    //         }
+void PPU::run_sprite_evaluation() {
+
+    // std::cout << (int) scanline << " " << (int) cur_dot << " " << (int) cur_sprite_evaluation_stage << std::endl;
+
+    // Sprite evaluation only occurs on visible scanlines
+    switch (cur_sprite_evaluation_stage) {
+        case IDLE:
+            if (scanline == 261 && cur_dot == 340) {
+                num_sprites_found = 0;
+                cur_sprite_evaluation_stage = STAGE_1;
+            }
             
-    //         return true;
-    //         break;
-    //     case STAGE_1:
-    //         // Secondary OAM is initialized to $FF
-    //         secondary_OAM.assign(SECONDARY_OAM_SIZE, 0xFF);
-    //         if (cur_dot == 64) {
-    //             cur_sprite_evaluation_stage = STAGE_2_1;
-    //         }
+            break;
+        case STAGE_1:
+            // Secondary OAM is initialized to $FF
+            secondary_OAM.assign(SECONDARY_OAM_SIZE, 0xFF);
+
+            if (cur_dot == 64) {
+                cur_sprite_evaluation_stage = STAGE_2;
+            }
             
-    //         return true;
-    //         break;
-    //     case STAGE_2_1:
-    //         {
-    //             bool is_done_here = true;
+            break;
+        case STAGE_2:
 
-    //             if (cur_dot % 2 == 1) {
-    //                 primary_oam_buffer = primary_OAM.at(4 * n);
-    //                 return true;
-    //             } else {
-    
-    //                 if (secondary_oam_write_enabled) {
-    //                     secondary_OAM.at(4 * n) = primary_oam_buffer;
-    //                 }
-    
-    //                 uint8_t sprite_height = get_sprite_height();
-    //                 uint8_t cur_sprite_y = primary_oam_buffer;
-    
-    //                 // Check if sprite y-coordinate is in range to be rendered here
-    //                 // Note that we check if this sprite is rendered on the NEXT scanline, hence scanline + 1.
-    //                 if (scanline + 1 <= cur_sprite_y + sprite_height && scanline + 1 >= cur_sprite_y) {
-    //                     cur_sprite_evaluation_stage = STAGE_2_1a;
-    //                     num_sprites_found++;
-    //                     m++;
-    //                 } else {
-    //                     // This sprite is not on the next scanline, so look at the next one
-    //                     cur_sprite_evaluation_stage = STAGE_2_2;
-    //                     is_done_here = false;
-    //                 }
-    
-    
-    //             }
-    
-    //             if (cur_dot == 256) {
-    //                 cur_sprite_evaluation_stage = STAGE_3;
-    //             }
-    
-    //             return is_done_here;
-    //             break;
-    //         }
-    //     case STAGE_2_1a:
-    //         if (cur_dot % 2 == 1) {
-    //             primary_oam_buffer = primary_OAM.at(4 * n + m);
-    //         } else {
-    //             if (secondary_oam_write_enabled) {
-    //                 secondary_OAM.at(4 * n + m) = primary_oam_buffer;
-    //             }
-    //             m++;
-    //         }
+            if (cur_dot == 65) {
+                // Evaluate sprites here
 
-    //         if (m == 4) {
-    //             m = 0;
-    //             cur_sprite_evaluation_stage = STAGE_2_2;
-    //             return false;
-    //         } else {
-    //             return true;
-    //         }
-    //         break;
-    //     case STAGE_2_2:
-    //         n++;
+                // n is the index of the sprite we're looking at
+                int n = 0;
+                for (; n < 64; n += 1) {
+                    uint8_t cur_sprite_y = primary_OAM.at(4 * n);
 
-    //         if (n == 64) {
-    //             // Case: If all 64 sprites have been evaluated
-    //             cur_sprite_evaluation_stage = STAGE_2_4;
-    //         } else if (num_sprites_found < 8) {
-    //             cur_sprite_evaluation_stage = STAGE_2_1;
-    //             return true;
-    //         } else if (num_sprites_found == 8) {
-    //             secondary_oam_write_enabled = false;
-    //             cur_sprite_evaluation_stage = STAGE_2_3;
-    //             m = 0;
-    //         } else {
-    //             cur_sprite_evaluation_stage = STAGE_2_3;
-    //             m = 0;
-    //         }
-    //         break;
-    //     case STAGE_2_3:
-    //         // Starting at m = 0, evaluate OAM[n][m] as a Y-coordinate
+                    uint8_t sprite_height = get_sprite_height();
 
-    //         if (cur_dot % 2 == 1) {
-    //             primary_oam_buffer = primary_OAM.at(4 * n + m);
-    //             return true;
-    //         } else {
-    //             uint8_t sprite_height = get_sprite_height();
-    //             uint8_t cur_sprite_y = primary_oam_buffer;
+                    // Check if the sprite will be rendered on the NEXT scanline
+                    if (cur_sprite_y <= scanline + 1 && scanline + 1 < (uint8_t) (sprite_height + cur_sprite_y)) {
+                        // If it will be rendered, copy it into secondary OAM
+                        std::copy(primary_OAM.begin() + 4 * n, primary_OAM.begin() + 4 * n + 4, secondary_OAM.begin() + 4 * num_sprites_found);
+                        num_sprites_found++;
+                    }
 
-    //             //If the value is in range, set the sprite overflow flag in $2002 and read the next 3 entries of OAM 
-    //             if (scanline + 1 <= cur_sprite_y + sprite_height && scanline + 1 >= cur_sprite_y) {
-    //                 cur_sprite_evaluation_stage = STAGE_2_3a;
-    //                 start_m = m;
-    //                 return false;
-    //             } else {
-    //                 cur_sprite_evaluation_stage = STAGE_2_3b;
-    //                 return false;
-    //             }
-    //         }
+                    if (num_sprites_found == 8) {
+                        // Our secondary OAM is full now
+                        break;
+                    }
+                }
 
-    //         break;
-    //     case STAGE_2_3a:
-    //         ppustatus.sprite_overflow = true;
+                // Search through the rest of the primary OAM to see if the sprite overflow flag is set
+                if (num_sprites_found == 8) {
+                    int m = 0;
 
-    //         if (cur_dot % 2 == 1) {
-    //             primary_oam_buffer = primary_OAM.at(4 * n + m);
-    //             m++;
+                    while (n < 64) {
+                        // This is the buggy case, and the y-coordinate may not be accurate
+                        uint8_t cur_sprite_y = primary_OAM.at(4 * n + m);
+                        uint8_t sprite_height = get_sprite_height();
 
-    //             if (m == 4) {
-    //                 m = 0;
-    //                 n++;
-    //             }
-    //         }
+                        // Check if our y value is in range
+                        if (scanline + 1 >= cur_sprite_y && scanline + 1 < cur_sprite_y + sprite_height) {
+                            // If it is, another sprite could have been rendered this scanline. 
+                            // Set sprite overflow flag accordingly.
+                            ppustatus.sprite_overflow = true;
 
-    //         // We are done after 3 reads
-    //         if (m == (start_m + 3) % 4) {
-    //             cur_sprite_evaluation_stage = STAGE_2_3;
-    //             return false;
-    //         } else {
-    //             return true;
-    //         }
 
-    //         break;
-    //     case STAGE_2_3b:
-    //         n++;
-    //         m++;
+                            m = m + 4;
+                            if (m >= 4) {
+                                n++;
+                                m = m % 4;
+                            }
+                        } else {
+                            // If sprite is not in range, increment n AND m. This is a hardware bug
+                            m++;
+                            n++;
 
-    //         if (m == 4) {
-    //             m = 0;
-    //         }
+                            // m can only be 0, 1, 2, or 3.
+                            if (m == 4) {
+                                m = 0;
+                                n++;
+                            }
+                        }
 
-    //         if (n == 64) {
-    //             cur_sprite_evaluation_stage = STAGE_2_4;
-    //         } else {
-    //             cur_sprite_evaluation_stage = STAGE_2_3;
-    //         }
+                    }
+                } else {
+                    // If there aren't 8 sprites rendered this scanline, part of secondary OAM must be empty.
+                    // Let's fill in the rest of secondary OAM properly.
 
-    //         return true;
-    //         break;
-    //     case STAGE_2_4:
-    //         // Increment n here until HBLANK
-    //         if (cur_dot == 256) {
-    //             cur_sprite_evaluation_stage = STAGE_3;
-    //         }
+                    // The first empty sprite slot will consist of sprite 63's Y-coordinate followed by 3 $FF bytes
+                    // for subsequent empty sprite slots, this will be four $FF bytes
 
-    //         return true;
-    //         break;
-    //     case STAGE_3:
-    //         // Sprite fetches (8 sprites total, 8 cycles per sprite)
+                    int i = 4 * num_sprites_found;
 
-    //         if (cur_dot == 320) {
-    //             cur_sprite_evaluation_stage = STAGE_4;
-    //         }
+                    secondary_OAM.at(i) = primary_OAM.at(PRIMARY_OAM_SIZE - 4);
+                    secondary_OAM.at(i + 1) = 0xFF;
+                    secondary_OAM.at(i + 2) = 0xFF;
+                    secondary_OAM.at(i + 3) = 0xFF;
+
+                    i += 4;
+
+                    while (i < SECONDARY_OAM_SIZE) {
+                        secondary_OAM.at(i) = 0xFF;
+                        secondary_OAM.at(i + 1) = 0xFF;
+                        secondary_OAM.at(i + 2) = 0xFF;
+                        secondary_OAM.at(i + 3) = 0xFF;
+                        i += 4;
+                    }
+                }
+            }
+
+            if (cur_dot == 256) {
+                cur_sprite_evaluation_stage = STAGE_3;
+            }
+            break;
+        case STAGE_3:
+            // Sprite fetches (8 sprites total, 8 cycles per sprite)
+            // Fill OAM buffer for rendering
+
+            if (cur_dot == 257) {
+                for (int i = 0; i < secondary_OAM.size(); i++) {
+                    OAM_buffer.at(i) = secondary_OAM.at(i);
+                }
+
+                // for (int i = 0; i < OAM_buffer.size(); i++) {
+                //     std::cout << std::hex << (int) OAM_buffer.at(i) << " ";
+                // }
+
+                // std::cout << std::endl;
+            }
+
+
+            if (cur_dot == 320) {
+                num_sprites_found = 0;
+                cur_sprite_evaluation_stage = STAGE_4;
+            }
             
-    //         return true;
-    //         break;
-    //     case STAGE_4:
-    //         // Cycles 321-340+0: Background render pipeline initialization
+            break;
+        case STAGE_4:
+            // Cycles 321-340+0: Background render pipeline initialization
 
-    //         if (cur_dot == 340) {
-    //             if (scanline < 239) {
-    //                 cur_sprite_evaluation_stage = STAGE_1;
-    //             } else {
-    //                 cur_sprite_evaluation_stage = IDLE;
-    //             }
-    //         }
+            if (cur_dot == 340) {
+                if (scanline < 239) {
+                    cur_sprite_evaluation_stage = STAGE_1;
+                } else {
+                    cur_sprite_evaluation_stage = IDLE;
+                }
+            }
             
-    //         return true;
-    //         break;
-    //     default:
-    //         return true;
-    //         break;
-    // }
+            break;
+        default:
+            break;
+    }
 }
 
 void PPU::tick() {
+
+    run_sprite_evaluation();
+
     switch (cur_ppu_rendering_stage) {
         case PRE_RENDER:
             {
@@ -498,6 +463,8 @@ void PPU::tick() {
                     ppustatus.vblank = false;
                     ppustatus.sprite_hit = false;
                     ppustatus.sprite_overflow = false;
+
+                    cur_sprite_evaluation_stage = IDLE;
                 }
 
                 // OAMADDR is set to 0 during ticks 257-320 of prerender scanlines
@@ -505,7 +472,7 @@ void PPU::tick() {
                     oamaddr = 0;
                 }
 
-                if (cur_dot == 341) {
+                if (cur_dot == 340) {
                     cur_dot = 0;
                     scanline = 0;
                     cur_ppu_rendering_stage = VISIBLE;
@@ -522,6 +489,9 @@ void PPU::tick() {
                 }
 
                 if (cur_dot >= 1 && cur_dot <= 256) {
+
+                    // Start background rendering
+
                     uint16_t pixel_x = cur_dot % 256;
                     uint16_t pixel_y = scanline;
     
@@ -583,10 +553,93 @@ void PPU::tick() {
                     uint8_t background_pixel_color = (is_bit_set(tile_offset_x, background_pixel_layer_1) << 1) | is_bit_set(tile_offset_x, background_pixel_layer_0);
     
                     ui->set_background_palette(background_color0, background_color1, background_color2, background_color3);
-                    ui->set_pixel(pixel_y, pixel_x, background_pixel_color, true);   
+
+                    // Start sprite rendering from secondary OAM
+
+                    // First, check if there is a sprite rendered here
+
+                    Sprite sprite_to_render;
+                    bool is_sprite_here = false;
+
+                    for (int i = 0; i < OAM_buffer.size(); i += 4) {
+                        Sprite cur_sprite = Sprite(
+                            OAM_buffer.at(i),
+                            OAM_buffer.at(i + 1),
+                            OAM_buffer.at(i + 2),
+                            OAM_buffer.at(i + 3)
+                        );
+
+                        if (cur_sprite.x_position <= pixel_x && cur_sprite.x_position + 7 >= pixel_x) {
+                            sprite_to_render = cur_sprite;
+                            is_sprite_here = true;
+                            break;
+                        }
+                    }
+
+                    // Get sprite offset from top, left
+                    uint8_t sprite_offset_x = pixel_x - sprite_to_render.x_position;
+                    uint8_t sprite_offset_y = pixel_y - sprite_to_render.y_position;
+                        
+                    // Check if flip sprite vertically flag is set
+                    if (is_bit_set(7, sprite_to_render.attributes)) {
+                        sprite_offset_y = get_sprite_height() - sprite_offset_y - 1;
+                    }
+    
+                    // Check if flip sprite horizontally flag is set
+                    if (is_bit_set(6, sprite_to_render.attributes)) {
+                        sprite_offset_x = SPRITE_WIDTH - sprite_offset_x - 1;
+                    }
+    
+                    // Check if the sprite is rendered in front of or behind the background
+                    bool is_sprite_behind_background = is_bit_set(6, sprite_to_render.attributes);
+    
+                    // Fetch sprite palette
+                    uint8_t sprite_palette_num = sprite_to_render.attributes & 0x03;
+                    uint16_t sprite_palette_index = 0x3F10 + 4 * sprite_palette_num;
+    
+                    uint8_t sprite_color0 = read_from_ppu(sprite_palette_index);
+                    uint8_t sprite_color1 = read_from_ppu(sprite_palette_index + 1);
+                    uint8_t sprite_color2 = read_from_ppu(sprite_palette_index + 2);
+                    uint8_t sprite_color3 = read_from_ppu(sprite_palette_index + 3);
+    
+                    ui->set_sprite_palette(sprite_color0, sprite_color1, sprite_color2, sprite_color3);
+
+                    uint8_t sprite_pattern_table_address;
+
+                    if (get_sprite_height() == 16) {
+                        // For 8x16 sprites, the pattern table is taken from the first bit of tile index number
+                        sprite_pattern_table_address = (sprite_to_render.tile_index_number & 1) * 0x1000;
+                    } else {
+                        sprite_pattern_table_address = ppuctrl.sprite_tile_select ? 0x1000 : 0;
+                    }
+    
+    
+                    uint8_t sprite_pixel_layer0 = read_from_ppu(sprite_offset_y + 16 * sprite_to_render.tile_index_number + sprite_pattern_table_address);
+                    uint8_t sprite_pixel_layer1 = read_from_ppu(8 + sprite_offset_y + 16 * sprite_to_render.tile_index_number + sprite_pattern_table_address);
+    
+                    uint8_t sprite_pixel_offset = 7 - (sprite_offset_x % 8);
+                    uint8_t sprite_pixel_color = is_bit_set(sprite_pixel_offset, sprite_pixel_layer0) | (is_bit_set(sprite_pixel_offset, sprite_pixel_layer1) << 1);
+
+                    // Sprite pixel replaces background pixel only if:
+                    // 1. Sprite pixel is opaque and has front priority, AND
+                    // 2. Background pixel is transparent
+                    
+                    // For now, let's assume that BG or sprite pixel is transparent iff the pixel color is 0
+                    // Is this a valid assumption?
+
+                    bool is_sprite_in_front = !is_bit_set(5, sprite_to_render.attributes);
+                    bool is_sprite_rendered = scanline > 0 && is_sprite_here && ((sprite_pixel_color != 0 && is_sprite_in_front) || (background_pixel_color == 0));
+                    
+                    if (is_sprite_rendered) {
+                        ui->set_pixel(pixel_y, pixel_x, sprite_pixel_color, false);
+                    } else {
+                        ui->set_pixel(pixel_y, pixel_x, background_pixel_color, true);
+                    }
+
+
                 }
 
-                if (cur_dot == 341) {
+                if (cur_dot == 340) {
                     scanline++;
                     cur_dot = 0;
 
@@ -600,7 +653,7 @@ void PPU::tick() {
             }
         case POST_RENDER:
             {
-                if (cur_dot == 341) {
+                if (cur_dot == 340) {
                     cur_dot = 0;
                     scanline++;
                     cur_ppu_rendering_stage = VBLANK;
@@ -622,16 +675,14 @@ void PPU::tick() {
                     bus->set_nmi_line(false);
                 }
 
-
-                if (scanline == 260 && cur_dot == 340) {
-                    ui->tick();
-                    frames_elapsed++;
-                }
-
                 if (scanline == 260 && cur_dot == 340) {
                     scanline++;
                     cur_dot = 0;
+
                     cur_ppu_rendering_stage = PRE_RENDER;
+
+                    ui->tick();
+                    frames_elapsed++;
                 } else {
                     cur_dot++;
 
@@ -889,6 +940,7 @@ void PPU::reset() {
     scanline = 261;
     cur_dot = 0;
     cur_ppu_rendering_stage = PRE_RENDER;
+    cur_sprite_evaluation_stage = IDLE;
 }
 
 void PPU::attach_bus(Bus* b) {
