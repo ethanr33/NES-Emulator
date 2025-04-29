@@ -526,9 +526,10 @@ void PPU::tick() {
 
                     // First, check if there is a sprite rendered here
 
-                    Sprite sprite_to_render;
                     bool is_sprite_here = false;
                     bool is_sprite_0_rendered = false;
+
+                    vector<Sprite> sprite_priority_order;
 
                     for (int i = 0; i < OAM_buffer.size(); i += 4) {
                         Sprite cur_sprite = Sprite(
@@ -539,7 +540,7 @@ void PPU::tick() {
                         );
 
                         if (cur_sprite.x_position <= pixel_x && cur_sprite.x_position + 7 >= pixel_x) {
-                            sprite_to_render = cur_sprite;
+                            sprite_priority_order.push_back(cur_sprite);
                             is_sprite_here = true;
 
                             if (OAM_indices.at(i / 4) == 0) {
@@ -550,60 +551,85 @@ void PPU::tick() {
                         }
                     }
 
-                    // Get sprite offset from top, left
-                    uint8_t sprite_offset_x = pixel_x - sprite_to_render.x_position;
-                    uint8_t sprite_offset_y = pixel_y - sprite_to_render.y_position;
+                    int cur_sprite_index = 0;
+
+                    uint8_t sprite_pixel_color;
+
+                    while (cur_sprite_index < sprite_priority_order.size()) {
+                        Sprite sprite_to_render = sprite_priority_order.at(cur_sprite_index);
+
+                        // Get sprite offset from top, left
+                        uint8_t sprite_offset_x = pixel_x - sprite_to_render.x_position;
+                        uint8_t sprite_offset_y = pixel_y - sprite_to_render.y_position;
+                            
+                        // Check if flip sprite vertically flag is set
+                        if (is_bit_set(7, sprite_to_render.attributes)) {
+                            sprite_offset_y = get_sprite_height() - sprite_offset_y - 1;
+                        }
+        
+                        // Check if flip sprite horizontally flag is set
+                        if (is_bit_set(6, sprite_to_render.attributes)) {
+                            sprite_offset_x = SPRITE_WIDTH - sprite_offset_x - 1;
+                        }
+        
+                        // Check if the sprite is rendered in front of or behind the background
+                        bool is_sprite_behind_background = is_bit_set(6, sprite_to_render.attributes);
+        
+                        // Fetch sprite palette
+                        uint8_t sprite_palette_num = sprite_to_render.attributes & 0x03;
+                        uint16_t sprite_palette_index = 0x3F10 + 4 * sprite_palette_num;
+        
+                        uint8_t sprite_color0 = read_from_ppu(sprite_palette_index);
+                        uint8_t sprite_color1 = read_from_ppu(sprite_palette_index + 1);
+                        uint8_t sprite_color2 = read_from_ppu(sprite_palette_index + 2);
+                        uint8_t sprite_color3 = read_from_ppu(sprite_palette_index + 3);
+        
+                        ui->set_sprite_palette(sprite_color0, sprite_color1, sprite_color2, sprite_color3);
+    
+                        uint16_t sprite_pattern_table_address;
+    
+                        if (get_sprite_height() == 16) {
+                            // For 8x16 sprites, the pattern table is taken from the first bit of tile index number
+                            sprite_pattern_table_address = (sprite_to_render.tile_index_number & 1) * 0x1000;
+                        } else {
+                            sprite_pattern_table_address = ppuctrl.sprite_tile_select ? 0x1000 : 0;
+                        }
+        
+        
+                        uint8_t sprite_pixel_layer0 = read_from_ppu(sprite_offset_y + 16 * sprite_to_render.tile_index_number + sprite_pattern_table_address);
+                        uint8_t sprite_pixel_layer1 = read_from_ppu(8 + sprite_offset_y + 16 * sprite_to_render.tile_index_number + sprite_pattern_table_address);
+        
+                        uint8_t sprite_pixel_offset = 7 - (sprite_offset_x % 8);
+                        sprite_pixel_color = is_bit_set(sprite_pixel_offset, sprite_pixel_layer0) | (is_bit_set(sprite_pixel_offset, sprite_pixel_layer1) << 1);
                         
-                    // Check if flip sprite vertically flag is set
-                    if (is_bit_set(7, sprite_to_render.attributes)) {
-                        sprite_offset_y = get_sprite_height() - sprite_offset_y - 1;
-                    }
-    
-                    // Check if flip sprite horizontally flag is set
-                    if (is_bit_set(6, sprite_to_render.attributes)) {
-                        sprite_offset_x = SPRITE_WIDTH - sprite_offset_x - 1;
-                    }
-    
-                    // Check if the sprite is rendered in front of or behind the background
-                    bool is_sprite_behind_background = is_bit_set(6, sprite_to_render.attributes);
-    
-                    // Fetch sprite palette
-                    uint8_t sprite_palette_num = sprite_to_render.attributes & 0x03;
-                    uint16_t sprite_palette_index = 0x3F10 + 4 * sprite_palette_num;
-    
-                    uint8_t sprite_color0 = read_from_ppu(sprite_palette_index);
-                    uint8_t sprite_color1 = read_from_ppu(sprite_palette_index + 1);
-                    uint8_t sprite_color2 = read_from_ppu(sprite_palette_index + 2);
-                    uint8_t sprite_color3 = read_from_ppu(sprite_palette_index + 3);
-    
-                    ui->set_sprite_palette(sprite_color0, sprite_color1, sprite_color2, sprite_color3);
+                        // If the sprite pixel is transparent, check if the next sprite in line has an opaque pixel to render
+                        if (sprite_pixel_color == 0) {
+                            cur_sprite_index++;
+                            continue;
+                        }
 
-                    uint8_t sprite_pattern_table_address;
+                        // Check for sprite 0 cases
+                        bool sprite_0_hit_possible = 
+                            is_sprite_0_rendered &&
+                            ppumask.background_enable &&
+                            ppumask.sprite_enable &&
+                            (background_pixel_color != 0 && sprite_pixel_color != 0);
+                        
+                        if (is_sprite_0_rendered && sprite_0_hit_possible) {
+                            ppustatus.sprite_hit = true;
+                        }
 
-                    if (get_sprite_height() == 16) {
-                        // For 8x16 sprites, the pattern table is taken from the first bit of tile index number
-                        sprite_pattern_table_address = (sprite_to_render.tile_index_number & 1) * 0x1000;
+                        break;
+                    }
+
+                    Sprite sprite_to_render;
+
+                    if (cur_sprite_index < sprite_priority_order.size()) {
+                        Sprite sprite_to_render = sprite_priority_order.at(cur_sprite_index);
                     } else {
-                        sprite_pattern_table_address = ppuctrl.sprite_tile_select ? 0x1000 : 0;
+                        is_sprite_here = false;
                     }
-    
-    
-                    uint8_t sprite_pixel_layer0 = read_from_ppu(sprite_offset_y + 16 * sprite_to_render.tile_index_number + sprite_pattern_table_address);
-                    uint8_t sprite_pixel_layer1 = read_from_ppu(8 + sprite_offset_y + 16 * sprite_to_render.tile_index_number + sprite_pattern_table_address);
-    
-                    uint8_t sprite_pixel_offset = 7 - (sprite_offset_x % 8);
-                    uint8_t sprite_pixel_color = is_bit_set(sprite_pixel_offset, sprite_pixel_layer0) | (is_bit_set(sprite_pixel_offset, sprite_pixel_layer1) << 1);
 
-                    // Check for sprite 0 cases
-                    bool sprite_0_hit_possible = 
-                        is_sprite_0_rendered &&
-                        ppumask.background_enable &&
-                        ppumask.sprite_enable &&
-                        (background_pixel_color != 0 && sprite_pixel_color != 0);
-                    
-                    if (is_sprite_0_rendered && sprite_0_hit_possible) {
-                        ppustatus.sprite_hit = true;
-                    }
 
                     // Sprite pixel replaces background pixel only if:
                     // 1. Sprite pixel is opaque and has front priority, AND
