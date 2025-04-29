@@ -239,41 +239,6 @@ void PPU::load_cartridge(Cartridge* new_cartridge) {
     cartridge = new_cartridge;
 } 
 
-// void PPU::filter_renderable_sprites() {
-
-//     // Clear list to get rid of previously rendered sprites
-//     OAM_renderable_sprites.clear();
-
-//     // Maps a scanline number to how many sprites we've seen so far that will be rendered on that scanline number
-//     vector<uint8_t> num_sprites_on_scanline(256);
-//     uint8_t sprite_height = ppuctrl.sprite_height ? 16 : 8;
-
-//     for (int i = 0; i < MAX_SPRITES; i++) {
-//         Sprite cur_sprite = OAM_sprite_list.at(i);
-//         uint8_t cur_sprite_scanline = cur_sprite.y_position;
-
-//         // If this sprite is out of range of drawing on the screen, then don't render the sprite
-//         if (cur_sprite_scanline >= VISIBLE_SCANLINES_PER_CYCLE) {
-//             continue;
-//         }
-
-//         // Check how many sprites are being rendered on this scanline.
-//         // If there are eight or more, then don't render the sprite.
-//         // Continue evaluation onto the next sprite.
-//         if (num_sprites_on_scanline.at(cur_sprite_scanline) >= 8) {
-//             continue;
-//         }
-
-//         // The sprite must be rendered from scanline i to i + sprite_height - 1.
-//         // Update map accordingly.
-//         for (int j = 0; j < sprite_height; j++) {
-//             num_sprites_on_scanline.at(cur_sprite_scanline + j)++;
-//             OAM_renderable_sprites.push_back(cur_sprite);
-//         }
-
-//     }
-// }
-
 void PPU::load_OAMDMA(uint8_t high_byte) {
     // Copy over a page of data at address 0xXX00, where XX is the data written to this register
     // Copy over page of data to OAMDMA starting at oamaddr, wrapping around in case the address is greater than 255
@@ -293,13 +258,10 @@ void PPU::load_OAMDMA(uint8_t high_byte) {
 
 void PPU::run_sprite_evaluation() {
 
-    // std::cout << (int) scanline << " " << (int) cur_dot << " " << (int) cur_sprite_evaluation_stage << std::endl;
-
     // Sprite evaluation only occurs on visible scanlines
     switch (cur_sprite_evaluation_stage) {
         case IDLE:
             if (scanline == 261 && cur_dot == 340) {
-                num_sprites_found = 0;
                 cur_sprite_evaluation_stage = STAGE_1;
             }
             
@@ -329,6 +291,7 @@ void PPU::run_sprite_evaluation() {
                     if (cur_sprite_y <= scanline + 1 && scanline + 1 < (uint8_t) (sprite_height + cur_sprite_y)) {
                         // If it will be rendered, copy it into secondary OAM
                         std::copy(primary_OAM.begin() + 4 * n, primary_OAM.begin() + 4 * n + 4, secondary_OAM.begin() + 4 * num_sprites_found);
+                        OAM_indices.at(num_sprites_found) = n;
                         num_sprites_found++;
                     }
 
@@ -393,6 +356,7 @@ void PPU::run_sprite_evaluation() {
                         secondary_OAM.at(i + 1) = 0xFF;
                         secondary_OAM.at(i + 2) = 0xFF;
                         secondary_OAM.at(i + 3) = 0xFF;
+                        OAM_indices.at(i / 4) = 0xFF; // Need to fill in OAM index buffer with placeholder
                         i += 4;
                     }
                 }
@@ -560,6 +524,7 @@ void PPU::tick() {
 
                     Sprite sprite_to_render;
                     bool is_sprite_here = false;
+                    bool is_sprite_0_rendered = false;
 
                     for (int i = 0; i < OAM_buffer.size(); i += 4) {
                         Sprite cur_sprite = Sprite(
@@ -572,6 +537,11 @@ void PPU::tick() {
                         if (cur_sprite.x_position <= pixel_x && cur_sprite.x_position + 7 >= pixel_x) {
                             sprite_to_render = cur_sprite;
                             is_sprite_here = true;
+
+                            if (OAM_indices.at(i / 4) == 0) {
+                                is_sprite_0_rendered = true;
+                            }
+
                             break;
                         }
                     }
@@ -620,19 +590,31 @@ void PPU::tick() {
                     uint8_t sprite_pixel_offset = 7 - (sprite_offset_x % 8);
                     uint8_t sprite_pixel_color = is_bit_set(sprite_pixel_offset, sprite_pixel_layer0) | (is_bit_set(sprite_pixel_offset, sprite_pixel_layer1) << 1);
 
+                    // Check for sprite 0 cases
+                    bool sprite_0_hit_possible = 
+                        is_sprite_0_rendered &&
+                        ppumask.background_enable &&
+                        ppumask.sprite_enable &&
+                        (background_pixel_color != 0 && sprite_pixel_color != 0);
+                    
+                    if (is_sprite_0_rendered && sprite_0_hit_possible) {
+                        ppustatus.sprite_hit = true;
+                    }
+
                     // Sprite pixel replaces background pixel only if:
                     // 1. Sprite pixel is opaque and has front priority, AND
                     // 2. Background pixel is transparent
                     
                     // For now, let's assume that BG or sprite pixel is transparent iff the pixel color is 0
                     // Is this a valid assumption?
-
+                    
+                    bool is_background_rendered = ppumask.background_enable;
                     bool is_sprite_in_front = !is_bit_set(5, sprite_to_render.attributes);
-                    bool is_sprite_rendered = scanline > 0 && is_sprite_here && ((sprite_pixel_color != 0 && is_sprite_in_front) || (background_pixel_color == 0));
+                    bool is_sprite_rendered = ppumask.sprite_enable && scanline > 0 && is_sprite_here && ((sprite_pixel_color != 0 && is_sprite_in_front) || (background_pixel_color == 0));
                     
                     if (is_sprite_rendered) {
                         ui->set_pixel(pixel_y, pixel_x, sprite_pixel_color, false);
-                    } else {
+                    } else if (is_background_rendered) {
                         ui->set_pixel(pixel_y, pixel_x, background_pixel_color, true);
                     }
 
@@ -700,241 +682,6 @@ void PPU::tick() {
 
     // std::cout << (int) cur_dot << " " << (int) scanline << " " << (int) cur_ppu_rendering_stage << std::endl;
 }
-
-// void PPU::tick() {
-//     // TODO: Add scanline specific actions
-
-//     if (scanline == 261) {
-//         // pre render scanline
-
-//         // First dot skipped if the frame number is odd and rendering is enabled
-//         if (cur_dot == 0 && (frames_elapsed % 2 == 1) && (ppumask.background_enable || ppumask.sprite_enable)) {
-//             cur_dot++;
-//         }
-
-//         // VBlank and other flags are always cleared on dot 1
-//         if (cur_dot == 1) {
-//             // Doesn't really matter where we clear the race condition, as long as it's cleared before it can happen again
-//             bus->set_nmi_line(false);
-//             bus->set_nmi_suppression_status(false);
-//             ppustatus_vblank_read_race_condition = false;
-//             ppustatus.vblank = false;
-//             ppustatus.sprite_hit = false;
-//             ppustatus.sprite_overflow = false;
-//         }
-
-//         // OAMADDR is set to 0 during ticks 257-320 of prerender scanlines
-//         if (cur_dot >= 257 && cur_dot <= 320) {
-//             oamaddr = 0;
-//         }
-        
-//     } else if (scanline >= 0 && scanline <= 239) {
-//         // visible scanlines
-
-//         if (cur_dot == 0) {
-//             // Idle cycle
-//         } else if (cur_dot >= 4) {
-
-//             // OAMADDR is set to 0 during ticks 257-320 of visible scanlines
-//             if (cur_dot >= 257 && cur_dot <= 320) {
-//                 oamaddr = 0;
-//             }
-
-//             // Due to rendering pipeline delays, first pixel is rendered on cycle 4
-//             uint16_t pixel_x = (cur_dot - 4) % 256;
-//             uint16_t pixel_y = scanline;
-
-//             // In the binary representation of a tile, the first pixel will be the MSB (bit 7)
-//             uint8_t tile_offset_x = 7 - (pixel_x % 8);
-//             uint8_t tile_offset_y = pixel_y % 8;
-
-//             // Fetch data from nametable
-
-//             // TODO: Add support for mirroring types
-//             // Who cares if we fetch the same data 8 times in a row, right???
-
-//             uint16_t background_nametable_index = 32 * (pixel_y / 8) + (pixel_x / 8);
-//             uint8_t cur_nametable_entry = read_from_ppu(0x2000 + 0x400 * ppuctrl.nametable_select + background_nametable_index); // FIX THIS LATER
-
-//             uint16_t pattern_table_offset = 0;
-
-//             if (ppuctrl.background_tile_select == 1) {
-//                 pattern_table_offset = 0x1000;
-//             }
-
-//             uint8_t background_pixel_layer_0 = read_from_ppu(16 * cur_nametable_entry + tile_offset_y + pattern_table_offset);
-//             uint8_t background_pixel_layer_1 = read_from_ppu(16 * cur_nametable_entry + tile_offset_y + pattern_table_offset + 8);
-
-//             uint16_t attribute_table_index = 8 * (pixel_y / 32) + (pixel_x / 32);
-//             uint8_t attribute_table_val = read_from_ppu(0x23C0 + 0x400 * ppuctrl.nametable_select + attribute_table_index); // Attribute table is located at the end of the nametable
-
-//             bool is_left_tile = (pixel_x % 32) < 16;
-//             bool is_top_tile = (pixel_y % 32) < 16;
-
-//             // The value in the attribute table is constructed as follows:
-//             // attribute_table_val = (bottomright << 6) | (bottomleft << 4) | (topright << 2) | (topleft << 0)
-//             // Where bottomright, bottomleft, topright, and topleft are the palette numbers for each quadrant of this block in the nametable
-//             uint8_t background_color_palette_num;
-
-//             if (is_top_tile && is_left_tile) {
-//                 // top left
-//                 background_color_palette_num = attribute_table_val & 0x3;
-//             } else if (is_top_tile && !is_left_tile) {
-//                 // top right
-//                 background_color_palette_num = (attribute_table_val & 0xC) >> 2;
-//             } else if (!is_top_tile && is_left_tile) {
-//                 // bottom left
-//                 background_color_palette_num = (attribute_table_val & 0x30) >> 4;
-//             } else {
-//                 // bottom right
-//                 background_color_palette_num = (attribute_table_val & 0xC0) >> 6;
-//             }
-
-//             // For background rendering only.
-//             // Palette addresses for the background are from 0x3F00 - 0x3F0F.
-//             uint16_t background_palette_index = 0x3F00 + 4 * background_color_palette_num;
-            
-//             uint8_t background_color0 = read_from_ppu(background_palette_index);
-//             uint8_t background_color1 = read_from_ppu(background_palette_index + 1);
-//             uint8_t background_color2 = read_from_ppu(background_palette_index + 2);
-//             uint8_t background_color3 = read_from_ppu(background_palette_index + 3);
-
-//             uint8_t background_pixel_color = (is_bit_set(tile_offset_x, background_pixel_layer_1) << 1) | is_bit_set(tile_offset_x, background_pixel_layer_0);
-
-//             ui->set_background_palette(background_color0, background_color1, background_color2, background_color3);
-//             ui->set_pixel(pixel_y, pixel_x, background_pixel_color, true);    
-
-
-//             // Sprite rendering logic
-
-//             // Run sprite evaluation state machine
-//             // while (!run_sprite_evaluation());
-
-//             // Sprite rendering does not occur on the first scanline
-//             // if (scanline > 0) {
-//             //     bool is_sprite_rendered = false;
-//             //     Sprite sprite_to_render;
-    
-//             //     for (int i = 0; i < secondary_OAM.size(); i += 4) {
-//             //         Sprite cur_sprite = Sprite(secondary_OAM.at(i), secondary_OAM.at(i + 1), secondary_OAM.at(i + 2), secondary_OAM.at(i + 3));
-                    
-//             //         // Check if the pixel is within the x bounds of the sprite
-//             //         if (cur_sprite.x_position <= pixel_x && cur_sprite.x_position + SPRITE_WIDTH > pixel_x) {
-//             //             // Check if the pixel is within the y bounds of the sprite
-//             //             if (cur_sprite.y_position <= pixel_y && cur_sprite.y_position + get_sprite_height() > pixel_y) {
-//             //                 is_sprite_rendered = true;
-//             //                 sprite_to_render = cur_sprite;
-//             //                 break; // Only one sprite to render at a time
-//             //                 // TODO: Implement sprite priority
-//             //             }
-//             //         }
-//             //     }
-
-
-//             //     if (is_sprite_rendered) {
-//             //         // Get pixel offset from top, left of sprite
-//             //         uint8_t sprite_offset_x = pixel_x - sprite_to_render.x_position;
-//             //         uint8_t sprite_offset_y = pixel_y - sprite_to_render.y_position;
-    
-//             //         // Check if flip sprite vertically flag is set
-//             //         if (is_bit_set(7, sprite_to_render.attributes)) {
-//             //             sprite_offset_y = get_sprite_height() - sprite_offset_y - 1;
-//             //         }
-    
-//             //         // Check if flip sprite horizontally flag is set
-//             //         if (is_bit_set(6, sprite_to_render.attributes)) {
-//             //             sprite_offset_x = SPRITE_WIDTH - sprite_offset_x - 1;
-//             //         }
-    
-//             //         // Check if the sprite is rendered in front of or behind the background
-//             //         bool is_sprite_behind_background = is_bit_set(6, sprite_to_render.attributes);
-    
-//             //         // Fetch sprite palette
-//             //         uint8_t sprite_palette_num = sprite_to_render.attributes & 0x03;
-//             //         uint16_t sprite_palette_index = 0x3F10 + 4 * sprite_palette_num;
-    
-//             //         uint8_t sprite_color0 = read_from_ppu(sprite_palette_index);
-//             //         uint8_t sprite_color1 = read_from_ppu(sprite_palette_index + 1);
-//             //         uint8_t sprite_color2 = read_from_ppu(sprite_palette_index + 2);
-//             //         uint8_t sprite_color3 = read_from_ppu(sprite_palette_index + 3);
-    
-//             //         ui->set_sprite_palette(sprite_color0, sprite_color1, sprite_color2, sprite_color3);
-    
-//             //         if (get_sprite_height() == 16) {
-//             //             throw std::runtime_error("Rendering for 8x16 sprites has not been implemented yet");
-//             //         }
-    
-//             //         uint8_t sprite_pattern_table_address = ppuctrl.sprite_tile_select ? 0x1000 : 0;
-    
-//             //         uint8_t sprite_pixel_layer0 = read_from_ppu(sprite_offset_y + 16 * sprite_to_render.tile_index_number + sprite_pattern_table_address);
-//             //         uint8_t sprite_pixel_layer1 = read_from_ppu(8 + sprite_offset_y + 16 * sprite_to_render.tile_index_number + sprite_pattern_table_address);
-    
-//             //         uint8_t sprite_pixel_offset = 7 - (sprite_offset_x % 8);
-//             //         uint8_t sprite_pixel_color = is_bit_set(sprite_pixel_offset, sprite_pixel_layer0) | (is_bit_set(sprite_pixel_offset, sprite_pixel_layer1) << 1);
-    
-//             //         // If the sprite's color is transparent, do not render it
-//             //         if (sprite_pixel_color == 0) {
-//             //             ui->set_pixel(pixel_y, pixel_x, background_pixel_color, true);    
-//             //         } else {
-//             //             ui->set_pixel(pixel_y, pixel_x, sprite_pixel_color, false);    
-//             //         }
-    
-//             //     } else {
-//             //         // If there is no sprite here, render background as normal
-//             //         ui->set_pixel(pixel_y, pixel_x, background_pixel_color, true);    
-//             //     }
-
-//             // }
-
-//         }
-
-//     } else if (scanline == 240) {
-//         // post render scanline
-//     } else if (scanline > 240) {
-//         // vertical blanking scanlines
-
-//         if (!ppustatus_vblank_read_race_condition && scanline == 241 && cur_dot == 1) {
-//             ppustatus.vblank = true;
-//         }
-
-//         // The PPU pulls /NMI low if and only if both vblank and nmi_enable are true
-//         if (ppustatus.vblank && ppuctrl.nmi_enable) {
-//             bus->set_nmi_line(true);
-//         } else {
-//             bus->set_nmi_line(false);
-//         }
-
-
-//         if (scanline == 260 && cur_dot == 340) {
-//             ui->tick();
-
-//             // for (int i = 0; i < 30; i++) {
-//             //     for (int j = 0; j < 32; j++) {
-//             //         std::cout << std::hex << (int) read_from_ppu(0x2000 + 32 * i + j) << " ";
-//             //     }
-//             //     std::cout << std::endl;
-//             // }
-
-
-//             frames_elapsed++;
-//         }
-//     } else {
-//         throw std::runtime_error("Invalid scanline");
-//     }
-
-//     cur_dot++;
-
-//     if (cur_dot == 341) {
-//         cur_dot = 0;
-
-//         scanline++;
-
-//         if (scanline == 262) {
-//             scanline = 0;
-//         }
-//     }
-
-// }
 
 void PPU::reset() {
     scanline = 261;

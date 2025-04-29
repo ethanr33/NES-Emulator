@@ -139,6 +139,9 @@ struct PPU {
     // Secondary OAM is a buffer for sprites being rendered on this scanline
     vector<uint8_t> secondary_OAM = vector<uint8_t>(SECONDARY_OAM_SIZE);
 
+    // Array which stores the indices of selected sprites in primary OAM
+    vector<uint8_t> OAM_indices = vector<uint8_t>(SECONDARY_OAM_SIZE / 4, 0xFF);
+
     // Secondary OAM is cleared before those sprites are rendered on the screen.
     // This is the place to store sprites after secondary OAM is filled
     vector<uint8_t> OAM_buffer = vector<uint8_t>(SECONDARY_OAM_SIZE);

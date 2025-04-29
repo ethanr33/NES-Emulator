@@ -71,6 +71,10 @@ The following NES controller inputs are mapped to these keys on a standard keybo
 - even_odd_frames.nes
 - vbl_clear_timing.nes
 
+## [Sprite hit tests](https://github.com/christopherpow/nes-test-roms/tree/master/sprite_hit_tests_2005.10.05)
+
+- basics.nes
+
 # Future work:
 
 - Full, cycle-accurate implementation of the PPU
