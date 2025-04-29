@@ -546,8 +546,6 @@ void PPU::tick() {
                             if (OAM_indices.at(i / 4) == 0) {
                                 is_sprite_0_rendered = true;
                             }
-
-                            break;
                         }
                     }
 
@@ -571,9 +569,6 @@ void PPU::tick() {
                         if (is_bit_set(6, sprite_to_render.attributes)) {
                             sprite_offset_x = SPRITE_WIDTH - sprite_offset_x - 1;
                         }
-        
-                        // Check if the sprite is rendered in front of or behind the background
-                        bool is_sprite_behind_background = is_bit_set(6, sprite_to_render.attributes);
         
                         // Fetch sprite palette
                         uint8_t sprite_palette_num = sprite_to_render.attributes & 0x03;
