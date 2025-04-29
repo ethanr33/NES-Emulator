@@ -314,7 +314,7 @@ void PPU::run_sprite_evaluation() {
                         if (scanline + 1 >= cur_sprite_y && scanline + 1 < cur_sprite_y + sprite_height) {
                             // If it is, another sprite could have been rendered this scanline. 
                             // Set sprite overflow flag accordingly.
-                            ppustatus.sprite_overflow = true;
+                            ppustatus.sprite_overflow = ppumask.background_enable || ppumask.sprite_enable;
 
 
                             m = m + 4;

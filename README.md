@@ -75,6 +75,10 @@ The following NES controller inputs are mapped to these keys on a standard keybo
 
 - basics.nes
 
+## [Sprite overflow tests](https://github.com/christopherpow/nes-test-roms/tree/master/sprite_overflow_tests)
+
+- basics.nes
+
 # Future work:
 
 - Full, cycle-accurate implementation of the PPU
