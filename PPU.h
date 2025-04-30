@@ -164,7 +164,7 @@ struct PPU {
     PPUSTATUS ppustatus = PPUSTATUS(0);
     uint8_t oamaddr = 0x0;
     uint8_t oamdata = 0x0;
-    uint8_t ppuscroll = 0x0;
+    uint16_t ppuscroll = 0x0;
     uint16_t ppuaddr = 0x0;
     
     // If PPUSTATUS is read the same time VBlank is set, PPUSTATUS will not show that VBlank has started

@@ -118,6 +118,18 @@ void PPU::write_from_cpu(uint16_t address, uint8_t val) {
                 oamaddr++;
                 break;
             case 5:
+                // PPUSCROLL register
+                // On the first write, update the x-position
+                // On the second, update the y-position
+                // Keep track of which write it is using the w register (shared with PPUADDR)
+
+                if (w == 0) {
+                    ppuscroll = val << 8;
+                    w = 1;
+                } else {
+                    ppuscroll = ppuscroll | val;
+                    w = 0;
+                }
                 break;
             case 6:
                 // w will be 0 on first write, 1 on second write
@@ -589,10 +601,21 @@ void PPU::tick() {
                         } else {
                             sprite_pattern_table_address = ppuctrl.sprite_tile_select ? 0x1000 : 0;
                         }
+
+                        uint16_t sprite_pixel_layer0_address = sprite_offset_y + sprite_pattern_table_address;
+                        uint16_t sprite_pixel_layer1_address = 8 + sprite_offset_y + sprite_pattern_table_address;
+
+                        if (get_sprite_height() == 16) {
+                            sprite_pixel_layer0_address += 16 * (sprite_to_render.tile_index_number & 0xFE);
+                            sprite_pixel_layer1_address += 16 * (sprite_to_render.tile_index_number & 0xFE);
+                        } else {
+                            sprite_pixel_layer0_address += 16 * sprite_to_render.tile_index_number;
+                            sprite_pixel_layer1_address += 16 * sprite_to_render.tile_index_number;
+                        }
         
         
-                        uint8_t sprite_pixel_layer0 = read_from_ppu(sprite_offset_y + 16 * sprite_to_render.tile_index_number + sprite_pattern_table_address);
-                        uint8_t sprite_pixel_layer1 = read_from_ppu(8 + sprite_offset_y + 16 * sprite_to_render.tile_index_number + sprite_pattern_table_address);
+                        uint8_t sprite_pixel_layer0 = read_from_ppu(sprite_pixel_layer0_address);
+                        uint8_t sprite_pixel_layer1 = read_from_ppu(sprite_pixel_layer1_address);
         
                         uint8_t sprite_pixel_offset = 7 - (sprite_offset_x % 8);
                         sprite_pixel_color = is_bit_set(sprite_pixel_offset, sprite_pixel_layer0) | (is_bit_set(sprite_pixel_offset, sprite_pixel_layer1) << 1);
