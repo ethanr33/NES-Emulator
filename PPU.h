@@ -214,6 +214,13 @@ struct PPU {
     // Run sprite evaluation for this scanline and dot
     void run_sprite_evaluation();
 
+    // Functions for incrementing registers
+    void increment_coarse_x();
+    void increment_y();
+
+    // Functions for copying data between registers
+    void copy_x_pos_data();
+
     enum SPRITE_EVALUATION_STAGE {STAGE_1, STAGE_2, STAGE_3, STAGE_4, IDLE};
 
     // The initial state of the PPU is scanline = 0 and cur_dot = 0

@@ -72,6 +72,15 @@ void UI::set_pixel(uint8_t row, uint8_t col, uint8_t color_index, bool using_bac
     }
 }
 
+void UI::set_pixel_color(uint8_t row, uint8_t col, uint8_t color_index) {
+    if (col >= 256 || row >= 240) {
+        throw std::runtime_error("Attempted to draw pixel out of bounds at position " + std::to_string(col) + ", " + std::to_string(row));
+    }
+
+    // 
+    screen_status.at(row).at(col) = sf::Color(COLORS[color_index]);
+}
+
 void UI::set_background_palette(uint8_t color0, uint8_t color1, uint8_t color2, uint8_t color3) {
     if (color0 >= PALETTE_SIZE) {
         throw std::runtime_error("color0 is " + std::to_string(color0) + ", which is out of bounds of the palette size");
