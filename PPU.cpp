@@ -182,22 +182,22 @@ uint8_t PPU::read_from_ppu(uint16_t address) {
         // should handle the pattern table cases (addresses 0x0000 - 0x1FFF)
 
         if (cartridge->CHR_ROM.size() == 0) {
-            return VRAM[address];
+            return VRAM.at(address);
         }
 
         return cartridge->CHR_ROM.at(address);
     } else if (address >= 0x2000 && address <= 0x2FFF) {
         // handle nametables and mirroring
         address = map_to_nametable(address);
-        return VRAM[address];
+        return VRAM.at(address);
     } else if (address >= 0x3000 && address <= 0x3EFF) {
         // mirror of 0x2000 - 0x2EFF
         address = map_to_nametable(address - 0x1000);
-        return VRAM[address];
+        return VRAM.at(address);
     } else if (address >= 0x3F00 && address <= 0x3F1F) {
         // palette table
         // 0x3F00 - 0x3F1F is mirrored in the range 0x3F20 - 0x3FFF
-        return PALETTE_RAM[address & 0x1F];
+        return PALETTE_RAM.at(address & 0x1F);
     } else {
         throw std::runtime_error("Edge case in read_from_ppu");
     }
@@ -238,11 +238,11 @@ void PPU::write_from_ppu(uint16_t address, uint8_t val) {
 
     if (cartridge->write_ppu(address, val)) {
         // In this case, we only write if we're working with CHR-RAM instead of CHR-ROM, because CHR-ROM is unwriteable
-        VRAM[address] = val;
+        VRAM.at(address) = val;
     } else if (address >= 0x2000 && address <= 0x2FFF) {
         // handle nametables and mirroring
         address = map_to_nametable(address);
-        VRAM[address] = val;
+        VRAM.at(address) = val;
     } else if (address >= 0x3000 && address <= 0x3EFF) {
         // mirror of 0x2000 - 0x2EFF
         write_from_ppu(address & 0x2EFF, val);
@@ -253,10 +253,10 @@ void PPU::write_from_ppu(uint16_t address, uint8_t val) {
             // Entry 0 of each palette is shared between the background and sprite palettes.
             // So if we write to entry 0 of any palette we need to make sure we also write to the 
             // other corresponding background or sprite palette.
-            PALETTE_RAM[(address & 0x1F) | 0x10] = val;
-            PALETTE_RAM[(address & 0x1F) & 0xEF] = val;
+            PALETTE_RAM.at((address & 0x1F) | 0x10) = val;
+            PALETTE_RAM.at((address & 0x1F) & 0xEF) = val;
         } else {
-            PALETTE_RAM[address & 0x1F] = val;
+            PALETTE_RAM.at(address & 0x1F) = val;
         }
     }
 
@@ -576,10 +576,6 @@ void PPU::tick() {
 
                     uint8_t cur_nametable_entry = read_from_ppu(0x2000 + 0x400 * namtable_to_fetch_from + background_nametable_index); // FIX THIS LATER
                     //uint8_t cur_nametable_entry = read_from_ppu(0x2000 | (v & 0x0FFF));
-
-                    if (frames_elapsed > 33 && pixel_x == 0 && pixel_y == 0 && cur_nametable_entry == 0x24) {
-                        std::cout << "got here";
-                    }
 
                     uint16_t pattern_table_offset = 0;
     

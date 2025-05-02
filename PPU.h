@@ -123,7 +123,7 @@ struct PPUSTATUS {
 };
 
 struct PPU {
-    static const int VRAM_SIZE = 0x4000;
+    static const int VRAM_SIZE = 0x3000;
     static const int PALETTE_TABLE_SIZE = 32;
     static const int PRIMARY_OAM_SIZE = 0x100;
     static const int SECONDARY_OAM_SIZE = 0x20;
@@ -131,8 +131,8 @@ struct PPU {
     static const int VISIBLE_SCANLINES_PER_CYCLE = 240;
     static const int SPRITE_WIDTH = 8;
 
-    uint8_t VRAM[VRAM_SIZE];
-    uint8_t PALETTE_RAM[PALETTE_TABLE_SIZE];
+    vector<uint8_t> VRAM = vector<uint8_t>(VRAM_SIZE);
+    vector<uint8_t> PALETTE_RAM = vector<uint8_t>(PALETTE_TABLE_SIZE);
 
     vector<uint8_t> primary_OAM = vector<uint8_t>(PRIMARY_OAM_SIZE);
 

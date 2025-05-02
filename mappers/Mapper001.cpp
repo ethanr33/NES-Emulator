@@ -76,6 +76,10 @@ bool Mapper001::cpu_mapper_write(uint16_t addr, uint32_t& mapped_addr, uint8_t d
 
 bool Mapper001::ppu_mapper_read(uint16_t addr, uint32_t& mapped_addr) {
 
+    if (addr >= 0x2000) {
+        return false;
+    }
+
     if (num_chr_banks == 0) {
         return true;
     }
@@ -95,7 +99,7 @@ bool Mapper001::ppu_mapper_write(uint16_t addr, uint32_t& mapped_addr, uint8_t d
 
     // Check if we are in range of CHR data
     if (addr >= 0x2000) {
-        //return false;
+        return false;
     }
     
     // If there are no CHR-ROM banks then we are using CHR-RAM
