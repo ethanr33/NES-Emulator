@@ -717,6 +717,8 @@ void PPU::tick() {
                             continue;
                         }
 
+                        bool left_clipping_enabled = !ppumask.background_left_column_enable || !ppumask.sprite_left_column_enable;
+
                         // Check for sprite 0 cases
                         bool sprite_0_hit_possible = 
                             is_sprite_0_rendered &&
@@ -724,6 +726,7 @@ void PPU::tick() {
                             ppumask.background_enable &&
                             ppumask.sprite_enable &&
                             pixel_x != 255 &&
+                            !(left_clipping_enabled && pixel_x >= 0 && pixel_x <= 7) &&
                             background_pixel_color != 0;
                         
                         if (sprite_0_hit_possible) {
@@ -748,10 +751,13 @@ void PPU::tick() {
                     
                     // For now, let's assume that BG or sprite pixel is transparent iff the pixel color is 0
                     // Is this a valid assumption?
+
+                    bool is_background_left_clipped = !ppumask.background_left_column_enable && (pixel_x >= 0 && pixel_x <= 7);
+                    bool is_sprite_left_clipped = !ppumask.sprite_left_column_enable && (pixel_x >= 0 && pixel_x <= 7);
                     
-                    bool is_background_rendered = ppumask.background_enable && background_pixel_color != 0;
+                    bool is_background_rendered = !is_background_left_clipped && ppumask.background_enable && background_pixel_color != 0;
                     bool is_sprite_in_front = !is_bit_set(5, sprite_to_render.attributes);
-                    bool is_sprite_rendered = ppumask.sprite_enable && scanline > 0 && is_sprite_here && ((sprite_pixel_color != 0 && is_sprite_in_front) || (background_pixel_color == 0));
+                    bool is_sprite_rendered = !is_sprite_left_clipped && ppumask.sprite_enable && scanline > 0 && is_sprite_here && ((sprite_pixel_color != 0 && is_sprite_in_front) || (background_pixel_color == 0));
                     
                     if (is_sprite_rendered) {
                         ui->set_pixel(pixel_y, pixel_x, sprite_pixel_color, false);
