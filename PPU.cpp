@@ -328,7 +328,7 @@ void PPU::run_sprite_evaluation() {
     // Sprite evaluation only occurs on visible scanlines
     switch (cur_sprite_evaluation_stage) {
         case IDLE:
-            if (scanline == 261 && cur_dot == 340) {
+            if (scanline == 0 && cur_dot == 0) {
                 cur_sprite_evaluation_stage = STAGE_1;
             }
             
@@ -355,7 +355,7 @@ void PPU::run_sprite_evaluation() {
                     uint8_t sprite_height = get_sprite_height();
 
                     // Check if the sprite will be rendered on the NEXT scanline
-                    if (cur_sprite_y <= scanline + 1 && scanline + 1 < (uint8_t) (sprite_height + cur_sprite_y)) {
+                    if (cur_sprite_y <= scanline && scanline < sprite_height + cur_sprite_y) {
                         // If it will be rendered, copy it into secondary OAM
                         std::copy(primary_OAM.begin() + 4 * n, primary_OAM.begin() + 4 * n + 4, secondary_OAM.begin() + 4 * num_sprites_found);
                         OAM_indices.at(num_sprites_found) = n;
@@ -378,7 +378,7 @@ void PPU::run_sprite_evaluation() {
                         uint8_t sprite_height = get_sprite_height();
 
                         // Check if our y value is in range
-                        if (scanline + 1 >= cur_sprite_y && scanline + 1 < cur_sprite_y + sprite_height) {
+                        if (scanline >= cur_sprite_y && scanline < cur_sprite_y + sprite_height) {
                             // If it is, another sprite could have been rendered this scanline. 
                             // Set sprite overflow flag accordingly.
                             bool sprite_overflow_conditions = 
@@ -446,11 +446,9 @@ void PPU::run_sprite_evaluation() {
                     OAM_buffer.at(i) = secondary_OAM.at(i);
                 }
 
-                // for (int i = 0; i < OAM_buffer.size(); i++) {
-                //     std::cout << std::hex << (int) OAM_buffer.at(i) << " ";
-                // }
-
-                // std::cout << std::endl;
+                if (OAM_buffer.at(0) == 119 && OAM_buffer.at(3) == 128) {
+                    std::cout << "got here";
+                }
             }
 
 
@@ -661,7 +659,7 @@ void PPU::tick() {
 
                         // Get sprite offset from top, left
                         uint8_t sprite_offset_x = pixel_x - sprite_to_render.x_position;
-                        uint8_t sprite_offset_y = pixel_y - sprite_to_render.y_position;
+                        uint8_t sprite_offset_y = pixel_y - sprite_to_render.y_position - 1;
                             
                         // Check if flip sprite vertically flag is set
                         if (is_bit_set(7, sprite_to_render.attributes)) {
@@ -711,7 +709,8 @@ void PPU::tick() {
         
                         uint8_t sprite_pixel_offset = 7 - (sprite_offset_x % 8);
                         sprite_pixel_color = is_bit_set(sprite_pixel_offset, sprite_pixel_layer0) | (is_bit_set(sprite_pixel_offset, sprite_pixel_layer1) << 1);
-                        
+
+
                         // If the sprite pixel is transparent, check if the next sprite in line has an opaque pixel to render
                         if (sprite_pixel_color == 0) {
                             cur_sprite_index++;
@@ -721,11 +720,13 @@ void PPU::tick() {
                         // Check for sprite 0 cases
                         bool sprite_0_hit_possible = 
                             is_sprite_0_rendered &&
+                            cur_sprite_index == 0 &&
                             ppumask.background_enable &&
                             ppumask.sprite_enable &&
-                            (background_pixel_color != 0 && sprite_pixel_color != 0);
+                            pixel_x != 255 &&
+                            background_pixel_color != 0;
                         
-                        if (is_sprite_0_rendered && sprite_0_hit_possible) {
+                        if (sprite_0_hit_possible) {
                             ppustatus.sprite_hit = true;
                         }
 

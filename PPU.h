@@ -144,7 +144,7 @@ struct PPU {
 
     // Secondary OAM is cleared before those sprites are rendered on the screen.
     // This is the place to store sprites after secondary OAM is filled
-    vector<uint8_t> OAM_buffer = vector<uint8_t>(SECONDARY_OAM_SIZE);
+    vector<uint8_t> OAM_buffer = vector<uint8_t>(SECONDARY_OAM_SIZE, 0xFF);
 
     Cartridge* cartridge;
     UI* ui = nullptr;
