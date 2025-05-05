@@ -74,6 +74,11 @@ The following NES controller inputs are mapped to these keys on a standard keybo
 ## [Sprite hit tests](https://github.com/christopherpow/nes-test-roms/tree/master/sprite_hit_tests_2005.10.05)
 
 - basics.nes
+- alignment.nes
+- corners.nes
+- flip.nes
+- left_clip.nes
+- right_edge.nes
 
 ## [Sprite overflow tests](https://github.com/christopherpow/nes-test-roms/tree/master/sprite_overflow_tests)
 
