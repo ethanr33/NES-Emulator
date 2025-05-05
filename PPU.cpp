@@ -445,10 +445,6 @@ void PPU::run_sprite_evaluation() {
                 for (int i = 0; i < secondary_OAM.size(); i++) {
                     OAM_buffer.at(i) = secondary_OAM.at(i);
                 }
-
-                if (OAM_buffer.at(0) == 119 && OAM_buffer.at(3) == 128) {
-                    std::cout << "got here";
-                }
             }
 
 
@@ -726,6 +722,7 @@ void PPU::tick() {
                             ppumask.background_enable &&
                             ppumask.sprite_enable &&
                             pixel_x != 255 &&
+                            pixel_y < 239 &&
                             !(left_clipping_enabled && pixel_x >= 0 && pixel_x <= 7) &&
                             background_pixel_color != 0;
                         
