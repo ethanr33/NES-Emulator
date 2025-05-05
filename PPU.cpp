@@ -542,7 +542,7 @@ void PPU::tick() {
                     uint16_t pixel_x = (cur_dot % 256);
                     uint16_t pixel_y = scanline;
 
-                    uint16_t pixel_x_with_offset = pixel_x + scroll_x_offset;
+                    uint16_t pixel_x_with_offset = pixel_x;
                     uint16_t pixel_y_with_offset = pixel_y;
 
                     uint8_t namtable_to_fetch_from = ppuctrl.nametable_select;

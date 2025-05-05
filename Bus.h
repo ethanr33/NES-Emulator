@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CPU.h"
+#include "APU.h"
 #include "PPU.h"
 #include "Cartridge.h"
 #include "IO.h"
@@ -10,6 +11,7 @@
 using std::vector;
 
 struct PPU;
+struct APU;
 
 struct Bus {
     static const uint16_t RAM_MIRROR_START = 0x0000;
@@ -23,6 +25,10 @@ struct Bus {
 
     static const uint16_t RAM_SIZE = 0x2000;
 
+    // Increments every time the CPU runs a cycle
+    // For use with frame counter in APU
+    uint32_t num_cpu_cycles = 0;
+
     Bus();
     Bus(bool);
 
@@ -30,6 +36,7 @@ struct Bus {
     PPU* ppu = nullptr;
     Cartridge* cartridge;
     IO* io = nullptr;
+    APU* apu = nullptr;
 
     std::vector<uint8_t> cpu_RAM = vector<uint8_t>(RAM_SIZE);
 

@@ -15,10 +15,10 @@ FetchContent_MakeAvailable(SFML)
 # find_package(SFML 2 REQUIRED COMPONENTS graphics system windows)
 
 # Add main executable
-add_executable(main main.cpp Bus.cpp CPU.cpp PPU.cpp Cartridge.cpp Helpers.cpp UI.cpp mappers/Mapper.cpp mappers/Mapper000.cpp mappers/Mapper001.cpp IO.cpp controllers/StandardController.cpp)
+add_executable(main main.cpp Bus.cpp CPU.cpp PPU.cpp Cartridge.cpp Helpers.cpp UI.cpp mappers/Mapper.cpp mappers/Mapper000.cpp mappers/Mapper001.cpp IO.cpp controllers/StandardController.cpp APU.cpp)
 
 # Add debug executable
-add_executable(debug main.cpp Bus.cpp CPU.cpp PPU.cpp Cartridge.cpp Helpers.cpp UI.cpp mappers/Mapper.cpp mappers/Mapper000.cpp mappers/Mapper001.cpp IO.cpp controllers/StandardController.cpp)
+add_executable(debug main.cpp Bus.cpp CPU.cpp PPU.cpp Cartridge.cpp Helpers.cpp UI.cpp mappers/Mapper.cpp mappers/Mapper000.cpp mappers/Mapper001.cpp IO.cpp controllers/StandardController.cpp APU.cpp)
 
 # Add debug executable
 # add_executable(chr_dump chr_dump.cpp Bus.cpp CPU.cpp PPU.cpp Cartridge.cpp Helpers.cpp UI.cpp mappers/Mapper.cpp mappers/Mapper000.cpp mappers/Mapper001.cpp IO.cpp controllers/StandardController.cpp)
