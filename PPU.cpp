@@ -364,6 +364,7 @@ void PPU::run_sprite_evaluation() {
 
                     if (num_sprites_found == 8) {
                         // Our secondary OAM is full now
+                        n++;
                         break;
                     }
                 }
@@ -383,9 +384,11 @@ void PPU::run_sprite_evaluation() {
                             // Set sprite overflow flag accordingly.
                             bool sprite_overflow_conditions = 
                                  (ppumask.background_enable || ppumask.sprite_enable) &&
-                                 cur_sprite_y != 240;
+                                 cur_sprite_y < 240;
 
-                            ppustatus.sprite_overflow = sprite_overflow_conditions;
+                            if (sprite_overflow_conditions) {
+                                ppustatus.sprite_overflow = true;
+                            }
 
 
                             m = m + 4;
