@@ -154,10 +154,10 @@ struct PPU {
     uint16_t cur_dot = 0;
 
     // Internal registers
-    uint16_t v;
-    uint16_t t;
-    uint8_t x;
-    bool w;
+    uint16_t v = 0;
+    uint16_t t = 0;
+    uint8_t x = 0;
+    bool w = 0;
 
     PPUCTRL ppuctrl = PPUCTRL(0);
     PPUMASK ppumask = PPUMASK(0);
@@ -204,12 +204,12 @@ struct PPU {
 
     // For use with OAMDMA register
     void load_OAMDMA(uint8_t);
-    
-    // Go through OAM_sprite_list and put only the sprites that will be rendered in OAM_renderable_sprites
-    void filter_renderable_sprites();
 
     // Get current sprite height from PPUCTRL
-    uint8_t get_sprite_height();
+    uint8_t get_sprite_height() const;
+
+    // Check if rendering is enabled
+    bool is_rendering_enabled() const;
 
     // Run sprite evaluation for this scanline and dot
     void run_sprite_evaluation();
@@ -217,9 +217,11 @@ struct PPU {
     // Functions for incrementing registers
     void increment_coarse_x();
     void increment_y();
+    void increment_y(uint16_t&) const;
 
     // Functions for copying data between registers
     void copy_x_pos_data();
+    void copy_y_pos_data();
 
     enum SPRITE_EVALUATION_STAGE {STAGE_1, STAGE_2, STAGE_3, STAGE_4, IDLE};
 
@@ -233,7 +235,7 @@ struct PPU {
     void attach_bus(Bus*);
 
     enum PPU_RENDERING_STAGE {PRE_RENDER, VISIBLE, POST_RENDER, VBLANK};
-    uint8_t cur_ppu_rendering_stage = PRE_RENDER;
+    uint8_t cur_ppu_rendering_stage;
 
     void tick();
 

@@ -1016,7 +1016,7 @@ void CPU::AXS(uint8_t value) {
         set_flag(ZERO, 0);
     }
 
-    if (A & X >= value) {
+    if ((A & X) >= value) {
         set_flag(CARRY, 1);
     } else {
         set_flag(CARRY, 0);

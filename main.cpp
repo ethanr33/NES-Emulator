@@ -19,10 +19,7 @@ int main(int argc, char** argv) {
     nes.reset();
 
     auto start = std::chrono::high_resolution_clock::now();
-    int cur_cycles = 0;
-
-    int num_iterations = 0;
-    
+    int cur_cycles = 0;    
 
     while (nes.ppu->ui->window->isOpen()) {
 

@@ -49,6 +49,11 @@ The following NES controller inputs are mapped to these keys on a standard keybo
 - official_only.nes (Standard opcodes only)
 - cpu_timing_test.nes
 
+## [Instruction Misc.](https://github.com/christopherpow/nes-test-roms/tree/master/instr_misc)
+
+- abs_x_wrap.nes
+- branch_wrap.nes
+
 ## [Branch Timing Tests](https://github.com/christopherpow/nes-test-roms/tree/master/branch_timing_tests)
 
 ## [Blargg's PPU Tests](https://github.com/christopherpow/nes-test-roms/tree/master/blargg_ppu_tests_2005.09.15b)
@@ -83,11 +88,11 @@ The following NES controller inputs are mapped to these keys on a standard keybo
 ## [Sprite overflow tests](https://github.com/christopherpow/nes-test-roms/tree/master/sprite_overflow_tests)
 
 - basics.nes
+- details.nes
 
 # Future work:
 
 - Full, cycle-accurate implementation of the PPU
-- Verify cycle-accurate implementation of the CPU
 - Verify functionality of second standard NES controller
 - Add support for non-traditional controllers
 - Add support for all common mappers

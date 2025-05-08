@@ -12,12 +12,16 @@ PPU::PPU(bool ui_disabled) {
     ui = new UI(ui_disabled);
 }
 
-uint8_t PPU::get_sprite_height() {
+uint8_t PPU::get_sprite_height() const {
     if (ppuctrl.sprite_height) {
         return 16;
     } else {
         return 8;
     }
+}
+
+bool PPU::is_rendering_enabled() const {
+    return ppumask.background_enable || ppumask.sprite_enable;
 }
 
 uint8_t PPU::read_from_cpu(uint16_t address) {
@@ -74,7 +78,7 @@ uint8_t PPU::read_from_cpu(uint16_t address) {
                 // for detailed operation
 
                 // When reading palette RAM data, return data immediately
-                // Fill read buffer with mirrored nametable data\
+                // Fill read buffer with mirrored nametable data
 
                 uint8_t read_data;
 
@@ -90,6 +94,24 @@ uint8_t PPU::read_from_cpu(uint16_t address) {
                     ppuaddr++;
                 } else {
                     ppuaddr += 32;
+                }
+
+                // If rendering is enabled, and the PPU is currently rendering,
+                // the v register is updated in a weird way
+                if (is_rendering_enabled() && (scanline < 240 || scanline == 261) ) {
+                    increment_coarse_x();
+                    increment_y();
+
+                    // In case v overflows, wrap around by removing the 16th bit
+                    v = v & 0x7FFF;
+                } else {
+                    // If the PPU is not rendering, update v according to ppuctrl.increment_mode
+
+                    if (ppuctrl.increment_mode == 0) {
+                        v++;
+                    } else {
+                        v += 32;
+                    }
                 }
 
                 return read_data;
@@ -108,7 +130,7 @@ void PPU::write_from_cpu(uint16_t address, uint8_t val) {
         switch (register_num) {
             case 0:
                 ppuctrl = PPUCTRL(val);
-                t = (t & 0xF3FF) | ((val & 0x3) << 10);
+                t = (t & 0x73FF) | ((val & 0x3) << 10);
                 break;
             case 1:
                 ppumask = PPUMASK(val);
@@ -129,15 +151,16 @@ void PPU::write_from_cpu(uint16_t address, uint8_t val) {
                 // Keep track of which write it is using the w register (shared with PPUADDR)
 
                 if (w == 0) {
-                    ppuscroll = ppuscroll | (val << 8);
+                    ppuscroll = val << 8;
 
-                    t = (t & 0xFFE0) | (val >> 3);
+                    t = (t & 0x7FE0) | (val >> 3);
                     x = (val & 0x7);
                     w = 1;
+
                 } else {
-                    ppuscroll = ppuscroll | val;
-                    t = (t & 0xFC1F) | ((val >> 3) << 5);
-                    t = (t & 0x8FFF) | (val & 0x7) << 12;
+                    ppuscroll = (ppuscroll & 0xFF00) | val;
+                    t = (t & 0x7C1F) | ((val >> 3) << 5);
+                    t = (t & 0x0FFF) | ((val & 0x7) << 12);
                     w = 0;
                 }
                 break;
@@ -146,13 +169,13 @@ void PPU::write_from_cpu(uint16_t address, uint8_t val) {
                 if (w == 0) {
                     ppuaddr = val << 8;
 
-                    t = (t & 0xC0FF) | ((val & 0x3F) >> 8);
-                    t = t | 0x3FFF;
+                    t = (t & 0x40FF) | ((val & 0x3F) << 8);
+                    t = t & 0x3FFF;
                     w = 1;
                 } else {
                     ppuaddr |= val;
 
-                    t = (t & 0xFF00) | val;
+                    t = (t & 0x7F00) | val;
                     v = t;
                     w = 0;
                 }
@@ -166,6 +189,25 @@ void PPU::write_from_cpu(uint16_t address, uint8_t val) {
                     ppuaddr += 32;
                 }
 
+                // If rendering is enabled, and the PPU is currently rendering,
+                // the v register is updated in a weird way
+                if (is_rendering_enabled() && (scanline < 240 || scanline == 261) ) {
+                    increment_coarse_x();
+                    increment_y();
+
+                    // In case v overflows, wrap around by removing the 16th bit
+                    v = v & 0x7FFF;
+                    return;
+                } else {
+                    // If the PPU is not rendering, update v according to ppuctrl.increment_mode
+
+                    if (ppuctrl.increment_mode == 0) {
+                        v++;
+                    } else {
+                        v += 32;
+                    }
+                }
+
                 break;
             default:
                 break;
@@ -176,8 +218,6 @@ void PPU::write_from_cpu(uint16_t address, uint8_t val) {
 // Communicate with PPU bus
 
 uint8_t PPU::read_from_ppu(uint16_t address) {
-    uint8_t data;
-
     if (cartridge->read_ppu(address)) {
         // should handle the pattern table cases (addresses 0x0000 - 0x1FFF)
 
@@ -289,6 +329,7 @@ void PPU::increment_coarse_x() {
     } else {
         v++;
     }
+    return;
 }
 
 // See https://www.nesdev.org/wiki/PPU_scrolling#Wrapping_around for explanation
@@ -312,12 +353,40 @@ void PPU::increment_y() {
     }
 }
 
+void PPU::increment_y(uint16_t& temp_v) const {
+    if ((temp_v & 0x7000) != 0x7000) {
+        temp_v += 0x1000;
+    } else {
+        temp_v &= ~0x7000;
+        int y = (temp_v & 0x03E0) >> 5;
+
+        if (y == 29) {
+            y = 0;
+            temp_v ^= 0x0800;
+        } else if (y == 31) {
+            y = 0;
+        } else {
+            y += 1;
+        }
+
+        temp_v = (temp_v & ~0x03E0) | (y << 5);
+    }
+}
+
+
 void PPU::copy_x_pos_data() {
     uint8_t A = (t & 0x0400) >> 10;
     uint8_t BCDEF = t & 0x001F;
 
-    v = (v & 0xFDFF) | (A << 10);
+    v = (v & 0xFBFF) | (A << 10);
     v = (v & 0xFFE0) | BCDEF;
+
+    return;
+}
+
+void PPU::copy_y_pos_data() {
+    v = (v & 0x041F) | (t & 0x7BE0);
+    return;
 }
 
 // We represent the process for sprite evaluation as a state machine.
@@ -445,7 +514,7 @@ void PPU::run_sprite_evaluation() {
             // Fill OAM buffer for rendering
 
             if (cur_dot == 257) {
-                for (int i = 0; i < secondary_OAM.size(); i++) {
+                for (unsigned int i = 0; i < secondary_OAM.size(); i++) {
                     OAM_buffer.at(i) = secondary_OAM.at(i);
                 }
             }
@@ -499,19 +568,21 @@ void PPU::tick() {
                     cur_sprite_evaluation_stage = IDLE;
                 }
 
-                if (cur_dot % 8 == 0 && (cur_dot >= 328 || cur_dot <= 256)) {
-                    increment_coarse_x();
-                }
+                if (is_rendering_enabled()) {
+                    if (cur_dot % 8 == 0 && ((cur_dot > 0 && cur_dot <= 256))) {
+                        increment_coarse_x();
+                    }
 
-                // At dot 256 of each scanline, the vertical component of v is incremented
-                if (cur_dot == 256) {
-                    increment_y();
-                } else if (cur_dot == 257 && (ppumask.sprite_enable || ppumask.background_enable)) {
-                    copy_x_pos_data();
-                }
+                    // At dot 256 of each scanline, the vertical component of v is incremented
+                    if (cur_dot == 256) {
+                        increment_y();
+                    } else if (cur_dot == 257) {
+                        copy_x_pos_data();
+                    }
 
-                if (cur_dot >= 280 && cur_dot <= 304 && (ppumask.sprite_enable || ppumask.background_enable)) {
-                    v = (v & 0x841F) | (t & 0x7BE0);
+                    if (cur_dot >= 280 && cur_dot <= 304) {
+                        copy_y_pos_data();
+                    }
                 }
 
                 // OAMADDR is set to 0 during ticks 257-320 of prerender scanlines
@@ -530,6 +601,7 @@ void PPU::tick() {
             break;
         case VISIBLE:
             {
+
                 // OAMADDR is set to 0 during ticks 257-320 of visible scanlines
                 if (cur_dot >= 257 && cur_dot <= 320) {
                     oamaddr = 0;
@@ -538,41 +610,39 @@ void PPU::tick() {
                 if (cur_dot >= 1 && cur_dot <= 256) {
 
                     // Start background rendering
-
-                    uint16_t scroll_x_offset = ((ppuscroll & 0xFF00) >> 8);
-                    uint16_t scroll_y_offset = (ppuscroll & 0xFF);
-
-                    uint16_t pixel_x = (cur_dot % 256);
+                    
+                    // Pixels start rendering at dot 1
+                    // Subtract 1 from cur_dot so that the first pixel is rendered correctly
+                    uint16_t pixel_x = ((cur_dot - 1) % 256);
                     uint16_t pixel_y = scanline;
 
-                    uint16_t pixel_x_with_offset = pixel_x;
-                    uint16_t pixel_y_with_offset = pixel_y;
+                    uint8_t fine_y_offset = v >> 12;
 
-                    uint8_t namtable_to_fetch_from = ppuctrl.nametable_select;
-
-                    if (ppuctrl.nametable_select == 1 && pixel_x_with_offset > 0xFF) {
-                        pixel_x_with_offset = pixel_x_with_offset % 256;
-                        namtable_to_fetch_from = 0;
-                    } else if (ppuctrl.nametable_select == 0 && pixel_x_with_offset > 0xFF) {
-                        pixel_x_with_offset = pixel_x_with_offset % 256;
-                        namtable_to_fetch_from = 1;
+                    if (fine_y_offset > 7) {
+                        throw std::runtime_error("fine y > 7");
                     }
 
-
-
                     // In the binary representation of a tile, the first pixel will be the MSB (bit 7)
-                    uint8_t tile_offset_x = 7 - (pixel_x_with_offset % 8);
-                    uint8_t tile_offset_y = pixel_y_with_offset % 8;
-    
-                    // Fetch background data from nametable
-    
-                    // TODO: Add support for mirroring types
-                    // Who cares if we fetch the same data 8 times in a row, right???
-    
-                    uint16_t background_nametable_index = 32 * (pixel_y_with_offset / 8) + (pixel_x_with_offset / 8);
+                    uint8_t tile_offset_x = (7 - (pixel_x % 8));
+                    uint8_t tile_offset_y = (pixel_y % 8);
 
-                    uint8_t cur_nametable_entry = read_from_ppu(0x2000 + 0x400 * namtable_to_fetch_from + background_nametable_index); // FIX THIS LATER
-                    //uint8_t cur_nametable_entry = read_from_ppu(0x2000 | (v & 0x0FFF));
+                    uint16_t temp_v = v;
+ 
+                    if (tile_offset_x < x) {
+                        // Temporarily increment the coarse x of v to access the next tile
+                        if ((temp_v & 0x001F) == 31) {
+                            temp_v = temp_v & ~0x001F;
+                            temp_v = temp_v ^ 0x0400;
+                        } else {
+                            temp_v++;
+                        }
+                        tile_offset_x = tile_offset_x - x + 8;
+                    } else {
+                        tile_offset_x -= x;
+                    }
+
+                    // Fetch background data from nametable
+                    uint8_t cur_nametable_entry = read_from_ppu(0x2000 | (temp_v & 0x0FFF));
 
                     uint16_t pattern_table_offset = 0;
     
@@ -583,18 +653,21 @@ void PPU::tick() {
                     uint8_t background_pixel_layer_0 = read_from_ppu(16 * cur_nametable_entry + tile_offset_y + pattern_table_offset);
                     uint8_t background_pixel_layer_1 = read_from_ppu(16 * cur_nametable_entry + tile_offset_y + pattern_table_offset + 8);
     
-                    uint16_t attribute_table_index = 8 * (pixel_y_with_offset / 32) + (pixel_x_with_offset / 32);
-                    uint8_t attribute_table_val = read_from_ppu(0x23C0 + 0x400 * namtable_to_fetch_from + attribute_table_index); // Attribute table is located at the end of the nametable
-                    //uint8_t attribute_table_val = read_from_ppu(0x23C0 | (v & 0x0C00) | ((v >> 4) & 0x38) | ((v >> 2) & 0x07));
+                    uint8_t attribute_table_val = read_from_ppu(0x23C0 | (temp_v & 0x0C00) | ((temp_v >> 4) & 0x38) | ((temp_v >> 2) & 0x07));
 
-                    bool is_left_tile = (pixel_x_with_offset % 32) < 16;
-                    bool is_top_tile = (pixel_y_with_offset % 32) < 16;
+                    uint8_t coarse_x = temp_v & 0x1F;
+                    uint8_t coarse_y = (temp_v >> 5) & 0x1F;
+
+                    bool is_left_tile = (coarse_x & 0x2) == 0;
+                    bool is_top_tile = (coarse_y & 0x2) == 0;
     
                     // The value in the attribute table is constructed as follows:
                     // attribute_table_val = (bottomright << 6) | (bottomleft << 4) | (topright << 2) | (topleft << 0)
                     // Where bottomright, bottomleft, topright, and topleft are the palette numbers for each quadrant of this block in the nametable
                     uint8_t background_color_palette_num;
-    
+
+                    // Due to there being 30 tiles vertically, the bottom row of tiles of the screen
+                    // does not fit in a 32x32 region. So we need to make a special case for that 
                     if (is_top_tile && is_left_tile) {
                         // top left
                         background_color_palette_num = attribute_table_val & 0x3;
@@ -631,7 +704,7 @@ void PPU::tick() {
 
                     vector<Sprite> sprite_priority_order;
 
-                    for (int i = 0; i < OAM_buffer.size(); i += 4) {
+                    for (unsigned int i = 0; i < OAM_buffer.size(); i += 4) {
                         Sprite cur_sprite = Sprite(
                             OAM_buffer.at(i),
                             OAM_buffer.at(i + 1),
@@ -649,7 +722,7 @@ void PPU::tick() {
                         }
                     }
 
-                    int cur_sprite_index = 0;
+                    unsigned int cur_sprite_index = 0;
 
                     uint8_t sprite_pixel_color;
 
@@ -726,7 +799,7 @@ void PPU::tick() {
                             ppumask.sprite_enable &&
                             pixel_x != 255 &&
                             pixel_y < 239 &&
-                            !(left_clipping_enabled && pixel_x >= 0 && pixel_x <= 7) &&
+                            !(left_clipping_enabled && pixel_x <= 7) &&
                             background_pixel_color != 0;
                         
                         if (sprite_0_hit_possible) {
@@ -739,7 +812,7 @@ void PPU::tick() {
                     Sprite sprite_to_render;
 
                     if (cur_sprite_index < sprite_priority_order.size()) {
-                        Sprite sprite_to_render = sprite_priority_order.at(cur_sprite_index);
+                        sprite_to_render = sprite_priority_order.at(cur_sprite_index);
                     } else {
                         is_sprite_here = false;
                     }
@@ -752,8 +825,8 @@ void PPU::tick() {
                     // For now, let's assume that BG or sprite pixel is transparent iff the pixel color is 0
                     // Is this a valid assumption?
 
-                    bool is_background_left_clipped = !ppumask.background_left_column_enable && (pixel_x >= 0 && pixel_x <= 7);
-                    bool is_sprite_left_clipped = !ppumask.sprite_left_column_enable && (pixel_x >= 0 && pixel_x <= 7);
+                    bool is_background_left_clipped = !ppumask.background_left_column_enable && (pixel_x <= 7);
+                    bool is_sprite_left_clipped = !ppumask.sprite_left_column_enable && (pixel_x <= 7);
                     
                     bool is_background_rendered = !is_background_left_clipped && ppumask.background_enable && background_pixel_color != 0;
                     bool is_sprite_in_front = !is_bit_set(5, sprite_to_render.attributes);
@@ -767,21 +840,22 @@ void PPU::tick() {
                         // If both background and sprite are transparent, set the pixel to the background color
                         // This is at mem. address 0x3F00 or 0x3F10 in PPU memory
                         // Which is index 0 or 16 in PALETTE_RAM
-                        ui->set_pixel_color(pixel_y, pixel_x, PALETTE_RAM[0]);
+                        ui->set_pixel_color(pixel_y, pixel_x, PALETTE_RAM.at(0));
+                    }
+
+                }
+
+                if (is_rendering_enabled()) {
+                    if (cur_dot % 8 == 0 && ((cur_dot > 0 && cur_dot <= 256))) {
+                        increment_coarse_x();
                     }
 
                     // At dot 256 of each scanline, the vertical component of v is incremented
                     if (cur_dot == 256) {
                         increment_y();
-                    } else if (cur_dot == 257 && (ppumask.sprite_enable || ppumask.background_enable)) {
+                    } else if (cur_dot == 257) {
                         copy_x_pos_data();
                     }
-
-
-                }
-
-                if (cur_dot % 8 == 0 && (cur_dot >= 328 || cur_dot <= 256)) {
-                    increment_coarse_x();
                 }
 
                 if (cur_dot == 340) {
@@ -799,15 +873,17 @@ void PPU::tick() {
         case POST_RENDER:
             {
 
-                if (cur_dot % 8 == 0 && (cur_dot >= 328 || cur_dot <= 256)) {
-                    increment_coarse_x();
-                }
-
-                // At dot 256 of each scanline, the vertical component of v is incremented
-                if (cur_dot == 256) {
-                    increment_y();
-                } else if (cur_dot == 257 && (ppumask.sprite_enable || ppumask.background_enable)) {
-                    copy_x_pos_data();
+                if (is_rendering_enabled()) {
+                    if (cur_dot % 8 == 0 && ((cur_dot > 0 && cur_dot <= 256))) {
+                        increment_coarse_x();
+                    }
+    
+                    // At dot 256 of each scanline, the vertical component of v is incremented
+                    if (cur_dot == 256) {
+                        increment_y();
+                    } else if (cur_dot == 257) {
+                        copy_x_pos_data();
+                    }
                 }
 
                 if (cur_dot == 340) {
@@ -832,15 +908,17 @@ void PPU::tick() {
                     bus->set_nmi_line(false);
                 }
 
-                if (cur_dot % 8 == 0 && (cur_dot >= 328 || cur_dot <= 256)) {
-                    increment_coarse_x();
-                }
-
-                // At dot 256 of each scanline, the vertical component of v is incremented
-                if (cur_dot == 256) {
-                    increment_y();
-                } else if (cur_dot == 257 && (ppumask.sprite_enable || ppumask.background_enable)) {
-                    copy_x_pos_data();
+                if (is_rendering_enabled()) {
+                    if (cur_dot % 8 == 0 && ((cur_dot > 0 && cur_dot <= 256))) {
+                        increment_coarse_x();
+                    }
+    
+                    // At dot 256 of each scanline, the vertical component of v is incremented
+                    if (cur_dot == 256) {
+                        increment_y();
+                    } else if (cur_dot == 257) {
+                        copy_x_pos_data();
+                    }
                 }
 
                 if (scanline == 260 && cur_dot == 340) {
@@ -866,13 +944,14 @@ void PPU::tick() {
             break;
     }
 
-    // std::cout << (int) cur_dot << " " << (int) scanline << " " << (int) cur_ppu_rendering_stage << std::endl;
 }
 
 void PPU::reset() {
-    scanline = 261;
+    scanline = 0;
     cur_dot = 0;
-    cur_ppu_rendering_stage = PRE_RENDER;
+    v = 0;
+    t = 0;
+    cur_ppu_rendering_stage = VISIBLE;
     cur_sprite_evaluation_stage = IDLE;
 }
 

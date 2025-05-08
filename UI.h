@@ -49,8 +49,8 @@ struct UI {
 
     sf::Color hex_to_sfcpo;
 
-    void set_pixel(uint8_t, uint8_t, uint8_t, bool);
-    void set_pixel_color(uint8_t, uint8_t, uint8_t);
+    void set_pixel(uint16_t, uint16_t, uint8_t, bool);
+    void set_pixel_color(uint16_t, uint16_t, uint8_t);
     void set_background_palette(uint8_t, uint8_t, uint8_t, uint8_t);
     void set_sprite_palette(uint8_t, uint8_t, uint8_t, uint8_t);
 

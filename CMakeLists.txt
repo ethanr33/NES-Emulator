@@ -40,13 +40,13 @@ target_compile_features(debug PRIVATE cxx_std_17)
 
 set_target_properties(main PROPERTIES
    COMPILE_FLAGS "-O3"
-   LINK_FLAGS "-O3"
+   LINK_FLAGS "-O3" 
 )
 
 # Ensure that debug symbols are included
 set_target_properties(debug PROPERTIES
-   COMPILE_FLAGS "-g"
-   LINK_FLAGS "-g"
+   COMPILE_FLAGS "-g -Wall -Wextra -fsanitize=address"
+   LINK_FLAGS "-g -Wall -Wextra -fsanitize=address"
 )
 
 # set_target_properties(debugger PROPERTIES

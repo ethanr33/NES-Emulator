@@ -56,12 +56,12 @@ UI::UI(bool disable_ui) {
     screen_status = vector<vector<sf::Color>>(SCREEN_HEIGHT, vector<sf::Color>(SCREEN_WIDTH));
 }
 
-void UI::set_pixel(uint8_t row, uint8_t col, uint8_t color_index, bool using_background_palette) {
+void UI::set_pixel(uint16_t row, uint16_t col, uint8_t color_index, bool using_background_palette) {
     if (col >= 256 || row >= 240) {
         throw std::runtime_error("Attempted to draw pixel out of bounds at position " + std::to_string(col) + ", " + std::to_string(row));
     }
 
-    if (color_index < 0 || color_index > 3) {
+    if (color_index > 3) {
         throw std::runtime_error("Unknown pixel index color " + std::to_string(color_index));
     }
 
@@ -72,7 +72,7 @@ void UI::set_pixel(uint8_t row, uint8_t col, uint8_t color_index, bool using_bac
     }
 }
 
-void UI::set_pixel_color(uint8_t row, uint8_t col, uint8_t color_index) {
+void UI::set_pixel_color(uint16_t row, uint16_t col, uint8_t color_index) {
     if (col >= 256 || row >= 240) {
         throw std::runtime_error("Attempted to draw pixel out of bounds at position " + std::to_string(col) + ", " + std::to_string(row));
     }
