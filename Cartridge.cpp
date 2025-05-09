@@ -59,10 +59,10 @@ Cartridge::Cartridge(const std::string& rom_file_name) {
 
             bool has_trainer = is_bit_set(2, file_header.at(6));
             
-            if (is_bit_set(7, file_header.at(6))) {
-                mirroring_type = HORIZONTAL;
-            } else {
+            if (is_bit_set(0, file_header.at(6))) {
                 mirroring_type = VERTICAL;
+            } else {
+                mirroring_type = HORIZONTAL;
             }
 
             if (has_trainer) {

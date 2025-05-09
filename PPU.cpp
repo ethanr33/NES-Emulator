@@ -618,16 +618,12 @@ void PPU::tick() {
 
                     uint8_t fine_y_offset = v >> 12;
 
-                    if (fine_y_offset > 7) {
-                        throw std::runtime_error("fine y > 7");
-                    }
-
                     // In the binary representation of a tile, the first pixel will be the MSB (bit 7)
                     uint8_t tile_offset_x = (7 - (pixel_x % 8));
-                    uint8_t tile_offset_y = (pixel_y % 8);
+                    uint8_t tile_offset_y = fine_y_offset;
 
                     uint16_t temp_v = v;
- 
+
                     if (tile_offset_x < x) {
                         // Temporarily increment the coarse x of v to access the next tile
                         if ((temp_v & 0x001F) == 31) {
@@ -650,13 +646,14 @@ void PPU::tick() {
                         pattern_table_offset = 0x1000;
                     }
     
-                    uint8_t background_pixel_layer_0 = read_from_ppu(16 * cur_nametable_entry + tile_offset_y + pattern_table_offset);
-                    uint8_t background_pixel_layer_1 = read_from_ppu(16 * cur_nametable_entry + tile_offset_y + pattern_table_offset + 8);
+                    uint8_t background_pixel_layer_0 = read_from_ppu((cur_nametable_entry << 4) + tile_offset_y + pattern_table_offset);
+                    uint8_t background_pixel_layer_1 = read_from_ppu((cur_nametable_entry << 4) + tile_offset_y + pattern_table_offset + 8);
     
                     uint8_t attribute_table_val = read_from_ppu(0x23C0 | (temp_v & 0x0C00) | ((temp_v >> 4) & 0x38) | ((temp_v >> 2) & 0x07));
 
                     uint8_t coarse_x = temp_v & 0x1F;
                     uint8_t coarse_y = (temp_v >> 5) & 0x1F;
+
 
                     bool is_left_tile = (coarse_x & 0x2) == 0;
                     bool is_top_tile = (coarse_y & 0x2) == 0;
