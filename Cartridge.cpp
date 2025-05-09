@@ -32,7 +32,7 @@ Cartridge::Cartridge(const std::string& rom_file_name) {
 
 
     if (extension_pos_start == std::string::npos) {
-        std::cerr << "The file name is formatted incorrectly. Be sure to add an extension" << std::endl;
+        throw std::runtime_error("The file name is formatted incorrectly. Be sure to add a file extension");
         return;
     } else {
         std::string extension = rom_file_name.substr(extension_pos_start + 1);
@@ -92,7 +92,7 @@ Cartridge::Cartridge(const std::string& rom_file_name) {
                     break;
             }
         } else {
-            std::cerr << "Unsupported ROM format" << std::endl;
+            throw std::runtime_error("Unsupported ROM format");
             return;
         }
     }
