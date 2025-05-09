@@ -16,8 +16,7 @@ Cartridge::Cartridge(const std::string& rom_file_name) {
     std::ifstream rom_file("roms/" + rom_file_name, std::ios::binary);
 
     if (!rom_file.is_open()) {
-        std::cerr << "Failed to open file" << std::endl;
-        return;
+        throw std::runtime_error("Failed to open file");
     }
 
     // We don't need to use size_t because string::npos is -1
