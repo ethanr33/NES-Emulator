@@ -99,8 +99,9 @@ uint8_t PPU::read_from_cpu(uint16_t address) {
                 // If rendering is enabled, and the PPU is currently rendering,
                 // the v register is updated in a weird way
                 if (is_rendering_enabled() && (scanline < 240 || scanline == 261) ) {
-                    increment_coarse_x();
-                    increment_y();
+                    // Both coarse x and coarse v are updated
+                    increment_coarse_x(v);
+                    increment_y(v);
 
                     // In case v overflows, wrap around by removing the 16th bit
                     v = v & 0x7FFF;
@@ -151,14 +152,13 @@ void PPU::write_from_cpu(uint16_t address, uint8_t val) {
                 // Keep track of which write it is using the w register (shared with PPUADDR)
 
                 if (w == 0) {
-                    ppuscroll = val << 8;
 
                     t = (t & 0x7FE0) | (val >> 3);
-                    x = (val & 0x7);
+                    fine_x_offset = (val & 0x7);
                     w = 1;
 
                 } else {
-                    ppuscroll = (ppuscroll & 0xFF00) | val;
+
                     t = (t & 0x7C1F) | ((val >> 3) << 5);
                     t = (t & 0x0FFF) | ((val & 0x7) << 12);
                     w = 0;
@@ -192,8 +192,9 @@ void PPU::write_from_cpu(uint16_t address, uint8_t val) {
                 // If rendering is enabled, and the PPU is currently rendering,
                 // the v register is updated in a weird way
                 if (is_rendering_enabled() && (scanline < 240 || scanline == 261) ) {
-                    increment_coarse_x();
-                    increment_y();
+                    // Both coarse x and coarse v are updated
+                    increment_coarse_x(v);
+                    increment_y(v);
 
                     // In case v overflows, wrap around by removing the 16th bit
                     v = v & 0x7FFF;
@@ -322,54 +323,34 @@ void PPU::load_OAMDMA(uint8_t high_byte) {
 }
 
 // See https://www.nesdev.org/wiki/PPU_scrolling#Wrapping_around for explanation
-void PPU::increment_coarse_x() {
-    if ((v & 0x001F) == 31) {
-        v = v & ~0x001F;
-        v = v ^ 0x0400;
+void PPU::increment_coarse_x(uint16_t& reg) const {
+    if ((reg & 0x001F) == 31) {
+        reg = reg & ~0x001F;
+        reg = reg ^ 0x0400;
     } else {
-        v++;
+        reg++;
     }
     return;
 }
 
 // See https://www.nesdev.org/wiki/PPU_scrolling#Wrapping_around for explanation
-void PPU::increment_y() {
-    if ((v & 0x7000) != 0x7000) {
-        v += 0x1000;
+void PPU::increment_y(uint16_t& reg) const {
+    if ((reg & 0x7000) != 0x7000) {
+        reg += 0x1000;
     } else {
-        v &= ~0x7000;
-        int y = (v & 0x03E0) >> 5;
+        reg &= ~0x7000;
+        int y = (reg & 0x03E0) >> 5;
 
         if (y == 29) {
             y = 0;
-            v ^= 0x0800;
+            reg ^= 0x0800;
         } else if (y == 31) {
             y = 0;
         } else {
             y += 1;
         }
 
-        v = (v & ~0x03E0) | (y << 5);
-    }
-}
-
-void PPU::increment_y(uint16_t& temp_v) const {
-    if ((temp_v & 0x7000) != 0x7000) {
-        temp_v += 0x1000;
-    } else {
-        temp_v &= ~0x7000;
-        int y = (temp_v & 0x03E0) >> 5;
-
-        if (y == 29) {
-            y = 0;
-            temp_v ^= 0x0800;
-        } else if (y == 31) {
-            y = 0;
-        } else {
-            y += 1;
-        }
-
-        temp_v = (temp_v & ~0x03E0) | (y << 5);
+        reg = (reg & ~0x03E0) | (y << 5);
     }
 }
 
@@ -392,9 +373,12 @@ void PPU::copy_y_pos_data() {
 // We represent the process for sprite evaluation as a state machine.
 // For more details, see https://www.nesdev.org/wiki/PPU_sprite_evaluation
 
+// Sprite evaluation here is not exactly cycle accurate. Stages are transitioned through at the correct times,
+// however sprite evaluation
+
 void PPU::run_sprite_evaluation() {
 
-    // Sprite evaluation only occurs on visible scanlines
+    // Sprite evaluation only occurs on visible scanlines. If the PPU is not on a visible scanline, then the state machine should be idle.
     switch (cur_sprite_evaluation_stage) {
         case IDLE:
             if (scanline == 0 && cur_dot == 0) {
@@ -527,7 +511,9 @@ void PPU::run_sprite_evaluation() {
             
             break;
         case STAGE_4:
-            // Cycles 321-340+0: Background render pipeline initialization
+            // Cycles 321-340: Background render pipeline initialization
+
+            // We already did this in previous stages though, so no need to do anything here
 
             if (cur_dot == 340) {
                 if (scanline < 239) {
@@ -550,7 +536,7 @@ void PPU::tick() {
     switch (cur_ppu_rendering_stage) {
         case PRE_RENDER:
             {
-                // First dot skipped if the frame number is odd and rendering is enabled
+                // First dot skipped if the frame number is odd and rendering is enabled on an NTSC NES
                 if (cur_dot == 0 && (frames_elapsed % 2 == 1) && (ppumask.background_enable || ppumask.sprite_enable)) {
                     cur_dot++;
                 }
@@ -570,12 +556,12 @@ void PPU::tick() {
 
                 if (is_rendering_enabled()) {
                     if (cur_dot % 8 == 0 && ((cur_dot > 0 && cur_dot <= 256))) {
-                        increment_coarse_x();
+                        increment_coarse_x(v);
                     }
 
                     // At dot 256 of each scanline, the vertical component of v is incremented
                     if (cur_dot == 256) {
-                        increment_y();
+                        increment_y(v);
                     } else if (cur_dot == 257) {
                         copy_x_pos_data();
                     }
@@ -616,29 +602,35 @@ void PPU::tick() {
                     uint16_t pixel_x = ((cur_dot - 1) % 256);
                     uint16_t pixel_y = scanline;
 
-                    uint8_t fine_y_offset = v >> 12;
-
-                    // In the binary representation of a tile, the first pixel will be the MSB (bit 7)
+                    // In the binary representation of a tile, the first pixel on the left will be the MSB (bit 7)
                     uint8_t tile_offset_x = (7 - (pixel_x % 8));
-                    uint8_t tile_offset_y = fine_y_offset;
 
-                    uint16_t temp_v = v;
+                    // The last 3 bits of v contain the fine y offset of the screen
+                    // AKA how many pixels down from the top of the tile are we shifted
+                    uint8_t tile_offset_y = v >> 12;
 
-                    if (tile_offset_x < x) {
+                    // In the case where tile_offset_x < fine_x_offset, we should be rendering from the next horizontal tile.
+                    // The v register is used for other things, so it's best not to change it.
+
+                    // In the case where we are rendering from the next horizontal tile, offset_v stores the location for the next horizontal tile.
+                    uint16_t offset_v = v;
+
+                    // 
+                    if (tile_offset_x < fine_x_offset) {
                         // Temporarily increment the coarse x of v to access the next tile
-                        if ((temp_v & 0x001F) == 31) {
-                            temp_v = temp_v & ~0x001F;
-                            temp_v = temp_v ^ 0x0400;
+                        if ((offset_v & 0x001F) == 31) {
+                            offset_v = offset_v & ~0x001F;
+                            offset_v = offset_v ^ 0x0400;
                         } else {
-                            temp_v++;
+                            offset_v++;
                         }
-                        tile_offset_x = tile_offset_x - x + 8;
+                        tile_offset_x += 8 - fine_x_offset;
                     } else {
-                        tile_offset_x -= x;
+                        tile_offset_x -= fine_x_offset;
                     }
 
                     // Fetch background data from nametable
-                    uint8_t cur_nametable_entry = read_from_ppu(0x2000 | (temp_v & 0x0FFF));
+                    uint8_t cur_nametable_entry = read_from_ppu(0x2000 | (offset_v & 0x0FFF));
 
                     uint16_t pattern_table_offset = 0;
     
@@ -649,10 +641,10 @@ void PPU::tick() {
                     uint8_t background_pixel_layer_0 = read_from_ppu((cur_nametable_entry << 4) + tile_offset_y + pattern_table_offset);
                     uint8_t background_pixel_layer_1 = read_from_ppu((cur_nametable_entry << 4) + tile_offset_y + pattern_table_offset + 8);
     
-                    uint8_t attribute_table_val = read_from_ppu(0x23C0 | (temp_v & 0x0C00) | ((temp_v >> 4) & 0x38) | ((temp_v >> 2) & 0x07));
+                    uint8_t attribute_table_val = read_from_ppu(0x23C0 | (offset_v & 0x0C00) | ((offset_v >> 4) & 0x38) | ((offset_v >> 2) & 0x07));
 
-                    uint8_t coarse_x = temp_v & 0x1F;
-                    uint8_t coarse_y = (temp_v >> 5) & 0x1F;
+                    uint8_t coarse_x = offset_v & 0x1F;
+                    uint8_t coarse_y = (offset_v >> 5) & 0x1F;
 
 
                     bool is_left_tile = (coarse_x & 0x2) == 0;
@@ -844,12 +836,12 @@ void PPU::tick() {
 
                 if (is_rendering_enabled()) {
                     if (cur_dot % 8 == 0 && ((cur_dot > 0 && cur_dot <= 256))) {
-                        increment_coarse_x();
+                        increment_coarse_x(v);
                     }
 
                     // At dot 256 of each scanline, the vertical component of v is incremented
                     if (cur_dot == 256) {
-                        increment_y();
+                        increment_y(v);
                     } else if (cur_dot == 257) {
                         copy_x_pos_data();
                     }
@@ -872,12 +864,12 @@ void PPU::tick() {
 
                 if (is_rendering_enabled()) {
                     if (cur_dot % 8 == 0 && ((cur_dot > 0 && cur_dot <= 256))) {
-                        increment_coarse_x();
+                        increment_coarse_x(v);
                     }
     
                     // At dot 256 of each scanline, the vertical component of v is incremented
                     if (cur_dot == 256) {
-                        increment_y();
+                        increment_y(v);
                     } else if (cur_dot == 257) {
                         copy_x_pos_data();
                     }
@@ -907,12 +899,12 @@ void PPU::tick() {
 
                 if (is_rendering_enabled()) {
                     if (cur_dot % 8 == 0 && ((cur_dot > 0 && cur_dot <= 256))) {
-                        increment_coarse_x();
+                        increment_coarse_x(v);
                     }
     
                     // At dot 256 of each scanline, the vertical component of v is incremented
                     if (cur_dot == 256) {
-                        increment_y();
+                        increment_y(v);
                     } else if (cur_dot == 257) {
                         copy_x_pos_data();
                     }

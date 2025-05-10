@@ -1,6 +1,4 @@
 
-#pragma once
-
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
@@ -24,10 +22,6 @@ Cartridge::Cartridge(const std::string& rom_file_name) {
 
     std::vector<uint8_t> file_header(16);
 
-    // We need to read in one byte at a time. However the ifstream.get method is not overloaded to work with uint8_t
-    // types. Chars are also one byte big so these will work fine
-    char cur_byte;
-
     std::vector<uint8_t> rom_data;
 
 
@@ -40,6 +34,8 @@ Cartridge::Cartridge(const std::string& rom_file_name) {
         if (extension == "nes") {
             // iNES format, file header is 16 bytes
 
+            // We need to read in one byte at a time. However the ifstream.get method is not overloaded to work with uint8_t
+            // types. Chars are also one byte big so these will work fine
             char cur_byte;
             for (int i = 0; i < 16; i++) {
                 rom_file.get(cur_byte);
