@@ -117,7 +117,7 @@ Cartridge::Cartridge(const std::string& rom_file_name) {
         uint32_t mapped_address = address;
 
         // Return true if we access PRG RAM data
-        if (mapper->mapped_to_prg_ram(address)) {
+        if (mapper->prg_ram_bank_size > 0 && mapper->mapped_to_prg_ram(address)) {
             mapper->cpu_mapper_write(address, mapped_address, data);
             return true;
         }

@@ -19,28 +19,30 @@ int main(int argc, char** argv) {
     nes.reset();
 
     auto start = std::chrono::high_resolution_clock::now();
+    int frame_count_start = 0;
     int cur_cycles = 0;    
 
     while (nes.ppu->ui->window->isOpen()) {
 
         sf::Event event;
-        while (cur_cycles % 100000 == 0 && nes.ppu->ui->window->pollEvent(event)) {
+        while (cur_cycles % 300000 == 0 && nes.ppu->ui->window->pollEvent(event)) {
             if (event.type == sf::Event::Closed) {
                 nes.ppu->ui->window->close();
             }
         }
 
+        if (nes.ppu->frames_elapsed > frame_count_start + 30) {
+            auto end = std::chrono::high_resolution_clock::now();
+            std::chrono::duration<double, std::milli> elapsed = end - start;
+            nes.ppu->ui->window->setTitle("NES Emulator frame time: " + std::to_string(elapsed.count() / 30));
+            start = std::chrono::high_resolution_clock::now();
+            frame_count_start = nes.ppu->frames_elapsed;
+
+        }
+
         nes.tick();
         cur_cycles++;
     }
-
-    auto current = std::chrono::high_resolution_clock::now();
-
-    // Calculate the elapsed time
-    std::chrono::duration<double> elapsed = current - start;
-
-    std::cout << "Ran " << cur_cycles << " cycles in " << elapsed.count() << std::endl;
-    std::cout << "FPS: " << nes.ppu->frames_elapsed / elapsed.count() << std::endl;
 
     return 0;
 }

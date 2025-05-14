@@ -20,6 +20,10 @@ add_executable(main main.cpp Bus.cpp CPU.cpp PPU.cpp Cartridge.cpp Helpers.cpp U
 # Add debug executable
 add_executable(debug main.cpp Bus.cpp CPU.cpp PPU.cpp Cartridge.cpp Helpers.cpp UI.cpp mappers/Mapper.cpp mappers/Mapper000.cpp mappers/Mapper001.cpp IO.cpp controllers/StandardController.cpp APU.cpp)
 
+# Add executable for performance analysis
+add_executable(profiler main.cpp Bus.cpp CPU.cpp PPU.cpp Cartridge.cpp Helpers.cpp UI.cpp mappers/Mapper.cpp mappers/Mapper000.cpp mappers/Mapper001.cpp IO.cpp controllers/StandardController.cpp APU.cpp)
+
+
 # Add debug executable
 # add_executable(chr_dump chr_dump.cpp Bus.cpp CPU.cpp PPU.cpp Cartridge.cpp Helpers.cpp UI.cpp mappers/Mapper.cpp mappers/Mapper000.cpp mappers/Mapper001.cpp IO.cpp controllers/StandardController.cpp)
 
@@ -32,6 +36,9 @@ target_compile_features(main PRIVATE cxx_std_17)
 target_link_libraries(debug PRIVATE sfml-system sfml-window sfml-graphics)
 target_compile_features(debug PRIVATE cxx_std_17)
 
+target_link_libraries(profiler PRIVATE sfml-system sfml-window sfml-graphics)
+target_compile_features(profiler PRIVATE cxx_std_17)
+
 # target_link_libraries(chr_dump PRIVATE sfml-system sfml-window sfml-graphics)
 # target_compile_features(chr_dump PRIVATE cxx_std_17)
 
@@ -39,8 +46,8 @@ target_compile_features(debug PRIVATE cxx_std_17)
 # target_compile_features(debugger PRIVATE cxx_std_17)
 
 set_target_properties(main PROPERTIES
-   COMPILE_FLAGS "-O3"
-   LINK_FLAGS "-O3" 
+   COMPILE_FLAGS "-O3 -flto"
+   LINK_FLAGS "-O3 -flto" 
 )
 
 # Ensure that debug symbols are included
@@ -48,6 +55,13 @@ set_target_properties(debug PROPERTIES
    COMPILE_FLAGS "-g -Wall -Wextra -fsanitize=address"
    LINK_FLAGS "-g -Wall -Wextra -fsanitize=address"
 )
+
+# Ensure that debug symbols are included
+set_target_properties(profiler PROPERTIES
+   COMPILE_FLAGS "-pg -O0 -flto -Wall -Wextra -fsanitize=address"
+   LINK_FLAGS "-pg -O0 -flto -Wall -Wextra -fsanitize=address"
+)
+
 
 # set_target_properties(debugger PROPERTIES
 #    COMPILE_FLAGS "-g"

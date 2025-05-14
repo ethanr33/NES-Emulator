@@ -655,8 +655,6 @@ void PPU::tick() {
                     // Where bottomright, bottomleft, topright, and topleft are the palette numbers for each quadrant of this block in the nametable
                     uint8_t background_color_palette_num;
 
-                    // Due to there being 30 tiles vertically, the bottom row of tiles of the screen
-                    // does not fit in a 32x32 region. So we need to make a special case for that 
                     if (is_top_tile && is_left_tile) {
                         // top left
                         background_color_palette_num = attribute_table_val & 0x3;
@@ -682,7 +680,10 @@ void PPU::tick() {
     
                     uint8_t background_pixel_color = (is_bit_set(tile_offset_x, background_pixel_layer_1) << 1) | is_bit_set(tile_offset_x, background_pixel_layer_0);
     
-                    ui->set_background_palette(background_color0, background_color1, background_color2, background_color3);
+                    if (((coarse_x & 0x3) == 0) || ((coarse_x & 0x2) == 0x2)) {
+                        ui->set_background_palette(background_color0, background_color1, background_color2, background_color3);
+                    }
+
 
                     // Start sprite rendering from secondary OAM
 
