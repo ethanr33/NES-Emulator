@@ -1,16 +1,20 @@
 
+## [Technical Write Up](https://docs.google.com/document/d/1fzqqa9KparlBGUkKNZd4IBr7n9K_vbH10DSQABEPsVY/edit?usp=sharing)
+
+
+
 # About
 
-This project is a currently work in progress emulator for the NES (Nintendo Entertainment System). Please note that the emulator is still very much in development, so there may be some major features of the NES that are still unsupported.
+This project is a work in progress emulator for the NES (Nintendo Entertainment System). All the main features of the NES's CPU and PPU are implemented, and a lot of popular games are playable, such as Donkey Kong, Super Mario Bros., and The Legend of Zelda.
 
 # What has been done:
 
 - **CPU emulation** - 
-  The emulator can emulate the Ricoh 6502 with good accuracy.
+  The emulator can emulate the Ricoh 6502 with near perfect accuracy.
 - **PPU emulation** -
-  Basic PPU operation and pipeline have been implemented. However, advanced operations such as sprite rendering and scrolling have not.
+  All of the main PPU operations such as sprite/background rendering, collisions, and sprite 0 hit have been implemented.
 - **Controller Input** -
-  The emulator is able to emulate the function of a single standard NES controller (so far). Functionality with more than one controller has not been tested yet.
+  The emulator is able to emulate the function of a single standard NES controller. 
 
 # Requirements:
 
@@ -92,9 +96,9 @@ The following NES controller inputs are mapped to these keys on a standard keybo
 
 # Future work:
 
-- Full, cycle-accurate implementation of the PPU
-- Verify functionality of second standard NES controller
+- Cycle-accurate implementation of the PPU
+- Add functionality of second standard NES controller
 - Add support for non-traditional controllers
-- Add support for all common mappers
+- Add support for all common mappers (Mapper, 2, 3, etc.)
 - Add support for the iNES2.0 file format
 - Implement APU
