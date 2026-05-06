@@ -2,18 +2,26 @@
 #include <iostream>
 #include <chrono>
 #include <optional>
+#include <string>
 #include "Bus.h"
 #include "Helpers.h"
+#include "RomPicker.h"
 
 int main(int argc, char** argv) {
 
-    if (argc != 2) {
-        std::cout << "Invalid usage: ./main <rom file name>" << std::endl;
-        return 1;
+    std::string rom_file;
+    if (argc >= 2) {
+        rom_file = argv[1];
+    } else {
+        std::optional<std::string> picked = pick_rom_interactively("roms");
+        if (!picked) {
+            return 0;
+        }
+        rom_file = *picked;
     }
 
     Bus nes = Bus();
-    Cartridge* game = new Cartridge(argv[1]);
+    Cartridge* game = new Cartridge(rom_file);
 
     nes.insert_cartridge(game);
     nes.reset();
