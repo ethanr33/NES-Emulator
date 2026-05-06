@@ -1,5 +1,5 @@
 
-#include "Mapper000.h"
+#include "mappers/Mapper000.h"
 
 bool Mapper000::cpu_mapper_read(uint16_t addr, uint32_t& mapped_addr, uint8_t& data) {
 

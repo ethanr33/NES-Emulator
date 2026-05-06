@@ -363,7 +363,7 @@ int main() {
                     std::cout << "Num frames: " << nes.ppu->frames_elapsed << std::endl;
 
                 } else if (step_nmi_button.getGlobalBounds().contains((sf::Vector2f) mouse_pos)) {
-                    while (!nes.cpu->has_nmi) {
+                    while (!nes.cpu->is_nmi_line_low) {
                         step_forward(nes);
                     }
                 }

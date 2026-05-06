@@ -1,7 +1,7 @@
 
 #include <stdexcept>
 #include <iostream>
-#include "Mapper001.h"
+#include "mappers/Mapper001.h"
 
 bool Mapper001::cpu_mapper_read(uint16_t addr, uint32_t& mapped_addr, uint8_t& data) {
 

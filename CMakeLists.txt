@@ -12,40 +12,74 @@ FetchContent_Declare(SFML
     SYSTEM)
 FetchContent_MakeAvailable(SFML)
 
-# find_package(SFML 2 REQUIRED COMPONENTS graphics system windows)
-
 # Add main executable
-add_executable(main main.cpp Bus.cpp CPU.cpp PPU.cpp Cartridge.cpp Helpers.cpp UI.cpp mappers/Mapper.cpp mappers/Mapper000.cpp mappers/Mapper001.cpp IO.cpp controllers/StandardController.cpp APU.cpp)
+add_executable(nesemu)
+add_executable(debug)
+add_executable(chr_dump)
+add_executable(debugger)
 
-# Add debug executable
-add_executable(debug main.cpp Bus.cpp CPU.cpp PPU.cpp Cartridge.cpp Helpers.cpp UI.cpp mappers/Mapper.cpp mappers/Mapper000.cpp mappers/Mapper001.cpp IO.cpp controllers/StandardController.cpp APU.cpp)
+file(GLOB_RECURSE NESEMU-SOURCES "./src/*.cpp")
+file(GLOB_RECURSE NESEMU-HEADERS "./include/*.h")
 
-# Add executable for performance analysis
-add_executable(profiler main.cpp Bus.cpp CPU.cpp PPU.cpp Cartridge.cpp Helpers.cpp UI.cpp mappers/Mapper.cpp mappers/Mapper000.cpp mappers/Mapper001.cpp IO.cpp controllers/StandardController.cpp APU.cpp)
+target_sources(nesemu
+   PRIVATE
+      ${NESEMU-SOURCES}
+      main.cpp
+   PUBLIC 
+      FILE_SET HEADERS
+      BASE_DIRS
+         include 
+      FILES 
+         ${NESEMU_HEADERS}
+)
 
+target_sources(debug
+   PRIVATE 
+      ${NESEMU-SOURCES}
+      main.cpp
+   PUBLIC 
+      FILE_SET HEADERS
+      BASE_DIRS
+         include 
+      FILES 
+         ${NESEMU_HEADERS}
+)
 
-# Add debug executable
-# add_executable(chr_dump chr_dump.cpp Bus.cpp CPU.cpp PPU.cpp Cartridge.cpp Helpers.cpp UI.cpp mappers/Mapper.cpp mappers/Mapper000.cpp mappers/Mapper001.cpp IO.cpp controllers/StandardController.cpp)
+target_sources(chr_dump
+   PRIVATE 
+      ${NESEMU-SOURCES}
+      chr_dump.cpp
+   PUBLIC 
+      FILE_SET HEADERS
+      BASE_DIRS
+         include 
+      FILES 
+         ${NESEMU_HEADERS}
+)
 
-# Add debugger executable
-# add_executable(debugger debug.cpp Bus.cpp CPU.cpp PPU.cpp Cartridge.cpp Helpers.cpp UI.cpp mappers/Mapper.cpp mappers/Mapper000.cpp mappers/Mapper001.cpp IO.cpp controllers/StandardController.cpp)
+target_sources(debugger
+   PRIVATE 
+      ${NESEMU-SOURCES}
+      debug.cpp
+   PUBLIC 
+      FILE_SET HEADERS
+      BASE_DIRS
+         include 
+      FILES 
+         ${NESEMU_HEADERS}
+)
 
-target_link_libraries(main PRIVATE sfml-system sfml-window sfml-graphics)
-target_compile_features(main PRIVATE cxx_std_17)
-
+target_link_libraries(nesemu PRIVATE sfml-system sfml-window sfml-graphics)
 target_link_libraries(debug PRIVATE sfml-system sfml-window sfml-graphics)
+target_link_libraries(chr_dump PRIVATE sfml-system sfml-window sfml-graphics)
+target_link_libraries(debugger PRIVATE sfml-system sfml-window sfml-graphics)
+
+target_compile_features(nesemu PRIVATE cxx_std_17)
 target_compile_features(debug PRIVATE cxx_std_17)
+target_compile_features(chr_dump PRIVATE cxx_std_17)
+target_compile_features(debugger PRIVATE cxx_std_17)
 
-target_link_libraries(profiler PRIVATE sfml-system sfml-window sfml-graphics)
-target_compile_features(profiler PRIVATE cxx_std_17)
-
-# target_link_libraries(chr_dump PRIVATE sfml-system sfml-window sfml-graphics)
-# target_compile_features(chr_dump PRIVATE cxx_std_17)
-
-# target_link_libraries(debugger PRIVATE sfml-system sfml-window sfml-graphics)
-# target_compile_features(debugger PRIVATE cxx_std_17)
-
-set_target_properties(main PROPERTIES
+set_target_properties(nesemu PROPERTIES
    COMPILE_FLAGS "-O3 -flto"
    LINK_FLAGS "-O3 -flto" 
 )
@@ -56,19 +90,12 @@ set_target_properties(debug PROPERTIES
    LINK_FLAGS "-g -Wall -Wextra -fsanitize=address"
 )
 
-# Ensure that debug symbols are included
-set_target_properties(profiler PROPERTIES
-   COMPILE_FLAGS "-pg -O0 -flto -Wall -Wextra -fsanitize=address"
-   LINK_FLAGS "-pg -O0 -flto -Wall -Wextra -fsanitize=address"
+set_target_properties(debugger PROPERTIES
+   COMPILE_FLAGS "-g"
+   LINK_FLAGS "-g"
 )
 
-
-# set_target_properties(debugger PROPERTIES
-#    COMPILE_FLAGS "-g"
-#    LINK_FLAGS "-g"
-# )
-
-# set_target_properties(chr_dump PROPERTIES
-#    COMPILE_FLAGS "-g"
-#    LINK_FLAGS "-g"
-# )
+set_target_properties(chr_dump PROPERTIES
+   COMPILE_FLAGS "-g"
+   LINK_FLAGS "-g"
+)

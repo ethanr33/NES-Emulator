@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "Mapper.h"
+#include "mappers/Mapper.h"
 
 
 struct Mapper000 : Mapper {

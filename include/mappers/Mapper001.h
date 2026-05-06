@@ -3,7 +3,7 @@
 
 #include <vector>
 
-#include "Mapper.h"
+#include "mappers/Mapper.h"
 
 using std::vector;
 

@@ -25,7 +25,8 @@ This project is a work in progress emulator for the NES (Nintendo Entertainment 
 # How to run the emulator:
 
 1. Clone the repository
-2. Run ```cmake .```, then ```make```.
+2. Run ```mkdir roms && mkdir build && cd build```
+2. Run ```cmake ..```, then ```make```.
 3. Run ```./main \<rom file name\>```. The ROM file name should be the name of a file located in the ```roms``` folder.
 
 # Supported ROMS:

@@ -2,7 +2,7 @@
 #include <iostream>
 #include <SFML/Window.hpp>
 
-#include "StandardController.h"
+#include "controllers/StandardController.h"
 
 bool StandardController::read_input() {
 
