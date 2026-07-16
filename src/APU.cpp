@@ -9,13 +9,14 @@ APU::APU() {
 }
 
 uint8_t APU::read_from_cpu(uint16_t address) {
-    switch (address) {
-        case 0x4015:
-            // unimplemented
-            return 0;
-        default:
-            throw std::runtime_error("Attempted to read APU from invalid address " + std::to_string(address));
-    }
+    return 0;
+    // switch (address) {
+    //     case 0x4015:
+    //         // unimplemented
+    //         return 0;
+    //     default:
+    //         throw std::runtime_error("Attempted to read APU from invalid address " + std::to_string(address));
+    // }
 }
 
 void APU::write_from_cpu(uint16_t address, uint8_t val) {

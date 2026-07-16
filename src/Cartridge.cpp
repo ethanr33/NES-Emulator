@@ -7,6 +7,7 @@
 #include "Helpers.h"
 #include "mappers/Mapper000.h"
 #include "mappers/Mapper001.h"
+#include "mappers/Mapper003.h"
 
 using std::vector;
 
@@ -82,6 +83,9 @@ Cartridge::Cartridge(const std::string& rom_file_name) {
                     break;
                 case 1:
                     this->mapper = new Mapper001(NUM_PRG_BANKS, NUM_PRG_RAM_BANKS, NUM_CHR_BANKS);
+                    break;
+                case 3:
+                    this->mapper = new Mapper003(NUM_CHR_BANKS);
                     break;
                 default:
                     throw std::runtime_error("Mapper not supported: " + std::to_string(mapper_number));
