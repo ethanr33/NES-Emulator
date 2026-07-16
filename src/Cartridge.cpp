@@ -85,7 +85,7 @@ Cartridge::Cartridge(const std::string& rom_file_name) {
                     this->mapper = new Mapper001(NUM_PRG_BANKS, NUM_PRG_RAM_BANKS, NUM_CHR_BANKS);
                     break;
                 case 3:
-                    this->mapper = new Mapper003(NUM_CHR_BANKS);
+                    this->mapper = new Mapper003(NUM_PRG_BANKS, NUM_CHR_BANKS);
                     break;
                 default:
                     throw std::runtime_error("Mapper not supported: " + std::to_string(mapper_number));

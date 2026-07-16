@@ -7,7 +7,7 @@
 
 struct Mapper003 : Mapper {
     // Fixed sized 32K PRG ROM, no PRG RAM
-    Mapper003(uint8_t num_chr_banks) : Mapper(1, 0, num_chr_banks, 0) {}
+    Mapper003(uint8_t num_prg_banks, uint8_t num_chr_banks) : Mapper(1, 0, num_chr_banks, 0) {}
 
     uint8_t cur_chr_bank = 0;
 
