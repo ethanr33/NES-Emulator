@@ -39,13 +39,14 @@ int main(int argc, char** argv) {
             }
         }
 
-        if (nes.ppu->frames_elapsed > frame_count_start + 30) {
-            auto end = std::chrono::high_resolution_clock::now();
-            std::chrono::duration<double, std::milli> elapsed = end - start;
-            nes.ppu->ui->window->setTitle("NES Emulator frame time: " + std::to_string(elapsed.count() / 30));
+        auto end = std::chrono::high_resolution_clock::now();
+        auto elapsed_time = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
+
+        // At 60 FPS each frame should be about 16666.6666... microseconds long
+        if (elapsed_time > 16666) {
+            nes.ppu->ui->window->setTitle("FPS: " + std::to_string(1000000 * (nes.ppu->frames_elapsed - frame_count_start) / (double) elapsed_time));
             start = std::chrono::high_resolution_clock::now();
             frame_count_start = nes.ppu->frames_elapsed;
-
         }
 
         nes.tick();
