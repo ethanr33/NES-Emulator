@@ -9,14 +9,15 @@ APU::APU() {
 }
 
 uint8_t APU::read_from_cpu(uint16_t address) {
-    return 0;
-    // switch (address) {
-    //     case 0x4015:
-    //         // unimplemented
-    //         return 0;
-    //     default:
-    //         throw std::runtime_error("Attempted to read APU from invalid address " + std::to_string(address));
-    // }
+    switch (address) {
+        case 0x4015:
+            // unimplemented
+            return 0;
+        default:
+            // This should throw an error, but since APU isn't fully implemented yet I want programs to still be able to run
+            //throw std::runtime_error("Attempted to read APU from invalid address " + std::to_string(address));
+            return 0;
+    }
 }
 
 void APU::write_from_cpu(uint16_t address, uint8_t val) {
@@ -91,6 +92,12 @@ void APU::write_from_cpu(uint16_t address, uint8_t val) {
             apu_status.pulse_1_enable = val & 0x01;
             break;
         case 0x4017:
+            frame_counter.mode = val & 0x80;
+            frame_counter.irq_inhibited = val & 0x40;
+
+            if (frame_counter.irq_inhibited) {
+                this->bus->cpu->reset_IRQ();
+            }
             break;
         default:
             throw std::runtime_error("Attempted to write to APU from invalid address " + std::to_string(address));
@@ -117,7 +124,9 @@ void APU::tick() {
         } else if (frame_counter.cycles_elapsed == 29828) {
 
         } else if (frame_counter.cycles_elapsed == 29829) {
-    
+            if (!frame_counter.irq_inhibited) {
+                this->bus->cpu->trigger_IRQ();
+            }
         } else if (frame_counter.cycles_elapsed == 29830) {
             // Counter resets to 0 on the next APU cycle
             // Set to -1 because this variable will be incremented at the end of the function
@@ -133,7 +142,7 @@ void APU::tick() {
         } else if (frame_counter.cycles_elapsed == 29829) {
     
         } else if (frame_counter.cycles_elapsed == 37281) {
-    
+
         } else if (frame_counter.cycles_elapsed == 37282) {
             // Counter resets to 0 on the next APU cycle
             // Set to -1 because this variable will be incremented at the end of the function

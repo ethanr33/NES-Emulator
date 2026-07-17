@@ -55,6 +55,8 @@ struct Bus {
     void set_nmi_line(bool);
     void set_nmi_suppression_status(bool);
     bool get_nmi_line_status() const;
+
+    bool is_open_bus(uint16_t addr) const;
     
 
 };

@@ -32,6 +32,9 @@ struct CPU {
 
     bool is_nmi_line_low = false;
     bool nmi_edge_detected = false;
+
+    // Flag set if there is an IRQ
+    bool irq_pending = false;
     
     // The stack pointer stores the low 8 bytes of the next memory location available on the stack
     // 
@@ -62,6 +65,9 @@ struct CPU {
     void set_flag(flag_type, bool);
     void toggle_flag(flag_type);
     uint8_t get_byte_from_flags() const;
+
+    void trigger_IRQ();
+    void reset_IRQ();
 
     // Given an addressing mode and parameters, return the value stored in memory
     // Some addressing modes only require one parameter, so there are 2 versions of the method:

@@ -8,6 +8,7 @@ Bus::Bus() {
     apu = new APU();
     cpu->attach_bus(this);
     ppu->attach_bus(this);
+    apu->attach_bus(this);
 }
 
 Bus::Bus(bool ui_disabled) {
@@ -17,10 +18,15 @@ Bus::Bus(bool ui_disabled) {
     apu = new APU();
     cpu->attach_bus(this);
     ppu->attach_bus(this);
+    apu->attach_bus(this);
 }
 
 uint8_t Bus::read_cpu(uint16_t address) {
     uint8_t data;
+
+    if (this->is_open_bus(address)) {
+        return address >> 8;
+    }
 
     if (cartridge->read_cpu(address, data)) {
         return data;
@@ -133,4 +139,16 @@ bool Bus::get_nmi_line_status() const {
 
 void Bus::set_nmi_suppression_status(bool new_status) {
     is_nmi_suppressed = new_status;
+}
+
+bool Bus::is_open_bus(uint16_t addr) const {
+    if (addr == 0x4016) {
+        return this->io->port1_controller == nullptr;
+    } else if (addr == 0x4017) {
+         return this->io->port2_controller == nullptr;
+    } else if (addr >= 0x4000 && addr <= 0x7FFF) {
+         return addr != 0x4015;
+    }
+
+    return false;
 }

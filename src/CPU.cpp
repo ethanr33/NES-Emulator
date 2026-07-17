@@ -1114,6 +1114,10 @@ uint8_t CPU::get_memory(addressing_mode mode, uint8_t parameter_lsb, uint8_t par
 
     increment_program_counter(3);
 
+    if (this->bus->is_open_bus(full_address)) {
+        return parameter_msb;
+    } 
+
     if (mode == ABSOLUTE) {
         return bus->read_cpu(full_address);
     } else if (mode == ABSOLUTE_X) {
@@ -1450,7 +1454,10 @@ void CPU::execute_opcode(uint16_t opcode_address) {
         case 0xAD:
             // LDA, absolute
             clock_cycles_remaining += 4;
+
             LDA(get_memory(ABSOLUTE, lsb, msb));
+
+
             break;
         case 0xB1:
             // LDA, indirect y
@@ -2242,6 +2249,9 @@ void CPU::tick() {
         execute_opcode(program_counter);
 
         if (nmi_flag) {
+            
+            // Handling NMI resets IRQ status
+            irq_pending = false;
 
             nmi_flag = false;
             clock_cycles_remaining += 8;
@@ -2255,6 +2265,18 @@ void CPU::tick() {
             nmi_latch_set = false;
 
             program_counter = nmi_interrput_address;
+        } else if (irq_pending && !get_flag(INT_DISABLE)) {
+            irq_pending = false;
+
+            stack_push(program_counter);
+            stack_push(get_byte_from_flags());
+
+            set_flag(INT_DISABLE, 1);
+
+            uint16_t irq_interrput_address = form_address(bus->read_cpu(0xFFFE), bus->read_cpu(0xFFFF));
+
+            program_counter = irq_interrput_address;
+
         }
     } else if (clock_cycles_remaining == 1) {
         // Check for pending NMI interrupt
@@ -2326,4 +2348,12 @@ void CPU::check_nmi_edge() {
     }
 
     is_nmi_line_low = cur_nmi_line_status;
+}
+
+void CPU::trigger_IRQ() {
+    irq_pending = true;
+}
+
+void CPU::reset_IRQ() {
+    irq_pending = false;
 }
