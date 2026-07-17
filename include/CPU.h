@@ -158,6 +158,7 @@ struct CPU {
     void SEC();
     void SED();
     void SEI();
+    void SRE(uint8_t);
     void STA(uint16_t);
     void STX(uint16_t);
     void STY(uint16_t);

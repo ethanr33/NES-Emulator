@@ -24,10 +24,6 @@ Bus::Bus(bool ui_disabled) {
 uint8_t Bus::read_cpu(uint16_t address) {
     uint8_t data;
 
-    if (this->is_open_bus(address)) {
-        return address >> 8;
-    }
-
     if (cartridge->read_cpu(address, data)) {
         return data;
     }

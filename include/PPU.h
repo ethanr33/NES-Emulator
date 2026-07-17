@@ -193,6 +193,9 @@ struct PPU {
     uint16_t t = 0;
     uint8_t fine_x_offset = 0;
 
+    // Keep track of open bus behavior
+    uint8_t open_bus_val = 0;
+
     // Register which keeps track of which write PPUSCROLL and PPUADDR are on
     // 0: first write, 1: second write
     bool w = 0;

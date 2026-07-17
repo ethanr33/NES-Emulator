@@ -29,9 +29,9 @@ uint8_t PPU::read_from_cpu(uint16_t address) {
         int register_num = address & 0x7;
         switch (register_num) {
             case 0:
-                break;
+                return open_bus_val;
             case 1:
-                break;
+                return open_bus_val;
             case 2: {
                 // Reading PPUSTATUS clears w register
                 // Useful for writes to PPUADDR or PPUSCROLL to ensure writes happen in correct order
@@ -59,14 +59,13 @@ uint8_t PPU::read_from_cpu(uint16_t address) {
                 break;
             }
             case 3:
-                break;
+                return open_bus_val;
             case 4:
                 return primary_OAM.at(oamaddr);
-                break;
             case 5:
-                break;
+                return open_bus_val;
             case 6:
-                break;
+                return open_bus_val;
             case 7: {
 
                 // See https://www.nesdev.org/wiki/PPU_registers#The_PPUDATA_read_buffer
@@ -123,6 +122,9 @@ uint8_t PPU::read_from_cpu(uint16_t address) {
 void PPU::write_from_cpu(uint16_t address, uint8_t val) {
     if (address >= 0x2000 && address <= 0x3FFF) {
         int register_num = address & 0x7;
+
+        open_bus_val = val;
+
         switch (register_num) {
             case 0:
                 ppuctrl = PPUCTRL(val);

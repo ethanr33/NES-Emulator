@@ -1023,6 +1023,17 @@ void CPU::AXS(uint8_t value) {
 
 }
 
+void CPU::SRE(uint8_t address) {
+    uint8_t val = bus->read_cpu(address);
+    bus->write_cpu(address, val >> 1);
+
+    A = A ^ bus->read_cpu(address);
+
+    set_flag(CARRY, val >> 7);
+    set_flag(ZERO, A == 0);
+    set_flag(NEGATIVE, A & 0x80);
+}
+
 void CPU::set_flag(flag_type flag_to_set, bool new_flag_val) {
     flags[flag_to_set] = new_flag_val;
 }
@@ -2236,6 +2247,12 @@ void CPU::execute_opcode(uint16_t opcode_address) {
             clock_cycles_remaining += 3;
             increment_program_counter(2);
             break;
+        case 0x43:
+            // SRE indirect, X
+            SRE(make_address(ZERO_PAGE_X, lsb));
+            clock_cycles_remaining += 8;
+            increment_program_counter(2);
+            break;
         default:
             std::cout << program_counter << std::endl;
             throw std::runtime_error("Unknown opcode " + std::to_string(opcode));
@@ -2253,11 +2270,11 @@ void CPU::tick() {
 
     // We may have some cycles left before we can execute the next opcode, but the PC will still be pointed to the next one
     if (clock_cycles_remaining == 0) {
-        //std::cout << std::uppercase << std::hex << program_counter << "  ";
-        //std::cout << std::setfill(' ') << std::dec << std::left << std::setw(3) << num_clock_cycles << " " << std::setw(3) << bus->ppu->cur_dot << " " << std::setw(3) << bus->ppu->scanline << std::endl;
-        //std::cout << std::setfill(' ') << std::hex << std::left << std::setw(2) << (int) bus->read_cpu(program_counter) << "  ";
-        //std::cout << std::setfill(' ') << std::hex << std::left << std::setw(2) << (int) stack_pointer << "  ";
-        //std::cout << std::setfill(' ') << std::dec << std::left << std::setw(8) << num_opcodes_executed << std::endl;
+        // std::cout << std::uppercase << std::hex << program_counter << "  ";
+        // std::cout << std::setfill(' ') << std::dec << std::left << std::setw(3) << num_clock_cycles << " " << std::setw(3) << bus->ppu->cur_dot << " " << std::setw(3) << bus->ppu->scanline << std::endl;
+        // std::cout << std::setfill(' ') << std::hex << std::left << std::setw(2) << (int) bus->read_cpu(program_counter) << "  ";
+        // std::cout << std::setfill(' ') << std::hex << std::left << std::setw(2) << (int) stack_pointer << "  ";
+        // std::cout << std::setfill(' ') << std::dec << std::left << std::setw(8) << num_opcodes_executed << std::endl;
 
         num_opcodes_executed++;
         execute_opcode(program_counter);
