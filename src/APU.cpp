@@ -11,8 +11,12 @@ APU::APU() {
 uint8_t APU::read_from_cpu(uint16_t address) {
     switch (address) {
         case 0x4015:
-            // unimplemented
-            return 0;
+            {
+                bool status = !this->frame_counter.irq_inhibited << 6;
+                this->frame_counter.irq_inhibited = 1;
+                this->bus->cpu->reset_IRQ();
+                return status;
+            }
         default:
             // This should throw an error, but since APU isn't fully implemented yet I want programs to still be able to run
             //throw std::runtime_error("Attempted to read APU from invalid address " + std::to_string(address));

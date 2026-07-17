@@ -89,6 +89,7 @@ struct Frame_Counter {
 
     bool mode;
     bool irq_inhibited;
+    bool irq_triggered = false;
 
     uint64_t cycles_elapsed;
 

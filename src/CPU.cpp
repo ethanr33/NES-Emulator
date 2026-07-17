@@ -213,8 +213,8 @@ Pushes a copy of the status flags on to the stack.
 */
 void CPU::PHP() {
     // Break flag is always set to 1 on the pushed flags
-    uint8_t new_flags = get_byte_from_flags() | (1 << 5) | (1 << 4); // Break flag is in the 6th position
-    stack_push(new_flags);
+    set_flag(BREAK, 1);
+    stack_push(get_byte_from_flags());
 }
 
 /*
@@ -972,12 +972,10 @@ void CPU::JSR(uint16_t address) {
 void CPU::BRK() {
     // for this we push in the order of program_counter (little endian) then processor status (flags)
     stack_push((uint16_t) (program_counter + 2));
-
-    // Break and reserve flags are set only for the flags that are pushed onto the stack
-    uint8_t pushed_flags = get_byte_from_flags() | (1 << BREAK) | (1 << RESERVED);
     
     set_flag(INT_DISABLE, 1);
-    stack_push(pushed_flags);
+    set_flag(BREAK, 1);
+    stack_push(get_byte_from_flags());
 
     program_counter = form_address(bus->read_cpu(0xFFFE), bus->read_cpu(0xFFFF));
 }
@@ -2267,6 +2265,8 @@ void CPU::tick() {
             program_counter = nmi_interrput_address;
         } else if (irq_pending && !get_flag(INT_DISABLE)) {
             irq_pending = false;
+
+            set_flag(BREAK, 0);
 
             stack_push(program_counter);
             stack_push(get_byte_from_flags());
