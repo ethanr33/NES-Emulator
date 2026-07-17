@@ -1101,6 +1101,11 @@ uint8_t CPU::get_memory(addressing_mode mode, uint8_t parameter_val) {
 
         uint16_t new_address = form_address(least_significant_byte, most_significant_byte) + Y;
 
+        // Perform dummy read
+        if (crosses_page(ABSOLUTE_Y, least_significant_byte, most_significant_byte)) {
+            bus->read_cpu(form_address(least_significant_byte + Y, most_significant_byte));
+        }
+
         return bus->read_cpu(new_address);
     } else {
         throw std::runtime_error("Memory addressing mode not implemented: " + std::to_string(mode));
@@ -1119,6 +1124,11 @@ uint8_t CPU::get_memory(addressing_mode mode, uint8_t parameter_lsb, uint8_t par
     if (mode == ABSOLUTE) {
         return bus->read_cpu(full_address);
     } else if (mode == ABSOLUTE_X) {
+        // Perform dummy read
+        if (crosses_page(ABSOLUTE_X, parameter_lsb, parameter_msb)) {
+            bus->read_cpu(form_address((parameter_lsb + X) & 0xFF, parameter_msb));
+        }
+
         // If address is too big, we may overflow
         return bus->read_cpu((full_address + X) & 0xFFFF);
     } else if (mode == ABSOLUTE_Y) {
@@ -1680,6 +1690,8 @@ void CPU::execute_opcode(uint16_t opcode_address) {
             break;
         case 0x9D:
             clock_cycles_remaining += 5;
+            // Perform dummy read, store instructions always have dummy read
+            bus->read_cpu(form_address((lsb + X) & 0xFF, msb));
             STA(make_address(ABSOLUTE_X, lsb, msb));
             break;
         case 0x99:
@@ -1692,6 +1704,10 @@ void CPU::execute_opcode(uint16_t opcode_address) {
             break;
         case 0x91:
             clock_cycles_remaining += 6;
+            // Perform dummy read
+            if (crosses_page(INDIRECT_INDEXED, lsb)) {
+                bus->read_cpu(form_address(bus->read_cpu(lsb) + Y, bus->read_cpu(lsb + 1)));
+            }
             STA(make_address(INDIRECT_INDEXED, lsb));
             break;
         case 0x86:

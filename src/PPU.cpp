@@ -29,10 +29,8 @@ uint8_t PPU::read_from_cpu(uint16_t address) {
         int register_num = address & 0x7;
         switch (register_num) {
             case 0:
-                throw std::runtime_error("Attempted to read from PPUCTRL register");
                 break;
             case 1:
-                throw std::runtime_error("Attempted to read from PPUMASK register");
                 break;
             case 2: {
                 // Reading PPUSTATUS clears w register
@@ -61,16 +59,13 @@ uint8_t PPU::read_from_cpu(uint16_t address) {
                 break;
             }
             case 3:
-                throw std::runtime_error("Attempted to read from OAMADDR register");
                 break;
             case 4:
                 return primary_OAM.at(oamaddr);
                 break;
             case 5:
-                throw std::runtime_error("Attempted to read from PPUSCROLL register");
                 break;
             case 6:
-                throw std::runtime_error("Attempted to read from PPUADDR register");
                 break;
             case 7: {
 
