@@ -118,36 +118,38 @@ void APU::tick() {
     // The frame counter keeps track of how many APU cycles have passed
     // Based on its mode, it will periodically clock each of the sound generators
 
+    // These values for cycles_elapsed are for NTSC machines only!!!
+
     if (frame_counter.mode == 0) {
-        if (frame_counter.cycles_elapsed == 7457) {
+        if (frame_counter.cycles_elapsed == 3728) {
 
-        } else if (frame_counter.cycles_elapsed == 14913) {
+        } else if (frame_counter.cycles_elapsed == 7456) {
     
-        } else if (frame_counter.cycles_elapsed == 22371) {
+        } else if (frame_counter.cycles_elapsed == 11185) {
     
-        } else if (frame_counter.cycles_elapsed == 29828) {
+        } else if (frame_counter.cycles_elapsed == 14914) {
 
-        } else if (frame_counter.cycles_elapsed == 29829) {
+        } else if (frame_counter.cycles_elapsed == 14915) {
             if (!frame_counter.irq_inhibited) {
                 this->bus->cpu->trigger_IRQ();
             }
-        } else if (frame_counter.cycles_elapsed == 29830) {
+        } else if (frame_counter.cycles_elapsed == 14916) {
             // Counter resets to 0 on the next APU cycle
             // Set to -1 because this variable will be incremented at the end of the function
             frame_counter.cycles_elapsed = -1;
         }
     } else {
-        if (frame_counter.cycles_elapsed == 7457) {
+        if (frame_counter.cycles_elapsed == 3728) {
 
-        } else if (frame_counter.cycles_elapsed == 14913) {
+        } else if (frame_counter.cycles_elapsed == 7456) {
     
-        } else if (frame_counter.cycles_elapsed == 22371) {
+        } else if (frame_counter.cycles_elapsed == 11185) {
     
-        } else if (frame_counter.cycles_elapsed == 29829) {
+        } else if (frame_counter.cycles_elapsed == 14914) {
     
-        } else if (frame_counter.cycles_elapsed == 37281) {
+        } else if (frame_counter.cycles_elapsed == 18640) {
 
-        } else if (frame_counter.cycles_elapsed == 37282) {
+        } else if (frame_counter.cycles_elapsed == 18641) {
             // Counter resets to 0 on the next APU cycle
             // Set to -1 because this variable will be incremented at the end of the function
             frame_counter.cycles_elapsed = -1;
