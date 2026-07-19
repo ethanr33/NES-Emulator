@@ -28,6 +28,11 @@ uint8_t Bus::read_cpu(uint16_t address) {
         return data;
     }
 
+    // Unused address space for now
+    if (address >= 0x4020 && address <= 0x5FFF) {
+        return 0;
+    }
+
     if (address >= RAM_MIRROR_START && address <= RAM_MIRROR_END) {
         return cpu_RAM.at(address & 0x7FF);
     }

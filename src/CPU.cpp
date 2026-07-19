@@ -1128,9 +1128,9 @@ uint8_t CPU::get_memory(addressing_mode mode, uint8_t parameter_lsb, uint8_t par
 
     increment_program_counter(3);
 
-    if (this->bus->is_open_bus(full_address)) {
-        return parameter_msb;
-    } 
+    // if (this->bus->is_open_bus(full_address)) {
+    //     return parameter_msb;
+    // } 
 
     if (mode == ABSOLUTE) {
         return bus->read_cpu(full_address);
